@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState, useRef } from 'react';
 
 // SVG icon for the microphone
 const MicIcon = () => (
@@ -8,41 +9,222 @@ const MicIcon = () => (
 );
 
 export default function QuizPage({ setPage }) {
-  // Array of question objects
-  const questions = [
-    { id: 1, text: "What is the capital of France?" },
-    { id: 2, text: "Who wrote 'To Kill a Mockingbird'?" },
-    { id: 3, text: "What is the chemical symbol for water?" },
-  ];
+  // Audio recording state
+  const [recordingId, setRecordingId] = useState(null);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [transcribing, setTranscribing] = useState(false);
+  const [transcription, setTranscription] = useState({});
+  const chunksRef = useRef([]);
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const [newQuestion, setNewQuestion] = useState("");
+
+  // Get user role from localStorage
+  let user = null;
+  try {
+    const userString = localStorage.getItem('user');
+    user = userString ? JSON.parse(userString) : null;
+  } catch (e) {
+    user = null;
+    console.warn('Invalid user token in localStorage:', e);
+  }
+  const isTeacher = user && user.role === 'teacher';
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/questions')
+      .then(res => res.json())
+      .then(data => setQuestions(data))
+      .catch(err => {
+        console.error('Error fetching questions:', err);
+        setQuestions([]);
+      });
+  }, []);
+
+  const handleAnswerChange = (id, value) => {
+    setAnswers(prev => ({ ...prev, [id]: value }));
+  };
+
+  // Audio recording handlers
+  // Unified mic button handler: start/stop recording and trigger transcription
+  const handleMicClick = async (id) => {
+    if (recordingId === id) {
+      // Stop recording and start transcription
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+      setRecordingId(null);
+      setTranscription(prev => ({ ...prev, [id]: 'Transcribing...' }));
+    } else {
+      // Start recording
+      setRecordingId(id);
+      setTranscribing(false);
+      setTranscription(prev => ({ ...prev, [id]: 'Listening...' }));
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new window.MediaRecorder(stream);
+        chunksRef.current = [];
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) chunksRef.current.push(e.data);
+        };
+        recorder.onstop = () => {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          setAudioBlob(blob);
+          uploadAudio(id, blob);
+        };
+        setMediaRecorder(recorder);
+        recorder.start();
+      } catch (err) {
+        setTranscription(prev => ({ ...prev, [id]: 'Microphone access denied.' }));
+        alert('Could not access microphone.');
+      }
+    }
+  };
+
+  // Upload audio to backend for transcription
+  const uploadAudio = async (id, blob) => {
+    setTranscribing(true);
+    setTranscription(prev => ({ ...prev, [id]: 'Transcribing...' }));
+    const formData = new FormData();
+    formData.append('audio', blob, 'answer.webm');
+    try {
+      const res = await fetch('http://localhost:5000/api/whisper/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTranscription(prev => ({ ...prev, [id]: data.text }));
+        setAnswers(prev => ({ ...prev, [id]: data.text })); // Auto-fill answer field
+      } else {
+        setTranscription(prev => ({ ...prev, [id]: 'Transcription failed.' }));
+        alert('Transcription failed.');
+      }
+    } catch (err) {
+      setTranscription(prev => ({ ...prev, [id]: 'Error uploading audio.' }));
+      alert('Error uploading audio.');
+    }
+    setTranscribing(false);
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    // In a real app, you would process the answers here.
     alert('Quiz submitted successfully!');
-    setPage('home'); // Navigate back to the home page after submission
+    setPage('home');
+  };
+
+  // Teacher: handle posting a new question
+  const handlePostQuestion = async (e) => {
+    e.preventDefault();
+    if (!newQuestion.trim()) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/questions/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ questionText: newQuestion })
+      });
+      if (res.ok) {
+        setNewQuestion("");
+        // Refresh questions
+        const updated = await fetch('http://localhost:5000/api/questions').then(r => r.json());
+        setQuestions(updated);
+      }
+    } catch (err) {
+      alert('Error posting question');
+    }
   };
 
   return (
     <div className="page-container">
       <h1 style={{ textAlign: 'center' }}>Quiz in Progress</h1>
-      <form onSubmit={handleSubmit}>
-        {questions.map((q, index) => (
-          <div key={q.id} className="form-group">
-            <label style={{ fontWeight: '500', marginBottom: '1rem' }}>{index + 1}. {q.text}</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <input type="text" placeholder="Type or record your answer..." style={{ flexGrow: 1 }} />
-              <button 
-                type="button" 
-                onClick={() => alert('Mic recording not implemented yet.')} 
-                style={{ border: '1px solid #d1d5db', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'none' }}
-              >
-                <MicIcon />
-              </button>
-            </div>
-          </div>
-        ))}
-        <button type="submit" className="btn">Submit Quiz</button>
-      </form>
+      {/* Only teachers see the post question form */}
+      {isTeacher ? (
+        <>
+          <form onSubmit={handlePostQuestion} style={{ marginBottom: '2rem' }}>
+            <input
+              type="text"
+              placeholder="Enter new question..."
+              value={newQuestion}
+              onChange={e => setNewQuestion(e.target.value)}
+              style={{ width: '70%', marginRight: '1rem' }}
+            />
+            <button type="submit" className="btn">Post Question</button>
+          </form>
+          <form onSubmit={handleSubmit}>
+            {questions.length === 0 ? (
+              <p>No questions available.</p>
+            ) : (
+              questions.map((q, index) => (
+                <div key={q._id} className="form-group">
+                  <label style={{ fontWeight: '500', marginBottom: '1rem' }}>{index + 1}. {q.questionText}</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      placeholder="Type or record your answer..."
+                      style={{ flexGrow: 1 }}
+                      value={answers[q._id] || ''}
+                      onChange={e => handleAnswerChange(q._id, e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => alert('Mic recording not implemented yet.')}
+                      style={{ border: '1px solid #d1d5db', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'none' }}
+                    >
+                      <MicIcon />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+            <button type="submit" className="btn">Submit Quiz</button>
+          </form>
+        </>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          {questions.length === 0 ? (
+            <p>No questions available.</p>
+          ) : (
+            questions.map((q, index) => (
+              <div key={q._id} className="form-group">
+                <label style={{ fontWeight: '500', marginBottom: '1rem' }}>{index + 1}. {q.questionText}</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Type or record your answer..."
+                    style={{ flexGrow: 1 }}
+                    value={answers[q._id] || ''}
+                    onChange={e => handleAnswerChange(q._id, e.target.value)}
+                    disabled={recordingId === q._id || transcribing}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleMicClick(q._id)}
+                    style={recordingId === q._id
+                      ? { border: '2px solid #ef4444', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: '#fee2e2', animation: 'pulse 1s infinite' }
+                      : { border: '1px solid #d1d5db', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'none' }
+                    }
+                  >
+                    <MicIcon />
+                  </button>
+                  {transcription[q._id] && (
+                    <span style={{ marginLeft: '1rem', color: transcription[q._id] === 'Transcribing...' ? '#6b7280' : (transcription[q._id] === 'Listening...' ? '#2563eb' : (transcription[q._id].toLowerCase().includes('failed') ? '#ef4444' : '#16a34a')) }}>
+                      {transcription[q._id]}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+          <button type="submit" className="btn">Submit Quiz</button>
+        </form>
+      )}
     </div>
   );
 }

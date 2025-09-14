@@ -1,274 +1,269 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import DashboardPage from './pages/DashboardPage.jsx';
+import QuizPage from './pages/QuizPage.jsx';
 
-// To resolve the import errors in this environment, all styles and components
-// have been consolidated into this single file. You can copy the individual
-// component code from here back into your separate local files.
+// For this collaborative environment's preview to work, all components and styles
+// must be consolidated into this single file. For your local project, you should 
+// continue to use your separate, modular files as you have been doing.
 
 // --- STYLES ---
+// This contains all the styles from your styles.css file.
 const GlobalStyles = () => (
   <style>{`
-    /* Basic Reset & Font */
+    :root {
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --secondary-color: #f9fafb;
+      --text-color: #1f2937;
+      --muted-text-color: #6b7280;
+      --border-color: #d1d5db;
+      --background-color: #ffffff;
+    }
     body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--secondary-color);
+      color: var(--text-color);
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      background-color: #f9fafb;
-      color: #1f2937;
     }
-
-    /* Main App Container */
+    #root {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
     main {
-      padding: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
+      flex: 1;
+      padding: 1rem;
     }
-
-    /* Page Container */
     .page-container {
-      background-color: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      background-color: var(--background-color);
+      border-radius: 1rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      padding: 2rem 2.5rem;
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem auto;
+      border: 1px solid var(--border-color);
+      box-sizing: border-box;
     }
-
-    /* Specific container for auth pages */
-    .auth-container {
-        max-width: 550px;
-        margin-left: auto;
-        margin-right: auto;
+    .form-window {
+      max-width: 550px;
+      margin-left: auto;
+      margin-right: auto;
     }
-
-    /* Button Styling */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      font-weight: 600;
-      cursor: pointer;
-      background-color: #4f46e5;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      background-color: var(--primary-color);
       color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
       transition: background-color 0.2s;
     }
-
     .btn:hover {
-      background-color: #4338ca;
+      background-color: var(--primary-hover);
     }
-
-    /* Form Styling */
     .form-container {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
     }
-
     .form-group {
-      display: flex;
-      flex-direction: column;
+      margin-bottom: 1.5rem;
     }
-
     .form-group label {
+      display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
     }
-
-    .form-group input,
-    .form-group textarea {
-      padding: 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
       font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      box-sizing: border-box;
     }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 2px #c7d2fe;
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: var(--background-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-
-    /* Input with Mic Button */
-    .input-with-mic {
-      position: relative;
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      cursor: pointer;
     }
-
-    .input-with-mic textarea {
-      width: calc(100% - 4rem); /* Adjust width to make space for button */
-      padding-right: 3.5rem;
-    }
-
-    .mic-button {
-      position: absolute;
-      right: 0.5rem;
-      top: 50%;
-      transform: translateY(-50%);
+    .nav-links button {
       background: none;
       border: none;
+      color: var(--muted-text-color);
+      font-size: 1rem;
+      font-weight: 500;
+      margin-left: 1.5rem;
       cursor: pointer;
-      padding: 0.5rem;
+      transition: color 0.2s;
+    }
+    .nav-links button:hover {
+      color: var(--primary-color);
+    }
+    h1, h2, h3 {
+      text-align: center;
+    }
+    .form-container p a, .form-window p a {
+        color: var(--primary-color);
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+    }
+     .form-container p, .form-window p {
+      text-align: center;
+      margin-top: 1.5rem;
     }
   `}</style>
 );
 
 
 // --- NAVBAR COMPONENT ---
-const Navbar = ({ setPage }) => {
-  const navStyle = {
-    backgroundColor: 'white',
-    padding: '1rem 2rem',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  };
-
-  const navLinkStyle = {
-    margin: '0 1rem',
-    cursor: 'pointer',
-    fontWeight: '600',
-    color: '#4f46e5',
-    textDecoration: 'none'
-  };
-
+const Navbar = ({ setPage, user, onLogout }) => {
+  const isLoggedIn = !!user;
   return (
-    <nav style={navStyle}>
-      <a href="#" style={{ ...navLinkStyle, fontSize: '1.5rem' }} onClick={() => setPage('home')}>
-        QuizMaster
-      </a>
-      <div>
-        <a href="#" style={navLinkStyle} onClick={() => setPage('home')}>Home</a>
-        <a href="#" style={navLinkStyle} onClick={() => setPage('login')}>Login</a>
-        <a href="#" style={navLinkStyle} onClick={() => setPage('signup')}>Signup</a>
+    <nav className="navbar">
+      <div className="navbar-brand" onClick={() => setPage('home')}>QuizMaster</div>
+      <div className="nav-links">
+        <button onClick={() => setPage('home')}>Home</button>
+        {isLoggedIn ? (
+          <>
+            {user.role === 'teacher' && (
+              <button onClick={() => setPage('dashboard')}>Dashboard</button>
+            )}
+            <button onClick={onLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setPage('login')}>Login</button>
+            <button onClick={() => setPage('signup')}>Sign Up</button>
+          </>
+        )}
       </div>
     </nav>
   );
 };
 
-
 // --- FOOTER COMPONENT ---
-const Footer = () => {
-  const footerStyle = {
-    backgroundColor: '#f3f4f6',
-    color: '#6b7280',
-    textAlign: 'center',
-    padding: '1.5rem',
-    marginTop: 'auto',
-    borderTop: '1px solid #e5e7eb'
-  };
-
-  return (
-    <footer style={footerStyle}>
-      <p>&copy; {new Date().getFullYear()} QuizMaster. All rights reserved.</p>
-    </footer>
-  );
-};
-
+const Footer = () => (
+  <footer style={{ backgroundColor: '#f3f4f6', color: '#6b7280', textAlign: 'center', padding: '1.5rem', borderTop: '1px solid #e5e7eb', marginTop: 'auto' }}>
+    <p>&copy; {new Date().getFullYear()} QuizMaster. All rights reserved.</p>
+  </footer>
+);
 
 // --- HOME PAGE COMPONENT ---
-const HomePage = ({ setPage }) => {
-  return (
-    <div className="page-container">
-      <h1 style={{ fontSize: '2.5rem', textAlign: 'center' }}>Welcome to the Quiz!</h1>
-      <div style={{ lineHeight: '1.6', color: '#6b7280' }}>
-        <h3>Instructions:</h3>
-        <ul>
-          <li>This quiz consists of several questions you must answer.</li>
-          <li>For each question, you can either type your answer or use the microphone to record it.</li>
-          <li>Once you submit your answers, you cannot change them.</li>
-          <li>Click "Start Quiz" when you are ready to begin.</li>
-        </ul>
-      </div>
-      <button className="btn" style={{ width: 'fit-content', margin: '2rem auto 0', display: 'block' }} onClick={() => setPage('quiz')}>
-        Start Quiz
-      </button>
-    </div>
-  );
-};
-
-
-// --- QUIZ PAGE COMPONENT ---
-const QuizPage = ({ setPage }) => {
-  const questions = [
-    "What is the capital of France?",
-    "Explain the theory of relativity in simple terms.",
-    "What are the main causes of climate change?",
-  ];
-
-  return (
-    <div className="page-container">
-      <h1 style={{ textAlign: 'center' }}>Quiz Questions</h1>
-      <form className="form-container" onSubmit={(e) => e.preventDefault()}>
-        {questions.map((q, index) => (
-          <div key={index} className="form-group">
-            <label htmlFor={`question-${index}`}>{`${index + 1}. ${q}`}</label>
-            <div className="input-with-mic">
-              <textarea id={`question-${index}`} rows="3"></textarea>
-              <button className="mic-button" title="Record Answer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-              </button>
-            </div>
-          </div>
-        ))}
-        <button type="submit" className="btn">Submit Answers</button>
-      </form>
-    </div>
-  );
-};
+const HomePage = ({ setPage }) => (
+  <div className="page-container">
+    <h1>Welcome to the Quiz!</h1>
+    <div style={{ lineHeight: '1.6' }}><h3>Instructions:</h3><ul><li>This quiz consists of several questions you must answer.</li><li>For each question, you can either type your answer or use the microphone to record it.</li><li>Click "Start Quiz" when you are ready to begin.</li></ul></div>
+    <button className="btn" style={{ width: 'fit-content', margin: '2rem auto 0', display: 'block' }} onClick={() => setPage('quiz')}>Start Quiz</button>
+  </div>
+);
 
 
 // --- LOGIN PAGE COMPONENT ---
-const LoginPage = ({ setPage }) => {
+const LoginPage = ({ setPage, onLoginSuccess }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        alert('Login successful!');
+        onLoginSuccess(data.user);
+      } else {
+        const errorData = await response.json();
+        alert(`Login failed: ${errorData.msg}`);
+      }
+    } catch (error) {
+      alert('Login failed. Could not connect to the server.');
+    }
+  };
   return (
-    <div className="page-container auth-container">
-      <h1 style={{ textAlign: 'center' }}>Login</h1>
-      <form className="form-container" onSubmit={(e) => e.preventDefault()}>
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input type="email" id="email" required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input type="password" id="password" required />
-        </div>
-        <button type="submit" className="btn">Log In</button>
-        <p style={{ textAlign: 'center' }}>
-          Don't have an account? <a href="#" onClick={() => setPage('signup')}>Sign up</a>
-        </p>
-      </form>
-    </div>
+    <div className="page-container form-window"><h1>Login</h1><form className="form-container" onSubmit={handleSubmit}><div className="form-group"><label htmlFor="email">Email</label><input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div><div className="form-group"><label htmlFor="password">Password</label><input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div><button type="submit" className="btn">Log In</button><p><a href="#" onClick={() => setPage('signup')}>Don't have an account? Sign up</a></p></form></div>
   );
 };
 
-
 // --- SIGNUP PAGE COMPONENT ---
 const SignupPage = ({ setPage }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('student');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+      if (response.ok) {
+        alert('Registration successful! Please log in.');
+        setPage('login');
+      } else {
+        const errorData = await response.json();
+        alert(`Registration failed: ${errorData.msg}`);
+      }
+    } catch (error) {
+      alert('Registration failed. Could not connect to the server.');
+    }
+  };
   return (
-    <div className="page-container auth-container">
-      <h1 style={{ textAlign: 'center' }}>Create an Account</h1>
-      <form className="form-container" onSubmit={(e) => e.preventDefault()}>
-        <div className="form-group">
-          <label htmlFor="name">Name</label>
-          <input type="text" id="name" required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input type="email" id="email" required />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input type="password" id="password" required />
-        </div>
-        <button type="submit" className="btn">Sign Up</button>
-        <p style={{ textAlign: 'center' }}>
-          Already have an account? <a href="#" onClick={() => setPage('login')}>Log in</a>
-        </p>
-      </form>
-    </div>
+    <div className="page-container form-window"><h1>Create an Account</h1><form className="form-container" onSubmit={handleSubmit}><div className="form-group"><label htmlFor="name">Name</label><input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} required /></div><div className="form-group"><label htmlFor="email">Email</label><input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div><div className="form-group"><label htmlFor="password">Password</label><input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div><div className="form-group"><label>I am a:</label><div style={{ display: 'flex', gap: '1rem' }}><label><input type="radio" value="student" checked={role === 'student'} onChange={(e) => setRole(e.target.value)} />Student</label><label><input type="radio" value="teacher" checked={role === 'teacher'} onChange={(e) => setRole(e.target.value)} />Teacher</label></div></div><button type="submit" className="btn">Sign Up</button><p><a href="#" onClick={() => setPage('login')}>Already have an account? Log in</a></p></form></div>
+  );
+};
+
+// --- TEACHER DASHBOARD COMPONENT ---
+const TeacherDashboard = ({ setPage }) => {
+  const [questionText, setQuestionText] = useState('');
+  const [correctAnswerText, setCorrectAnswerText] = useState('');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You are not logged in!');
+      setPage('login'); return;
+    }
+    try {
+      const response = await fetch('http://localhost:5000/api/questions/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+        body: JSON.stringify({ questionText, correctAnswerText }),
+      });
+      if (response.ok) {
+        alert('Question created successfully!');
+        setQuestionText('');
+        setCorrectAnswerText('');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.msg}`);
+      }
+    } catch (error) {
+      alert('An error occurred while creating the question.');
+    }
+  };
+  return (
+    <div className="page-container form-window"><h1>Teacher Dashboard</h1><h3>Create a New Question</h3><form className="form-container" onSubmit={handleSubmit}><div className="form-group"><label htmlFor="questionText">Question Text</label><textarea id="questionText" rows="3" value={questionText} onChange={(e) => setQuestionText(e.target.value)} required /></div><div className="form-group"><label htmlFor="correctAnswerText">Correct Answer</label><textarea id="correctAnswerText" rows="3" value={correctAnswerText} onChange={(e) => setCorrectAnswerText(e.target.value)} required /></div><button type="submit" className="btn">Add Question</button></form></div>
   );
 };
 
@@ -276,36 +271,65 @@ const SignupPage = ({ setPage }) => {
 // --- MAIN APP COMPONENT ---
 export default function App() {
   const [page, setPage] = useState('home');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+    }
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    setPage('home');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    alert('You have been logged out.');
+    setPage('home');
+  };
 
   const renderPage = () => {
     switch (page) {
       case 'quiz':
+        // Students see QuizPage, teachers see DashboardPage
+        if (user && user.role === 'teacher') {
+          return <DashboardPage setPage={setPage} />;
+        }
         return <QuizPage setPage={setPage} />;
       case 'login':
-        return <LoginPage setPage={setPage} />;
+        return <LoginPage setPage={setPage} onLoginSuccess={handleLogin} />;
       case 'signup':
         return <SignupPage setPage={setPage} />;
+      case 'dashboard':
+        if (user && user.role === 'teacher') {
+          return <DashboardPage setPage={setPage} />;
+        }
+        return <HomePage setPage={setPage} />;
       case 'home':
       default:
         return <HomePage setPage={setPage} />;
     }
   };
 
-  const appStyle = {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column'
-  };
-
   return (
-    <div style={appStyle}>
+    <>
       <GlobalStyles />
-      <Navbar setPage={setPage} />
-      <main style={{ flex: 1 }}>
+      <Navbar setPage={setPage} user={user} onLogout={handleLogout} />
+      <main>
         {renderPage()}
       </main>
       <Footer />
-    </div>
+    </>
   );
 }
 

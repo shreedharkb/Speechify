@@ -1,23 +1,35 @@
 import React from 'react';
 
-// The Navbar receives the 'setPage' function as a prop to change the current view.
-export default function Navbar({ setPage }) {
+// The Navbar now receives the 'user' object and 'onLogout' function as props.
+export default function Navbar({ setPage, user, onLogout }) {
+  
+  // We check if the user object exists to see if someone is logged in.
+  const isLoggedIn = !!user;
+
   return (
-    <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', marginBottom: '2rem' }}>
-      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4f46e5', cursor: 'pointer' }} onClick={() => setPage('home')}>
+    <nav className="navbar">
+      <div className="navbar-brand" onClick={() => setPage('home')}>
         QuizMaster
       </div>
-      <div>
-        <button style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '1rem', marginLeft: '1.5rem', cursor: 'pointer' }} onClick={() => setPage('home')}>
-          Home
-        </button>
-        <button style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '1rem', marginLeft: '1.5rem', cursor: 'pointer' }} onClick={() => setPage('login')}>
-          Login
-        </button>
-        <button style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '1rem', marginLeft: '1.5rem', cursor: 'pointer' }} onClick={() => setPage('signup')}>
-          Sign Up
-        </button>
+      <div className="nav-links">
+        <button onClick={() => setPage('home')}>Home</button>
+        {isLoggedIn ? (
+          <>
+            {/* This logic is the same, but it's now more reliable */}
+            {user.role === 'teacher' && (
+              <button onClick={() => setPage('dashboard')}>Dashboard</button>
+            )}
+            
+            <button onClick={onLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setPage('login')}>Login</button>
+            <button onClick={() => setPage('signup')}>Sign Up</button>
+          </>
+        )}
       </div>
     </nav>
   );
 }
+

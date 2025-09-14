@@ -14,16 +14,17 @@ body {
   background-color: var(--secondary-color);
   color: var(--text-color);
   margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
 }
 
 #root {
   width: 100%;
-  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
   padding: 1rem;
 }
 
@@ -38,6 +39,7 @@ body {
   margin: 2rem auto;
   border: 1px solid var(--border-color);
   animation: fadeIn 0.5s ease-in-out;
+  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -45,16 +47,84 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Navbar Styles */
+/* Container for Login/Signup/Dashboard forms to control width */
+.form-window {
+  max-width: 550px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* General Button Styling */
+.btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Form Styles */
+.form-container {
+  display: flex;
+  flex-direction: column;
+}
+.form-group {
+  margin-bottom: 1.5rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+/* Styles for both input fields and textareas */
+.form-group input, 
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+/* Links inside form text */
+.form-container p, .form-window p {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+.form-container p a, .form-window p a {
+    color: var(--primary-color);
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+}
+.form-container p a:hover, .form-window p a:hover {
+    text-decoration: underline;
+}
+
+/* Navbar styles */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
   background-color: var(--background-color);
-  border-radius: 1rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
 }
 .navbar-brand {
   font-size: 1.5rem;
@@ -76,90 +146,6 @@ body {
   color: var(--primary-color);
 }
 
-/* Form Styles (Login & Signup) */
-.form-container {
-  display: flex;
-  flex-direction: column;
-}
-.form-title {
-  font-size: 2rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-.form-subtitle {
-  text-align: center;
-  color: var(--muted-text-color);
-  margin-bottom: 2rem;
-}
-.form-subtitle span {
-  color: var(--primary-color);
-  font-weight: 500;
-  cursor: pointer;
-}
-.form-group {
-  margin-bottom: 1.5rem;
-}
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-.form-group input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
-  font-size: 1rem;
-  box-sizing: border-box;
-}
-.form-group input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
-}
-.btn {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  background-color: var(--primary-color);
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.btn:hover {
-  background-color: var(--primary-hover);
-}
-
-/* Home Page Styles */
-.home-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-.home-instructions {
-  line-height: 1.6;
-  font-size: 1.1rem;
-  color: var(--muted-text-color);
-}
-.home-instructions h3 {
-  color: var(--text-color);
-  margin-top: 2rem;
-}
-.home-instructions ul {
-  list-style-type: disc;
-  padding-left: 20px;
-}
-.start-quiz-btn {
-  display: block;
-  width: fit-content;
-  margin: 2rem auto 0 auto;
-  padding: 0.75rem 2rem;
-}
 
 /* Quiz Page Styles */
 .quiz-question {
@@ -174,13 +160,6 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-.answer-input-container input {
-  flex-grow: 1;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
-  font-size: 1rem;
 }
 .mic-btn {
   background-color: var(--secondary-color);
@@ -202,6 +181,9 @@ body {
   height: 20px;
   color: var(--muted-text-color);
 }
-.submit-quiz-btn {
-  margin-top: 1rem;
+
+/* Center-align headings */
+h1, h2, h3 {
+    text-align: center;
 }
+

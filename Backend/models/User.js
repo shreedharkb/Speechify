@@ -16,6 +16,14 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
+  // --- NEW FIELD ---
+  // This adds a 'role' to each user document.
+  // By default, any new user who signs up will have the role of 'student'.
+  role: {
+    type: String,
+    enum: ['student', 'teacher'], // The role can only be one of these two values
+    default: 'student',
+  },
 });
 
 // Create and export the User model

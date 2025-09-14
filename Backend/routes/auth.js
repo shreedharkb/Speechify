@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
+// Import all three functions from the controller
+const { register, login, makeTeacher } = require('../controllers/authController');
 
 // Define the registration route
-// POST /api/auth/register
-router.post('/register', authController.register);
+router.post('/register', register);
 
 // Define the login route
-// POST /api/auth/login
-router.post('/login', authController.login);
+router.post('/login', login);
+
+// --- NEW ROUTE ---
+// Define the route to make a user a teacher
+router.post('/make-teacher', makeTeacher);
 
 module.exports = router;
-
