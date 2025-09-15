@@ -1,69 +1,51 @@
-const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
-const FormData = require('form-data');
+const { SpeechClient } = require('@google-cloud/speech');
+
+// Set up Google credentials
+process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, '../google-credentials.json');
+const client = new SpeechClient();
 
 // POST /api/whisper/transcribe
 exports.transcribe = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ msg: 'No audio file uploaded.' });
+    const audioFile = req.file;
+    if (!audioFile) return res.status(400).json({ error: 'No audio file uploaded.' });
+
+    // Read audio file and convert to base64
+    const audioBytes = fs.readFileSync(audioFile.path).toString('base64');
+
+
+    // Choose encoding and sample rate based on file type
+    let encoding = 'WEBM_OPUS';
+    let sampleRateHertz = 48000;
+    if (audioFile.mimetype === 'audio/wav') {
+      encoding = 'LINEAR16';
+      sampleRateHertz = 16000;
     }
-    // Path to uploaded audio file
-    const audioPath = path.join(__dirname, '..', req.file.path);
-    // Log file info for debugging
-    console.log('Audio file info:', {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: audioPath
-    });
-
-    // Convert webm to wav using ffmpeg
-    const wavPath = audioPath.replace(/\.[^/.]+$/, '') + '.wav';
-    await new Promise((resolve, reject) => {
-      exec(`ffmpeg -y -i "${audioPath}" "${wavPath}"`, (error, stdout, stderr) => {
-        if (error) {
-          console.error('ffmpeg conversion error:', error);
-          reject(error);
-        } else {
-          console.log('ffmpeg conversion stdout:', stdout);
-          console.log('ffmpeg conversion stderr:', stderr);
-          resolve();
-        }
-      });
-    });
-
-    // Send to Whisper API (OpenAI)
-    const formData = new FormData();
-    formData.append('file', fs.createReadStream(wavPath));
-    formData.append('model', 'whisper-1');
-
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (!openaiApiKey) {
-      return res.status(500).json({ msg: 'OpenAI API key not set.' });
+    if (audioFile.mimetype === 'audio/mp3') {
+      encoding = 'MP3';
+      sampleRateHertz = 16000;
     }
 
-    const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
-      headers: {
-        ...formData.getHeaders(),
-        'Authorization': `Bearer ${openaiApiKey}`,
+    const request = {
+      audio: { content: audioBytes },
+      config: {
+        encoding,
+        sampleRateHertz,
+        languageCode: 'en-US',
       },
-    });
+    };
 
-    // Clean up uploaded files
-    fs.unlinkSync(audioPath);
-    fs.unlinkSync(wavPath);
+    const [response] = await client.recognize(request);
+    const transcription = response.results.map(r => r.alternatives[0].transcript).join('\n');
+    res.json({ text: transcription });
 
-    res.json({ text: response.data.text });
+    // Clean up
+    fs.unlinkSync(audioFile.path);
   } catch (err) {
-    console.error('Whisper transcription error:', err);
-    if (err.response && err.response.data) {
-      console.error('Whisper API response:', err.response.data);
-      res.status(500).json({ msg: 'Transcription failed.', error: err.response.data });
-    } else {
-      res.status(500).json({ msg: 'Transcription failed.', error: err.message });
-    }
+    console.error('Google Speech-to-Text error:', err);
+    res.status(500).json({ error: 'Transcription failed', details: err.message });
   }
 };
+

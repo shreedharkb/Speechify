@@ -65,14 +65,25 @@ export default function QuizPage({ setPage }) {
       }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new window.MediaRecorder(stream);
+        // Try to use a supported MIME type for audio
+        let options = {};
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          options.mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          options.mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+          options.mimeType = 'audio/wav';
+        }
+        const recorder = new window.MediaRecorder(stream, options);
         chunksRef.current = [];
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) chunksRef.current.push(e.data);
         };
         recorder.onstop = () => {
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
           setAudioBlob(blob);
+          // For debugging: log blob size and type
+          console.log('Recorded audio blob:', blob.size, blob.type);
           uploadAudio(id, blob);
         };
         setMediaRecorder(recorder);
@@ -213,10 +224,15 @@ export default function QuizPage({ setPage }) {
                   >
                     <MicIcon />
                   </button>
+                  {/* Only show error or status, not transcript */}
                   {transcription[q._id] && (
-                    <span style={{ marginLeft: '1rem', color: transcription[q._id] === 'Transcribing...' ? '#6b7280' : (transcription[q._id] === 'Listening...' ? '#2563eb' : (transcription[q._id].toLowerCase().includes('failed') ? '#ef4444' : '#16a34a')) }}>
-                      {transcription[q._id]}
-                    </span>
+                    (transcription[q._id] === 'Transcribing...' || transcription[q._id] === 'Listening...') ? (
+                      <span style={{ marginLeft: '1rem', color: '#6b7280' }}>{transcription[q._id]}</span>
+                    ) : (
+                      transcription[q._id].toLowerCase().includes('failed') || transcription[q._id].toLowerCase().includes('error') ? (
+                        <span style={{ marginLeft: '1rem', color: '#ef4444' }}>{transcription[q._id]}</span>
+                      ) : null
+                    )
                   )}
                 </div>
               </div>

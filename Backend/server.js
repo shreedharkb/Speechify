@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -43,3 +44,9 @@ mongoose.connect(MONGO_URI)
     process.exit(1); // Exit if the database connection fails
   });
 
+
+
+
+
+  
+  
