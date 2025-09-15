@@ -17,8 +17,8 @@ app.use(cors());
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
-// Make sure this is your correct connection string.
-const MONGO_URI = 'mongodb+srv://shreedharkb4_db_user:shreedhariiit23@quizmasterdeployment.bp14rgx.mongodb.net/?retryWrites=true&w=majority&appName=QuizMasterDeployment';
+// Use environment variable for MongoDB URI (set in Vercel dashboard)
+const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
   .then(() => {
