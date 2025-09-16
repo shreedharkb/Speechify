@@ -12,18 +12,22 @@ const questionRoutes = require('./routes/questions'); // New route for questions
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Force CORS headers for all responses (fix for Render)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://speechify-tau.vercel.app');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Keep CORS package for local dev
 app.use(cors({
   origin: ['https://speechify-tau.vercel.app', 'http://localhost:5173'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Handle preflight requests for all routes
-app.options('*', cors({
-  origin: ['https://speechify-tau.vercel.app', 'http://localhost:5173'],
-  credentials: true,
+  credentials: true
 }));
 app.use(express.json());
 
