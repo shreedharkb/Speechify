@@ -12,28 +12,16 @@ const questionRoutes = require('./routes/questions'); // New route for questions
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Force CORS headers for all responses (fix for Render)
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://speechify-tau.vercel.app');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
-// Keep CORS package for local dev
+// Simple CORS for local development
 app.use(cors({
-  origin: ['https://speechify-tau.vercel.app', 'http://localhost:5173'],
+  origin: 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
-// Use environment variable for MongoDB URI (set in Vercel dashboard)
-const MONGO_URI = process.env.MONGO_URI;
+// Use hardcoded MongoDB URI for local development
+const MONGO_URI = 'mongodb+srv://shreedharkb4_db_user:shreedhariiit23@quizmasterdeployment.bp14rgx.mongodb.net/?retryWrites=true&w=majority&appName=QuizMasterDeployment';
 
 mongoose.connect(MONGO_URI)
   .then(() => {
