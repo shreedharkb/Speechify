@@ -9,7 +9,7 @@ export default function DashboardPage({ setPage }) {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5000/api/questions/create', {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

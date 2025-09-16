@@ -32,7 +32,7 @@ export default function QuizPage({ setPage }) {
   const isTeacher = user && user.role === 'teacher';
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/questions')
+  fetch(`${import.meta.env.VITE_API_URL}/api/questions`)
       .then(res => res.json())
       .then(data => setQuestions(data))
       .catch(err => {
@@ -102,7 +102,7 @@ export default function QuizPage({ setPage }) {
     const formData = new FormData();
     formData.append('audio', blob, 'answer.webm');
     try {
-      const res = await fetch('http://localhost:5000/api/whisper/transcribe', {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/whisper/transcribe`, {
         method: 'POST',
         body: formData,
       });
@@ -133,7 +133,7 @@ export default function QuizPage({ setPage }) {
     if (!newQuestion.trim()) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/questions/create', {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export default function QuizPage({ setPage }) {
       if (res.ok) {
         setNewQuestion("");
         // Refresh questions
-        const updated = await fetch('http://localhost:5000/api/questions').then(r => r.json());
+  const updated = await fetch(`${import.meta.env.VITE_API_URL}/api/questions`).then(r => r.json());
         setQuestions(updated);
       }
     } catch (err) {

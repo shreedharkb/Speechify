@@ -19,7 +19,7 @@ export default function TeacherDashboard({ setPage }) {
 
     try {
       // 2. Make the API call to our protected backend route
-      const response = await fetch('http://localhost:5000/api/questions/create', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

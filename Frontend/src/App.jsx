@@ -181,7 +181,7 @@ const LoginPage = ({ setPage, onLoginSuccess }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
@@ -213,7 +213,7 @@ const SignupPage = ({ setPage }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, role }),
       });
@@ -245,7 +245,7 @@ const TeacherDashboard = ({ setPage }) => {
       setPage('login'); return;
     }
     try {
-      const response = await fetch('http://localhost:5000/api/questions/create', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
         body: JSON.stringify({ questionText, correctAnswerText }),
