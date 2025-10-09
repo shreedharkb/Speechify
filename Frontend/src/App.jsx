@@ -165,13 +165,31 @@ const Footer = () => (
 );
 
 // --- HOME PAGE COMPONENT ---
-const HomePage = ({ setPage }) => (
-  <div className="page-container">
-    <h1>Welcome to the Quiz!</h1>
-    <div style={{ lineHeight: '1.6' }}><h3>Instructions:</h3><ul><li>This quiz consists of several questions you must answer.</li><li>For each question, you can either type your answer or use the microphone to record it.</li><li>Click "Start Quiz" when you are ready to begin.</li></ul></div>
-    <button className="btn" style={{ width: 'fit-content', margin: '2rem auto 0', display: 'block' }} onClick={() => setPage('quiz')}>Start Quiz</button>
-  </div>
-);
+const HomePage = ({ setPage, user }) => {
+  const handleStartQuiz = () => {
+    if (!user) {
+      alert('You must log in or sign up before starting the quiz.');
+      return;
+    }
+    setPage('quiz');
+  };
+  // If user is a teacher, do not show the quiz start section
+  if (user && user.role === 'teacher') {
+    return (
+      <div className="page-container">
+        <h1>Welcome, Teacher!</h1>
+        <p>Go to the Dashboard to create or manage quizzes.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="page-container">
+      <h1>Welcome to the Quiz!</h1>
+      <div style={{ lineHeight: '1.6' }}><h3>Instructions:</h3><ul><li>This quiz consists of several questions you must answer.</li><li>For each question, you can either type your answer or use the microphone to record it.</li><li>Click "Start Quiz" when you are ready to begin.</li></ul></div>
+      <button className="btn" style={{ width: 'fit-content', margin: '2rem auto 0', display: 'block' }} onClick={handleStartQuiz}>Start Quiz</button>
+    </div>
+  );
+};
 
 
 // --- LOGIN PAGE COMPONENT ---
@@ -314,10 +332,10 @@ export default function App() {
         if (user && user.role === 'teacher') {
           return <DashboardPage setPage={setPage} />;
         }
-        return <HomePage setPage={setPage} />;
+        return <HomePage setPage={setPage} user={user} />;
       case 'home':
       default:
-        return <HomePage setPage={setPage} />;
+        return <HomePage setPage={setPage} user={user} />;
     }
   };
 

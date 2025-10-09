@@ -1,10 +1,8 @@
+
 const fs = require('fs');
 const path = require('path');
-const { SpeechClient } = require('@google-cloud/speech');
+const { spawn } = require('child_process');
 
-// Set up Google credentials
-process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, '../google-credentials.json');
-const client = new SpeechClient();
 
 // POST /api/whisper/transcribe
 exports.transcribe = async (req, res) => {
@@ -12,39 +10,31 @@ exports.transcribe = async (req, res) => {
     const audioFile = req.file;
     if (!audioFile) return res.status(400).json({ error: 'No audio file uploaded.' });
 
-    // Read audio file and convert to base64
-    const audioBytes = fs.readFileSync(audioFile.path).toString('base64');
+    // Call the local Python script using Faster Whisper
+    const pythonProcess = spawn('python', [path.join(__dirname, '../transcribe.py'), audioFile.path]);
+    let transcription = '';
+    let errorOutput = '';
 
+    pythonProcess.stdout.on('data', (data) => {
+      transcription += data.toString();
+    });
 
-    // Choose encoding and sample rate based on file type
-    let encoding = 'WEBM_OPUS';
-    let sampleRateHertz = 48000;
-    if (audioFile.mimetype === 'audio/wav') {
-      encoding = 'LINEAR16';
-      sampleRateHertz = 16000;
-    }
-    if (audioFile.mimetype === 'audio/mp3') {
-      encoding = 'MP3';
-      sampleRateHertz = 16000;
-    }
+    pythonProcess.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
 
-    const request = {
-      audio: { content: audioBytes },
-      config: {
-        encoding,
-        sampleRateHertz,
-        languageCode: 'en-US',
-      },
-    };
-
-    const [response] = await client.recognize(request);
-    const transcription = response.results.map(r => r.alternatives[0].transcript).join('\n');
-    res.json({ text: transcription });
-
-    // Clean up
-    fs.unlinkSync(audioFile.path);
+    pythonProcess.on('close', (code) => {
+      // Clean up uploaded file
+      fs.unlinkSync(audioFile.path);
+      if (code === 0) {
+        res.json({ text: transcription.trim() });
+      } else {
+        console.error('Faster Whisper error:', errorOutput);
+        res.status(500).json({ error: 'Transcription failed', details: errorOutput });
+      }
+    });
   } catch (err) {
-    console.error('Google Speech-to-Text error:', err);
+    console.error('Faster Whisper integration error:', err);
     res.status(500).json({ error: 'Transcription failed', details: err.message });
   }
 };

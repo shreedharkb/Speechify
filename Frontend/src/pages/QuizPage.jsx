@@ -1,11 +1,14 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 
-// SVG icon for the microphone
+// SVG icon for the microphone (classic style, theme blue)
 const MicIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{width: '20px', height: '20px'}}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5a6 6 0 00-12 0v1.5a6 6 0 006 6zM12 12.75V15m0-6.75v2.25m0-4.5v2.25m0 0A2.25 2.25 0 009.75 6.75h-1.5a2.25 2.25 0 00-2.25 2.25v1.5a2.25 2.25 0 002.25 2.25h1.5A2.25 2.25 0 0012 9V6.75z" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="#4f46e5" />
+    <line x1="12" y1="14" x2="12" y2="22" />
+    <line x1="8" y1="22" x2="16" y2="22" />
+    <path d="M19 10a7 7 0 0 1-14 0" />
+  </svg>
 );
 
 export default function QuizPage({ setPage }) {
@@ -109,7 +112,7 @@ export default function QuizPage({ setPage }) {
       if (res.ok) {
         const data = await res.json();
         setTranscription(prev => ({ ...prev, [id]: data.text }));
-        setAnswers(prev => ({ ...prev, [id]: data.text })); // Auto-fill answer field
+        setAnswers(prev => ({ ...prev, [id]: (prev[id] ? prev[id] + ' ' : '') + data.text })); // Append new transcript
       } else {
         setTranscription(prev => ({ ...prev, [id]: 'Transcription failed.' }));
         alert('Transcription failed.');
@@ -174,7 +177,7 @@ export default function QuizPage({ setPage }) {
             ) : (
               questions.map((q, index) => (
                 <div key={q._id} className="form-group">
-                  <label style={{ fontWeight: '500', marginBottom: '1rem' }}>{index + 1}. {q.questionText}</label>
+                  <label style={{ fontWeight: '600', marginBottom: '1rem', fontSize: '1.25rem' }}>{index + 1}. {q.questionText}</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <input
                       type="text"
@@ -204,7 +207,7 @@ export default function QuizPage({ setPage }) {
           ) : (
             questions.map((q, index) => (
               <div key={q._id} className="form-group">
-                <label style={{ fontWeight: '500', marginBottom: '1rem' }}>{index + 1}. {q.questionText}</label>
+                <label style={{ fontWeight: '600', marginBottom: '1rem', fontSize: '1.25rem' }}>{index + 1}. {q.questionText}</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input
                     type="text"
