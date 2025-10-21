@@ -276,14 +276,28 @@ export default function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const token = getAuthToken();
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      }
+    
+    if (!token || !storedUser) {
+      clearAuth();
+      return;
+    }
+    
+    try {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      
+      // Verify token is still valid
+      fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
+        headers: {
+          'x-auth-token': token
+        }
+      }).catch(() => {
+        clearAuth();
+      });
+    } catch (e) {
+      clearAuth();
     }
   }, []);
 

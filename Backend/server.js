@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 
 // Route Imports
 const authRoutes = require('./routes/auth');
-const questionRoutes = require('./routes/questions'); // New route for questions
+const questionRoutes = require('./routes/questions');
+const quizRoutes = require('./routes/quiz'); // New route for quizzes
 
 
 // Initialize Express App
@@ -32,6 +33,8 @@ mongoose.connect(MONGO_URI)
   app.use('/api/auth', authRoutes);
   // Use the new question routes
   app.use('/api/questions', questionRoutes);
+  // Use the quiz routes
+  app.use('/api/quiz', quizRoutes);
   // Use the whisper transcription route
   const whisperRoutes = require('./routes/whisper');
   app.use('/api/whisper', whisperRoutes);

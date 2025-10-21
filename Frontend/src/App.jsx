@@ -141,9 +141,7 @@ const Navbar = ({ setPage, user, onLogout }) => {
         <button onClick={() => setPage('home')}>Home</button>
         {isLoggedIn ? (
           <>
-            {user.role === 'teacher' && (
-              <button onClick={() => setPage('dashboard')}>Dashboard</button>
-            )}
+            <button onClick={() => setPage('dashboard')}>Dashboard</button>
             <button onClick={onLogout}>Logout</button>
           </>
         ) : (
@@ -251,39 +249,9 @@ const SignupPage = ({ setPage }) => {
   );
 };
 
-// --- TEACHER DASHBOARD COMPONENT ---
-const TeacherDashboard = ({ setPage }) => {
-  const [questionText, setQuestionText] = useState('');
-  const [correctAnswerText, setCorrectAnswerText] = useState('');
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('You are not logged in!');
-      setPage('login'); return;
-    }
-    try {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-        body: JSON.stringify({ questionText, correctAnswerText }),
-      });
-      if (response.ok) {
-        alert('Question created successfully!');
-        setQuestionText('');
-        setCorrectAnswerText('');
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.msg}`);
-      }
-    } catch (error) {
-      alert('An error occurred while creating the question.');
-    }
-  };
-  return (
-    <div className="page-container form-window"><h1>Teacher Dashboard</h1><h3>Create a New Question</h3><form className="form-container" onSubmit={handleSubmit}><div className="form-group"><label htmlFor="questionText">Question Text</label><textarea id="questionText" rows="3" value={questionText} onChange={(e) => setQuestionText(e.target.value)} required /></div><div className="form-group"><label htmlFor="correctAnswerText">Correct Answer</label><textarea id="correctAnswerText" rows="3" value={correctAnswerText} onChange={(e) => setCorrectAnswerText(e.target.value)} required /></div><button type="submit" className="btn">Add Question</button></form></div>
-  );
-};
+// Import dashboard components
+import TeacherDashboard from './pages/TeacherDashboard.jsx';
+import StudentDashboard from './pages/StudentDashboard.jsx';
 
 
 // --- MAIN APP COMPONENT ---
@@ -319,10 +287,6 @@ export default function App() {
   const renderPage = () => {
     switch (page) {
       case 'quiz':
-        // Students see QuizPage, teachers see DashboardPage
-        if (user && user.role === 'teacher') {
-          return <DashboardPage setPage={setPage} />;
-        }
         return <QuizPage setPage={setPage} />;
       case 'login':
         return <LoginPage setPage={setPage} onLoginSuccess={handleLogin} />;
@@ -330,11 +294,15 @@ export default function App() {
         return <SignupPage setPage={setPage} />;
       case 'dashboard':
         if (user && user.role === 'teacher') {
-          return <DashboardPage setPage={setPage} />;
+          return <TeacherDashboard setPage={setPage} />;
+        } else if (user && user.role === 'student') {
+          return <StudentDashboard setPage={setPage} />;
         }
         return <HomePage setPage={setPage} user={user} />;
       case 'home':
-      default:
+        if (user && user.role === 'student') {
+          return <StudentDashboard setPage={setPage} />;
+        }
         return <HomePage setPage={setPage} user={user} />;
     }
   };

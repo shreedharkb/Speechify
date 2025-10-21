@@ -1,7 +1,7 @@
+import React, { useState, useRef, useEffect } from 'react';
+import QuizList from '../components/quiz/QuizList';
+import QuizAttempt from '../components/quiz/QuizAttempt';
 
-import React, { useEffect, useState, useRef } from 'react';
-
-// SVG icon for the microphone (classic style, theme blue)
 const MicIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="9" y="2" width="6" height="12" rx="3" fill="none" stroke="#4f46e5" />
@@ -35,7 +35,7 @@ export default function QuizPage({ setPage }) {
   const isTeacher = user && user.role === 'teacher';
 
   useEffect(() => {
-  fetch(`${import.meta.env.VITE_API_URL}/api/questions`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/questions`)
       .then(res => res.json())
       .then(data => setQuestions(data))
       .catch(err => {
@@ -105,7 +105,7 @@ export default function QuizPage({ setPage }) {
     const formData = new FormData();
     formData.append('audio', blob, 'answer.webm');
     try {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/whisper/transcribe`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/whisper/transcribe`, {
         method: 'POST',
         body: formData,
       });
@@ -136,7 +136,7 @@ export default function QuizPage({ setPage }) {
     if (!newQuestion.trim()) return;
     try {
       const token = localStorage.getItem('token');
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/create`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ export default function QuizPage({ setPage }) {
       if (res.ok) {
         setNewQuestion("");
         // Refresh questions
-  const updated = await fetch(`${import.meta.env.VITE_API_URL}/api/questions`).then(r => r.json());
+        const updated = await fetch(`${import.meta.env.VITE_API_URL}/api/questions`).then(r => r.json());
         setQuestions(updated);
       }
     } catch (err) {
@@ -188,7 +188,7 @@ export default function QuizPage({ setPage }) {
                     />
                     <button
                       type="button"
-                      onClick={() => alert('Mic recording not implemented yet.')}
+                      onClick={() => handleMicClick(q._id)}
                       style={{ border: '1px solid #d1d5db', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'none' }}
                     >
                       <MicIcon />
