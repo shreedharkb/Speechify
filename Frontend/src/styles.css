@@ -47,6 +47,17 @@ main {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
 /* Container for Login/Signup/Dashboard forms to control width */
 .form-window {
   max-width: 550px;

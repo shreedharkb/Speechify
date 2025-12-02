@@ -15,10 +15,15 @@ const QuizAttemptSchema = new Schema({
   answers: [{
     question: { type: String, required: true },
     studentAnswer: { type: String, required: true },
+    correctAnswer: { type: String },
     isCorrect: { type: Boolean, required: true },
-    similarityScore: { type: Number }
+    pointsEarned: { type: Number, default: 0 },
+    maxPoints: { type: Number, default: 10 },
+    similarityScore: { type: Number },
+    explanation: { type: String }
   }],
-  finalScore: { type: Number, required: true },
+  score: { type: Number, required: true },
+  startedAt: { type: Date },
   submittedAt: { type: Date, default: Date.now },
 });
 

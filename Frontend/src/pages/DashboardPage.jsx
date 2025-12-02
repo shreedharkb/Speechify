@@ -97,58 +97,165 @@ export default function DashboardPage({ setPage }) {
   };
 
   return (
-    <div className="page-container">
-      <h1>Teacher Dashboard</h1>
-      <h3>Create a New Quiz</h3>
+    <div className="page-container" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Professional Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        borderRadius: '16px',
+        padding: '2.5rem',
+        color: 'white',
+        marginBottom: '2rem',
+        boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)'
+      }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem', margin: 0 }}>Create New Quiz</h1>
+        <p style={{ fontSize: '1rem', opacity: 0.9, margin: 0 }}>Design and schedule your quiz with customizable questions</p>
+      </div>
       
       <form onSubmit={handleSubmit}>
-        {/* Quiz Details Section */}
-        <div className="quiz-details">
-          <div className="form-group">
-            <label htmlFor="quizTitle">Quiz Title</label>
-            <input
-              type="text"
-              id="quizTitle"
-              value={quizData.title}
-              onChange={(e) => setQuizData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter quiz title"
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="subject">Subject</label>
-            <input
-              type="text"
-              id="subject"
-              value={quizData.subject}
-              onChange={(e) => setQuizData(prev => ({ ...prev, subject: e.target.value }))}
-              placeholder="Enter subject"
-              required
-            />
+        {/* Quiz Details Section - Professional Design */}
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '2rem',
+          marginBottom: '2rem',
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.75rem' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <h2 style={{ fontSize: '1.375rem', fontWeight: '600', color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>
+              Quiz Details
+            </h2>
           </div>
 
-          <div className="datetime-group">
+          <div style={{ display: 'grid', gap: '1.5rem' }}>
             <div className="form-group">
-              <label htmlFor="startTime">Start Time</label>
+              <label htmlFor="quizTitle" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151', fontSize: '0.875rem' }}>Quiz Title</label>
               <input
-                type="datetime-local"
-                id="startTime"
-                value={quizData.startTime}
-                onChange={(e) => setQuizData(prev => ({ ...prev, startTime: e.target.value }))}
+                type="text"
+                id="quizTitle"
+                value={quizData.title}
+                onChange={(e) => setQuizData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter quiz title"
                 required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem',
+                  outline: 'none',
+                  transition: 'all 0.15s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#667eea';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#D1D5DB';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="subject" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151', fontSize: '0.875rem' }}>Subject</label>
+              <input
+                type="text"
+                id="subject"
+                value={quizData.subject}
+                onChange={(e) => setQuizData(prev => ({ ...prev, subject: e.target.value }))}
+                placeholder="Enter subject"
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem',
+                  outline: 'none',
+                  transition: 'all 0.15s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#667eea';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#D1D5DB';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="endTime">End Time</label>
-              <input
-                type="datetime-local"
-                id="endTime"
-                value={quizData.endTime}
-                onChange={(e) => setQuizData(prev => ({ ...prev, endTime: e.target.value }))}
-                required
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div className="form-group">
+                <label htmlFor="startTime" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151', fontSize: '0.875rem' }}>Start Time</label>
+                <input
+                  type="datetime-local"
+                  id="startTime"
+                  value={quizData.startTime}
+                  onChange={(e) => setQuizData(prev => ({ ...prev, startTime: e.target.value }))}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '0.9375rem',
+                    outline: 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#D1D5DB';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="endTime" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151', fontSize: '0.875rem' }}>End Time</label>
+                <input
+                  type="datetime-local"
+                  id="endTime"
+                  value={quizData.endTime}
+                  onChange={(e) => setQuizData(prev => ({ ...prev, endTime: e.target.value }))}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '0.9375rem',
+                    outline: 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#D1D5DB';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

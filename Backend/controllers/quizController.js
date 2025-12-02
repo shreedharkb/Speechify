@@ -1,5 +1,6 @@
 const Quiz = require('../models/Quiz');
 const QuizEvent = require('../models/QuizEvent');
+const User = require('../models/User');
 
 // Create a new quiz
 exports.createQuiz = async (req, res) => {
@@ -63,6 +64,15 @@ exports.createQuiz = async (req, res) => {
     console.log('Quiz saved successfully:', savedQuiz);
     console.log('QuizEvent saved successfully:', savedQuizEvent);
     
+    // Update teacher's quizzesCreated array
+    await User.findByIdAndUpdate(
+      req.user.id,
+      { $addToSet: { quizzesCreated: savedQuizEvent._id } },
+      { new: true }
+    );
+
+    console.log('Teacher profile updated with quiz reference');
+    
     res.json({ 
       msg: 'Quiz created successfully',
       quiz: savedQuiz,
@@ -100,6 +110,9 @@ exports.getAllQuizzes = async (req, res) => {
       .populate('createdBy', 'name')
       .sort({ startTime: 1 });
     
+    // Get QuizAttempt model to count attempts
+    const QuizAttempt = require('../models/QuizAttempt');
+    
     console.log('All quiz events:', quizEvents.map(event => ({
       id: event._id,
       title: event.title,
@@ -111,7 +124,7 @@ exports.getAllQuizzes = async (req, res) => {
     console.log(`Found ${quizEvents.length} quiz events`);
 
     // Add status and time information to each quiz event
-    const updatedQuizEvents = quizEvents.map(event => {
+    const updatedQuizEvents = await Promise.all(quizEvents.map(async (event) => {
       const eventData = event.toObject();
       const startDate = new Date(event.startTime);
       const endDate = new Date(event.endTime);
@@ -119,6 +132,10 @@ exports.getAllQuizzes = async (req, res) => {
       // Format dates for display
       eventData.formattedStartTime = startDate.toLocaleString();
       eventData.formattedEndTime = endDate.toLocaleString();
+
+      // Calculate quiz duration in minutes (from startTime to endTime)
+      const durationMs = endDate - startDate;
+      eventData.duration = Math.floor(durationMs / (1000 * 60)); // in minutes
 
       // Calculate status
       if (now >= startDate && now <= endDate) {
@@ -141,9 +158,20 @@ exports.getAllQuizzes = async (req, res) => {
         eventData.startsIn = { hours: 0, minutes: 0 };
       }
 
-      console.log(`Quiz ${event._id}: ${eventData.status}, Time remaining: ${eventData.timeRemaining} minutes`);
+      // Count attempts for this quiz by the current student
+      if (req.user && req.user.id) {
+        const attemptCount = await QuizAttempt.countDocuments({
+          quiz: event._id,
+          student: req.user.id
+        });
+        eventData.attempts = attemptCount;
+      } else {
+        eventData.attempts = 0;
+      }
+
+      console.log(`Quiz ${event._id}: ${eventData.status}, Duration: ${eventData.duration} minutes, Time remaining: ${eventData.timeRemaining} minutes, Attempts: ${eventData.attempts}`);
       return eventData;
-    });
+    }));
 
     res.json({
       quizEvents: updatedQuizEvents,

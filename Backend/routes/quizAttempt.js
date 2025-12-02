@@ -1,9 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { submitQuizAttempt } = require('../controllers/quizController');
+const { submitQuizAttempt, checkQuizAttempt, getStudentQuizHistory, getAllQuizAttempts } = require('../controllers/quizAttemptController');
 const authMiddleware = require('../middleware/authMiddleware');
 
+// Get all quiz attempts (for teachers)
+router.get('/all', authMiddleware, getAllQuizAttempts);
+
+// Check if student has already attempted a quiz
+router.get('/check/:quizEventId', authMiddleware, checkQuizAttempt);
+
+// Get student's quiz history
+router.get('/history', authMiddleware, getStudentQuizHistory);
+
 // Submit a quiz attempt
-router.post('/:quizId/submit', authMiddleware, submitQuizAttempt);
+router.post('/submit', authMiddleware, submitQuizAttempt);
 
 module.exports = router;

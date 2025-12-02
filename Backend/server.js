@@ -35,6 +35,9 @@ mongoose.connect(MONGO_URI)
   app.use('/api/questions', questionRoutes);
   // Use the quiz routes
   app.use('/api/quiz', quizRoutes);
+  // Use the quiz attempt routes
+  const quizAttemptRoutes = require('./routes/quizAttempt');
+  app.use('/api/quiz-attempt', quizAttemptRoutes);
   // Use the whisper transcription route
   const whisperRoutes = require('./routes/whisper');
   app.use('/api/whisper', whisperRoutes);

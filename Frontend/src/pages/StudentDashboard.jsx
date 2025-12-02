@@ -1,106 +1,63 @@
 import React, { useEffect, useState } from 'react';
 import QuizList from '../components/quiz/QuizList';
 
-export default function StudentDashboard({ setPage }) {
+export default function StudentDashboard({ setPage, user }) {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    // Get user info from localStorage
-    try {
-      const userString = localStorage.getItem('user');
-      if (userString) {
-        const user = JSON.parse(userString);
-        setUserName(user.name || 'Student');
+    // Get user info from props or localStorage
+    if (user) {
+      setUserName(user.name || 'Student');
+    } else {
+      try {
+        const userString = localStorage.getItem('user');
+        if (userString) {
+          const storedUser = JSON.parse(userString);
+          setUserName(storedUser.name || 'Student');
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
       }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
     }
-  }, []);
+  }, [user]);
 
-  const handleQuizSelect = (quizEvent) => {
-    // Store the selected quiz event in localStorage for the quiz page to use
-    localStorage.setItem('currentQuizEvent', JSON.stringify(quizEvent));
-    setPage('quiz');
+  const handleQuizSelect = async (quizEvent) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Check if student has already attempted this quiz
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/quiz-attempt/check/${quizEvent._id}`,
+        {
+          headers: {
+            'x-auth-token': token
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.attempted) {
+          alert('You have already completed this quiz. You cannot take it again.');
+          return;
+        }
+      }
+
+      // Store the selected quiz event in localStorage for the quiz page to use
+      localStorage.setItem('currentQuizEvent', JSON.stringify(quizEvent));
+      setPage('quiz');
+    } catch (error) {
+      console.error('Error checking quiz attempt:', error);
+      // Allow them to proceed if check fails
+      localStorage.setItem('currentQuizEvent', JSON.stringify(quizEvent));
+      setPage('quiz');
+    }
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="welcome-header">
-        <div className="header-content">
-          <h1>Welcome back, {userName}!</h1>
-          <p>Here are your available quizzes. Active quizzes can be taken immediately.</p>
-        </div>
-        <div className="header-actions">
-          <button onClick={() => setPage('home')} className="home-button">
-            Home
-          </button>
-        </div>
-      </div>
-
+    <div style={{ margin: 0, padding: 0 }}>
       {/* Quiz List Component */}
-      <QuizList onQuizSelect={handleQuizSelect} />
-
-      <style>{`
-        .dashboard-container {
-          min-height: calc(100vh - 64px);
-          background-color: #f3f4f6;
-          padding: 2rem 1rem;
-        }
-
-        .welcome-header {
-          background: white;
-          border-radius: 12px;
-          padding: 2rem;
-          margin-bottom: 2rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          max-width: 1200px;
-          margin-left: auto;
-          margin-right: auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .header-content h1 {
-          font-size: 1.875rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin: 0;
-          margin-bottom: 0.5rem;
-        }
-
-        .header-content p {
-          color: #6b7280;
-          margin: 0;
-        }
-
-        .home-button {
-          padding: 0.5rem 1rem;
-          background-color: #4f46e5;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-
-        .home-button:hover {
-          background-color: #4338ca;
-        }
-
-        @media (max-width: 640px) {
-          .welcome-header {
-            flex-direction: column;
-            text-align: center;
-            gap: 1rem;
-          }
-
-          .header-content h1 {
-            font-size: 1.5rem;
-          }
-        }
-      `}</style>
+      <QuizList onQuizSelect={handleQuizSelect} user={user || { name: userName }} setPage={setPage} />
     </div>
   );
 }

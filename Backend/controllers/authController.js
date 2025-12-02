@@ -40,14 +40,19 @@ exports.login = async (req, res) => {
         role: user.role
       },
     };
+    // Use JWT secret from environment for signing tokens
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not set in environment variables');
+      return res.status(500).json({ msg: 'Server configuration error' });
+    }
+
     jwt.sign(
       payload,
-      'your_jwt_secret', // IMPORTANT: Replace with your actual secret
+      process.env.JWT_SECRET,
       { expiresIn: '1h' },
       (err, token) => {
         if (err) throw err;
-        // ** THE KEY CHANGE IS HERE **
-        // We now send back the token AND a user object with the role.
+        // Send back the token AND a user object with the role.
         res.json({
           token,
           user: {

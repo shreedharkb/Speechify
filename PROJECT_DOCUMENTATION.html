@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speechify - Complete Technical Documentation</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        @media print {
+            body {
+                font-size: 11pt;
+            }
+            .no-print {
+                display: none;
+            }
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+            pre, table {
+                page-break-inside: avoid;
+            }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #fff;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin: 40px 0 20px 0;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+        }
+        
+        h1:first-child {
+            margin-top: 0;
+        }
+        
+        h2 {
+            color: #34495e;
+            font-size: 2em;
+            margin: 35px 0 15px 0;
+            border-bottom: 2px solid #95a5a6;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #7f8c8d;
+            font-size: 1.5em;
+            margin: 25px 0 12px 0;
+        }
+        
+        h4 {
+            color: #2c3e50;
+            font-size: 1.2em;
+            margin: 20px 0 10px 0;
+        }
+        
+        p {
+            margin: 12px 0;
+            text-align: justify;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        
+        pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+            line-height: 1.5;
+        }
+        
+        pre code {
+            background: transparent;
+            color: #ecf0f1;
+            padding: 0;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 25px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #555;
+            font-style: italic;
+        }
+        
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #ecf0f1;
+            margin: 40px 0;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .toc h2 {
+            margin-top: 0;
+            border-bottom: none;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+        }
+        
+        .toc a {
+            color: #2c3e50;
+        }
+        
+        .button-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .print-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .print-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="button-container no-print">
+        <button class="print-btn" onclick="window.print()">🖨️ Print to PDF</button>
+    </div>
+    
+    <div id="content">
+        <!-- Content will be loaded here -->
+    </div>
+    
+    <script>
+        // Read and convert markdown to HTML
+        fetch('PROJECT_DOCUMENTATION.md')
+            .then(response => response.text())
+            .then(markdown => {
+                // Simple markdown to HTML converter
+                let html = markdown
+                    // Headers
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    // Bold
+                    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                    // Italic
+                    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                    // Code blocks
+                    .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+                    // Inline code
+                    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                    // Links
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>')
+                    // Horizontal rules
+                    .replace(/^---$/gim, '<hr>')
+                    // Line breaks
+                    .replace(/\n\n/g, '</p><p>')
+                    // Lists
+                    .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                    .replace(/^- (.*$)/gim, '<li>$1</li>')
+                    .replace(/^(\d+)\. (.*$)/gim, '<li>$2</li>');
+                
+                // Wrap in paragraphs
+                html = '<p>' + html + '</p>';
+                
+                // Fix paragraph tags around headers
+                html = html.replace(/<p>(<h[1-6]>)/g, '$1');
+                html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
+                
+                // Fix paragraph tags around other block elements
+                html = html.replace(/<p>(<pre>)/g, '$1');
+                html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+                html = html.replace(/<p>(<hr>)/g, '$1');
+                html = html.replace(/(<\/hr>)<\/p>/g, '$1');
+                
+                document.getElementById('content').innerHTML = html;
+            });
+    </script>
+</body>
+</html>
