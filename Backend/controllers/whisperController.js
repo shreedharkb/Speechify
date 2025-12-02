@@ -1,8 +1,9 @@
-
 const fs = require('fs');
-const path = require('path');
-const { spawn } = require('child_process');
+const FormData = require('form-data');
+const axios = require('axios');
 
+// Whisper service URL - can be configured via environment variable
+const WHISPER_SERVICE_URL = process.env.WHISPER_SERVICE_URL || 'http://localhost:5000';
 
 // POST /api/whisper/transcribe
 exports.transcribe = async (req, res) => {
@@ -14,20 +15,24 @@ exports.transcribe = async (req, res) => {
 
     console.log('Transcribing audio file:', audioFile.filename, 'Size:', audioFile.size);
 
-    // Call the local Python script using Faster Whisper
-    const pythonProcess = spawn('python', [path.join(__dirname, '../transcribe.py'), audioFile.path]);
-    let transcription = '';
-    let errorOutput = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      transcription += data.toString();
+    // Create form data to send to the Whisper service
+    const formData = new FormData();
+    formData.append('audio', fs.createReadStream(audioFile.path), {
+      filename: audioFile.originalname,
+      contentType: audioFile.mimetype
     });
 
-    pythonProcess.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-    });
+    try {
+      // Send request to the dockerized Whisper service
+      const response = await axios.post(`${WHISPER_SERVICE_URL}/transcribe`, formData, {
+        headers: {
+          ...formData.getHeaders()
+        },
+        timeout: 120000, // 2 minute timeout
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
+      });
 
-    pythonProcess.on('close', (code) => {
       // Clean up uploaded file
       try {
         fs.unlinkSync(audioFile.path);
@@ -35,47 +40,44 @@ exports.transcribe = async (req, res) => {
         console.error('Error cleaning up file:', cleanupError);
       }
 
-      if (code === 0 && transcription.trim()) {
-        console.log('Transcription successful:', transcription.trim());
-        res.json({ text: transcription.trim() });
-      } else {
-        console.error('Faster Whisper error (code ' + code + '):', errorOutput);
-        
-        // Check for common errors
-        if (errorOutput.includes('OMP: Error')) {
-          res.status(500).json({ 
-            error: 'Python environment error. OpenMP library conflict detected.',
-            details: 'Please restart the backend server to apply the fix.'
-          });
-        } else if (errorOutput.includes('ModuleNotFoundError') || errorOutput.includes('No module named')) {
-          res.status(500).json({ 
-            error: 'Missing Python package. Please install faster-whisper.',
-            details: 'Run: pip install faster-whisper'
-          });
-        } else {
-          res.status(500).json({ 
-            error: 'Transcription failed', 
-            details: errorOutput || 'Unknown error'
-          });
-        }
-      }
-    });
+      console.log('Transcription successful:', response.data.text.substring(0, 100) + '...');
+      
+      // Return the transcription text
+      res.json({ text: response.data.text });
 
-    pythonProcess.on('error', (err) => {
-      console.error('Failed to start Python process:', err);
+    } catch (error) {
+      // Clean up uploaded file
       try {
         fs.unlinkSync(audioFile.path);
       } catch (cleanupError) {
         console.error('Error cleaning up file:', cleanupError);
       }
-      res.status(500).json({ 
-        error: 'Failed to start transcription process',
-        details: 'Make sure Python is installed and in PATH'
+
+      console.error('Whisper service error:', error.message);
+      
+      if (error.code === 'ECONNREFUSED') {
+        return res.status(503).json({ 
+          error: 'Whisper service unavailable',
+          details: 'Cannot connect to transcription service. Please ensure the Docker container is running.'
+        });
+      }
+
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        return res.status(error.response.status).json({
+          error: 'Transcription failed',
+          details: error.response.data.details || error.response.data.error || 'Unknown error'
+        });
+      }
+
+      return res.status(500).json({ 
+        error: 'Transcription failed',
+        details: error.message
       });
-    });
+    }
 
   } catch (err) {
-    console.error('Faster Whisper integration error:', err);
+    console.error('Whisper integration error:', err);
     res.status(500).json({ error: 'Transcription failed', details: err.message });
   }
 };

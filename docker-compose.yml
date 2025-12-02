@@ -1,0 +1,17 @@
+services:
+  whisper-service:
+    build:
+      context: ./whisper-service
+      dockerfile: Dockerfile
+    container_name: whisper-transcription
+    ports:
+      - "5000:5000"
+    environment:
+      - KMP_DUPLICATE_LIB_OK=TRUE
+    volumes:
+      - whisper-cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+volumes:
+  whisper-cache:
+    driver: local
