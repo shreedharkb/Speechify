@@ -27,7 +27,7 @@ export default function StudentDashboard({ setPage, user }) {
       
       // Check if student has already attempted this quiz
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/quiz-attempt/check/${quizEvent._id}`,
+        `${import.meta.env.VITE_API_URL}/api/quiz-attempt/check/${quizEvent.id || quizEvent._id}`,
         {
           headers: {
             'x-auth-token': token

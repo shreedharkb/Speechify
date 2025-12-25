@@ -1,6 +1,5 @@
 const QuizEvent = require('../models/QuizEvent');
 const QuizAttempt = require('../models/QuizAttempt');
-const User = require('../models/User');
 const { gradeAnswerWithAI } = require('./gradeController');
 
 const submitQuizAttempt = async (req, res) => {
@@ -21,25 +20,21 @@ const submitQuizAttempt = async (req, res) => {
     }
 
     // Check if student has already attempted this quiz
-    const existingAttempt = await QuizAttempt.findOne({
-      student: userId,
-      quizEvent: quizEventId
-    });
-
+    const existingAttempt = await QuizAttempt.findByStudentAndQuiz(userId, quizEventId);
     if (existingAttempt) {
       return res.status(400).json({ 
         msg: 'You have already submitted this quiz',
         alreadyAttempted: true,
-        attemptId: existingAttempt._id
+        attemptId: existingAttempt.id
       });
     }
 
     // Check if quiz is still active
     const now = new Date();
-    if (now < quizEvent.startTime) {
+    if (now < new Date(quizEvent.startTime)) {
       return res.status(400).json({ msg: 'Quiz has not started yet' });
     }
-    if (now > quizEvent.endTime) {
+    if (now > new Date(quizEvent.endTime)) {
       return res.status(400).json({ msg: 'Quiz has already ended' });
     }
 
@@ -56,18 +51,20 @@ const submitQuizAttempt = async (req, res) => {
       
       if (!question) {
         gradedAnswers.push({
+          questionId: null,
           question: answerObj.question,
           studentAnswer: answerObj.studentAnswer,
           correctAnswer: '',
           isCorrect: false,
           pointsEarned: 0,
+          maxPoints: 10,
           similarityScore: 0,
           explanation: 'Question not found'
         });
         continue;
       }
 
-      // Use AI grading - let Gemini decide the score based on semantic understanding
+      // Use AI grading
       const gradeResult = await gradeAnswerWithAI(
         question.questionText,
         answerObj.studentAnswer,
@@ -80,7 +77,7 @@ const submitQuizAttempt = async (req, res) => {
       let percentageEarned = 0;
       let isCorrect = false;
       
-      // Use Gemini's similarity score directly - trust the AI's judgment
+      // Use AI's similarity score
       percentageEarned = gradeResult.similarityScore;
       
       // Determine if correct based on threshold
@@ -88,7 +85,7 @@ const submitQuizAttempt = async (req, res) => {
         isCorrect = true;
       }
       
-      // Calculate points based on Gemini's similarity assessment
+      // Calculate points based on AI similarity assessment
       pointsEarned = maxPoints * percentageEarned;
       
       // Round to 2 decimal places
@@ -101,40 +98,31 @@ const submitQuizAttempt = async (req, res) => {
       if (isCorrect) correctAnswers++;
 
       gradedAnswers.push({
+        questionId: question.id,
         question: question.questionText,
         studentAnswer: answerObj.studentAnswer,
         correctAnswer: question.correctAnswerText,
         isCorrect: isCorrect,
         pointsEarned: pointsEarned,
-        percentageEarned: percentageEarned,
         maxPoints: maxPoints,
         similarityScore: gradeResult.similarityScore,
         explanation: gradeResult.explanation
       });
       
-      console.log(`Question ${index + 1}: ${isCorrect ? 'CORRECT' : 'INCORRECT'} - ${pointsEarned.toFixed(2)}/${maxPoints} pts (${Math.round(percentageEarned * 100)}%) - Similarity: ${Math.round(gradeResult.similarityScore * 100)}%`);
+      console.log(`Question ${index + 1}: ${isCorrect ? 'CORRECT' : 'INCORRECT'} - ${pointsEarned.toFixed(2)}/${maxPoints} pts - Similarity: ${Math.round(gradeResult.similarityScore * 100)}%`);
     }
 
     // Create quiz attempt record
-    const quizAttempt = new QuizAttempt({
-      student: userId,
-      quizEvent: quizEventId,
+    const quizAttempt = await QuizAttempt.create({
+      quizEventId: quizEventId,
+      studentId: userId,
       answers: gradedAnswers,
       score: totalPoints,
       startedAt: req.body.startedAt || now,
       submittedAt: now
     });
 
-    await quizAttempt.save();
-    console.log('Quiz attempt saved:', quizAttempt._id);
-
-    // Update student's quizzesAttended array
-    await User.findByIdAndUpdate(
-      userId,
-      { $addToSet: { quizzesAttended: quizAttempt._id } },
-      { new: true }
-    );
-    console.log('Student record updated with quiz attempt');
+    console.log('Quiz attempt saved:', quizAttempt.id);
 
     const totalPossible = quizEvent.questions.reduce((sum, q) => sum + (q.points || 10), 0);
     const percentage = totalPossible > 0 ? ((totalPoints / totalPossible) * 100).toFixed(2) : 0;
@@ -147,7 +135,7 @@ const submitQuizAttempt = async (req, res) => {
       correctAnswers: correctAnswers,
       totalQuestions: quizEvent.questions.length,
       answers: gradedAnswers,
-      attemptId: quizAttempt._id
+      attemptId: quizAttempt.id
     });
 
   } catch (err) {
@@ -166,17 +154,14 @@ const checkQuizAttempt = async (req, res) => {
 
     console.log('Checking quiz attempt:', { quizEventId, userId });
 
-    const existingAttempt = await QuizAttempt.findOne({
-      student: userId,
-      quizEvent: quizEventId
-    });
+    const existingAttempt = await QuizAttempt.findByStudentAndQuiz(userId, quizEventId);
 
     if (existingAttempt) {
       return res.json({
         attempted: true,
-        attemptId: existingAttempt._id,
+        attemptId: existingAttempt.id,
         score: existingAttempt.score,
-        submittedAt: existingAttempt.submittedAt
+        submittedAt: existingAttempt.submitted_at
       });
     }
 
@@ -200,18 +185,15 @@ const getStudentQuizHistory = async (req, res) => {
     console.log('Fetching quiz history for student:', userId);
 
     // Get all quiz attempts for the student
-    const attempts = await QuizAttempt.find({ student: userId })
-      .populate('quizEvent', 'title subject startTime endTime')
-      .sort({ submittedAt: -1 });
+    const attempts = await QuizAttempt.findByStudent(userId);
 
     const history = attempts.map(attempt => ({
-      attemptId: attempt._id,
-      quizTitle: attempt.quizEvent?.title || 'Unknown Quiz',
-      quizSubject: attempt.quizEvent?.subject || 'N/A',
+      attemptId: attempt.id,
+      quizTitle: attempt.quiz_title || 'Unknown Quiz',
+      quizSubject: attempt.subject || 'N/A',
       score: attempt.score,
-      startedAt: attempt.startedAt,
-      submittedAt: attempt.submittedAt,
-      answers: attempt.answers
+      startedAt: attempt.started_at,
+      submittedAt: attempt.submitted_at
     }));
 
     res.json({
@@ -234,34 +216,29 @@ const getAllQuizAttempts = async (req, res) => {
 
     console.log('Fetching all quiz attempts for teacher:', userId);
 
-    // Get all quiz attempts with populated student and quiz event data
-    const allAttempts = await QuizAttempt.find()
-      .populate('student', 'name email')
-      .populate({
-        path: 'quizEvent',
-        populate: {
-          path: 'createdBy',
-          select: 'name email'
-        }
-      })
-      .sort({ submittedAt: -1 });
+    // Get all quizzes created by this teacher
+    const teacherQuizzes = await QuizEvent.findByCreator(userId);
+    const quizIds = teacherQuizzes.map(q => q.id);
 
-    console.log('Total attempts in database:', allAttempts.length);
+    if (quizIds.length === 0) {
+      return res.json({
+        totalAttempts: 0,
+        attempts: []
+      });
+    }
 
-    // Filter to only include quizzes created by this teacher
-    const teacherAttempts = allAttempts.filter(attempt => {
-      const hasQuizEvent = attempt.quizEvent != null;
-      const hasCreatedBy = attempt.quizEvent?.createdBy != null;
-      const creatorMatch = attempt.quizEvent?.createdBy?._id?.toString() === userId;
-      
-      return hasQuizEvent && hasCreatedBy && creatorMatch;
-    });
+    // Get all attempts for these quizzes
+    let allAttempts = [];
+    for (const quizId of quizIds) {
+      const attempts = await QuizAttempt.findByQuizEvent(quizId);
+      allAttempts = allAttempts.concat(attempts);
+    }
 
-    console.log('Teacher attempts after filter:', teacherAttempts.length);
+    console.log('Teacher attempts:', allAttempts.length);
 
     res.json({
-      totalAttempts: teacherAttempts.length,
-      attempts: teacherAttempts
+      totalAttempts: allAttempts.length,
+      attempts: allAttempts
     });
 
   } catch (err) {

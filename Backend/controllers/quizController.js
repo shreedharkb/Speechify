@@ -1,19 +1,17 @@
-const Quiz = require('../models/Quiz');
 const QuizEvent = require('../models/QuizEvent');
-const User = require('../models/User');
+const QuizAttempt = require('../models/QuizAttempt');
 
 // Create a new quiz
 exports.createQuiz = async (req, res) => {
   try {
-    const { title, subject, startTime, endTime, questions } = req.body;
+    const { title, subject, description, startTime, endTime, questions } = req.body;
     
-    // Debug log
     console.log('Creating quiz with data:', {
       title,
       subject,
       startTime,
       endTime,
-      questions,
+      questions: questions?.length,
       userId: req.user.id
     });
 
@@ -22,65 +20,30 @@ exports.createQuiz = async (req, res) => {
       return res.status(400).json({ msg: 'Please provide all required fields' });
     }
 
-    // Create new quiz
-    const quiz = new Quiz({
+    // Create quiz event with questions
+    const quizEvent = await QuizEvent.create({
       title,
       subject,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      questions,
-      createdBy: req.user.id, // from auth middleware
-      status: 'upcoming'
-    });
-
-    // Create corresponding quiz event
-    const quizEvent = new QuizEvent({
-      title,
-      subject,
+      description,
+      createdBy: req.user.id,
       startTime: new Date(startTime),
       endTime: new Date(endTime),
       questions: questions.map(q => ({
-        questionText: q.questionText,
-        correctAnswerText: q.correctAnswer,
-        points: q.points
-      })),
-      createdBy: req.user.id
+        questionText: q.questionText || q.question,
+        correctAnswerText: q.correctAnswer || q.correctAnswerText,
+        points: q.points || 10
+      }))
     });
 
-    // Update status based on current time
-    const now = new Date();
-    if (now >= quiz.startTime && now <= quiz.endTime) {
-      quiz.status = 'active';
-    } else if (now > quiz.endTime) {
-      quiz.status = 'completed';
-    }
-
-    // Save both quiz and quiz event
-    const [savedQuiz, savedQuizEvent] = await Promise.all([
-      quiz.save(),
-      quizEvent.save()
-    ]);
-
-    console.log('Quiz saved successfully:', savedQuiz);
-    console.log('QuizEvent saved successfully:', savedQuizEvent);
-    
-    // Update teacher's quizzesCreated array
-    await User.findByIdAndUpdate(
-      req.user.id,
-      { $addToSet: { quizzesCreated: savedQuizEvent._id } },
-      { new: true }
-    );
-
-    console.log('Teacher profile updated with quiz reference');
+    console.log('Quiz created successfully:', quizEvent.id);
     
     res.json({ 
       msg: 'Quiz created successfully',
-      quiz: savedQuiz,
-      quizEvent: savedQuizEvent
+      quizEvent
     });
   } catch (err) {
     console.error('Error creating quiz:', err);
-    res.status(500).json({ msg: 'Server error while creating quiz' });
+    res.status(500).json({ msg: 'Server error while creating quiz', error: err.message });
   }
 };
 
@@ -89,88 +52,66 @@ exports.getAllQuizzes = async (req, res) => {
   try {
     console.log('Fetching quizzes...');
     const now = new Date();
-    console.log('Current date:', now.toISOString());
     
-    // First, let's see if there are any quiz events at all
-    const allQuizEvents = await QuizEvent.find({});
-    console.log('Total quiz events in database:', allQuizEvents.length);
+    // Get all quiz events
+    const quizEvents = await QuizEvent.findAll();
     
-    if (allQuizEvents.length > 0) {
-      console.log('Sample quiz event dates:');
-      allQuizEvents.forEach(event => {
-        console.log(`Quiz ${event._id}:`, {
-          startTime: event.startTime,
-          endTime: event.endTime
-        });
-      });
-    }
-    
-    // Get all events for debugging
-    const quizEvents = await QuizEvent.find({})
-      .populate('createdBy', 'name')
-      .sort({ startTime: 1 });
-    
-    // Get QuizAttempt model to count attempts
-    const QuizAttempt = require('../models/QuizAttempt');
-    
-    console.log('All quiz events:', quizEvents.map(event => ({
-      id: event._id,
-      title: event.title,
-      startTime: event.startTime,
-      endTime: event.endTime,
-      createdBy: event.createdBy
-    })));
-
     console.log(`Found ${quizEvents.length} quiz events`);
 
     // Add status and time information to each quiz event
     const updatedQuizEvents = await Promise.all(quizEvents.map(async (event) => {
-      const eventData = event.toObject();
       const startDate = new Date(event.startTime);
       const endDate = new Date(event.endTime);
 
-      // Format dates for display
-      eventData.formattedStartTime = startDate.toLocaleString();
-      eventData.formattedEndTime = endDate.toLocaleString();
+      // Calculate total points
+      const totalPoints = event.questions.reduce((sum, q) => sum + (q.points || 10), 0);
 
-      // Calculate quiz duration in minutes (from startTime to endTime)
+      // Format dates for display
+      event.formattedStartTime = startDate.toLocaleString();
+      event.formattedEndTime = endDate.toLocaleString();
+
+      // Calculate quiz duration in minutes
       const durationMs = endDate - startDate;
-      eventData.duration = Math.floor(durationMs / (1000 * 60)); // in minutes
+      event.duration = Math.floor(durationMs / (1000 * 60));
 
       // Calculate status
       if (now >= startDate && now <= endDate) {
-        eventData.status = 'active';
+        event.status = 'active';
       } else if (now < startDate) {
-        eventData.status = 'upcoming';
+        event.status = 'upcoming';
+      } else {
+        event.status = 'completed';
       }
 
       // Calculate time information
-      if (eventData.status === 'upcoming') {
+      if (event.status === 'upcoming') {
         const timeUntilStart = startDate - now;
-        eventData.startsIn = {
+        event.startsIn = {
           hours: Math.floor(timeUntilStart / (1000 * 60 * 60)),
           minutes: Math.floor((timeUntilStart % (1000 * 60 * 60)) / (1000 * 60))
         };
-        eventData.timeRemaining = Math.floor(timeUntilStart / (1000 * 60)); // in minutes
-      } else if (eventData.status === 'active') {
+        event.timeRemaining = Math.floor(timeUntilStart / (1000 * 60));
+      } else if (event.status === 'active') {
         const timeUntilEnd = endDate - now;
-        eventData.timeRemaining = Math.floor(timeUntilEnd / (1000 * 60)); // in minutes
-        eventData.startsIn = { hours: 0, minutes: 0 };
+        event.timeRemaining = Math.floor(timeUntilEnd / (1000 * 60));
+        event.startsIn = { hours: 0, minutes: 0 };
       }
 
-      // Count attempts for this quiz by the current student
+      // Check if student has attempted this quiz
       if (req.user && req.user.id) {
-        const attemptCount = await QuizAttempt.countDocuments({
-          quiz: event._id,
-          student: req.user.id
-        });
-        eventData.attempts = attemptCount;
+        const attempt = await QuizAttempt.findByStudentAndQuiz(req.user.id, event.id);
+        event.hasAttempted = !!attempt;
+        event.attempts = attempt ? 1 : 0;
       } else {
-        eventData.attempts = 0;
+        event.hasAttempted = false;
+        event.attempts = 0;
       }
 
-      console.log(`Quiz ${event._id}: ${eventData.status}, Duration: ${eventData.duration} minutes, Time remaining: ${eventData.timeRemaining} minutes, Attempts: ${eventData.attempts}`);
-      return eventData;
+      // Add total points
+      event.totalPoints = totalPoints;
+
+      console.log(`Quiz ${event.id}: ${event.status}, Duration: ${event.duration} minutes, Questions: ${event.questions.length}, Points: ${totalPoints}`);
+      return event;
     }));
 
     res.json({
@@ -179,17 +120,17 @@ exports.getAllQuizzes = async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching quizzes:', err);
-    res.status(500).json({ msg: 'Server error while fetching quizzes' });
+    res.status(500).json({ msg: 'Server error while fetching quizzes', error: err.message });
   }
 };
 
 // Get quizzes by teacher
 exports.getTeacherQuizzes = async (req, res) => {
   try {
-    const quizzes = await Quiz.find({ createdBy: req.user.id });
-    res.json(quizzes);
+    const quizEvents = await QuizEvent.findByCreator(req.user.id);
+    res.json(quizEvents);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching teacher quizzes:', err);
     res.status(500).send('Server error');
   }
 };
@@ -197,16 +138,64 @@ exports.getTeacherQuizzes = async (req, res) => {
 // Get quiz by ID
 exports.getQuizById = async (req, res) => {
   try {
-    const quiz = await Quiz.findById(req.params.id);
+    const quiz = await QuizEvent.findById(req.params.id);
     if (!quiz) {
       return res.status(404).json({ msg: 'Quiz not found' });
     }
     res.json(quiz);
   } catch (err) {
-    console.error(err);
-    if (err.kind === 'ObjectId') {
+    console.error('Error fetching quiz:', err);
+    res.status(500).send('Server error');
+  }
+};
+
+// Delete quiz
+exports.deleteQuiz = async (req, res) => {
+  try {
+    const quiz = await QuizEvent.findById(req.params.id);
+    if (!quiz) {
       return res.status(404).json({ msg: 'Quiz not found' });
     }
+
+    // Check if user is the creator
+    if (quiz.created_by !== req.user.id) {
+      return res.status(403).json({ msg: 'Not authorized to delete this quiz' });
+    }
+
+    await QuizEvent.delete(req.params.id);
+    res.json({ msg: 'Quiz deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting quiz:', err);
+    res.status(500).send('Server error');
+  }
+};
+
+// Update quiz
+exports.updateQuiz = async (req, res) => {
+  try {
+    const { title, subject, description, startTime, endTime } = req.body;
+    const quiz = await QuizEvent.findById(req.params.id);
+    
+    if (!quiz) {
+      return res.status(404).json({ msg: 'Quiz not found' });
+    }
+
+    // Check if user is the creator
+    if (quiz.created_by !== req.user.id) {
+      return res.status(403).json({ msg: 'Not authorized to update this quiz' });
+    }
+
+    const updatedQuiz = await QuizEvent.update(req.params.id, {
+      title,
+      subject,
+      description,
+      startTime: new Date(startTime),
+      endTime: new Date(endTime)
+    });
+
+    res.json({ msg: 'Quiz updated successfully', quiz: updatedQuiz });
+  } catch (err) {
+    console.error('Error updating quiz:', err);
     res.status(500).send('Server error');
   }
 };

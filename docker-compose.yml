@@ -12,6 +12,27 @@ services:
       - whisper-cache:/root/.cache/huggingface
     restart: unless-stopped
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: quiz-postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: quiz_admin
+      POSTGRES_PASSWORD: quiz_secure_password
+      POSTGRES_DB: quiz_app
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./Backend/init-database.sql:/docker-entrypoint-initdb.d/init-database.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quiz_admin -d quiz_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   whisper-cache:
+    driver: local
+  postgres-data:
     driver: local

@@ -50,7 +50,7 @@ export default function QuizPage({ setPage }) {
           'x-auth-token': token
         },
         body: JSON.stringify({
-          quizEventId: quizEvent._id,
+          quizEventId: quizEvent.id || quizEvent._id,
           answers: answers,
           startedAt: quizStartTime // Include when quiz was started
         })

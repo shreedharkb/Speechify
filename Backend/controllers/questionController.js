@@ -1,4 +1,3 @@
-
 const QuizEvent = require('../models/QuizEvent');
 
 // @desc    Get all quiz events (with questions)
@@ -6,10 +5,10 @@ const QuizEvent = require('../models/QuizEvent');
 // @access  Public (students and teachers)
 exports.getAllQuestions = async (req, res) => {
   try {
-    const quizEvents = await QuizEvent.find().populate('createdBy', 'name email role');
+    const quizEvents = await QuizEvent.findAll();
     res.json(quizEvents);
   } catch (err) {
-    console.error(err.message);
+    console.error('Error fetching questions:', err.message);
     res.status(500).send('Server Error');
   }
 };
@@ -20,29 +19,24 @@ exports.getAllQuestions = async (req, res) => {
 exports.createQuestion = async (req, res) => {
   try {
     const { quizEventId, questionText, correctAnswerText, points } = req.body;
-    let quizEvent;
-
+    
     if (quizEventId) {
-      // Add question to existing quiz event
-      quizEvent = await QuizEvent.findById(quizEventId);
-      if (!quizEvent) return res.status(404).json({ msg: 'Quiz event not found' });
-      quizEvent.questions.push({ questionText, correctAnswerText, points: points || 10 });
-      await quizEvent.save();
+      // Adding questions to existing quiz event not yet implemented in PostgreSQL
+      return res.status(501).json({ msg: 'Adding questions to existing quiz not yet implemented. Please create a new quiz with all questions.' });
     } else {
       // Create a new quiz event with this question
-      quizEvent = new QuizEvent({
+      const quizEvent = await QuizEvent.create({
         title: 'Untitled Quiz',
         subject: 'General',
         createdBy: req.user.id,
         startTime: new Date(),
         endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        questions: [{ questionText, correctAnswerText, points: points || 10 }],
+        questions: [{ questionText, correctAnswerText, points: points || 10 }]
       });
-      await quizEvent.save();
+      res.status(201).json(quizEvent);
     }
-    res.status(201).json(quizEvent);
   } catch (err) {
-    console.error(err.message);
+    console.error('Error creating question:', err.message);
     res.status(500).send('Server Error');
   }
 };

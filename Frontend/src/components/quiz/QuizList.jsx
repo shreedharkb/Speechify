@@ -91,7 +91,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
             if (att.submittedAt && att.startedAt) {
               const duration = new Date(att.submittedAt) - new Date(att.startedAt);
               console.log('[QuizList] Quiz time:', { 
-                quiz: att.quizTitle || att._id, 
+                quiz: att.quizTitle || att.id || att._id, 
                 duration: Math.round(duration / 60000), 
                 submittedAt: att.submittedAt, 
                 startedAt: att.startedAt 
@@ -1112,7 +1112,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                     .slice(0, 5)
                     .map((quiz, idx) => (
                     <div
-                      key={quiz._id}
+                      key={quiz.id || quiz._id}
                       style={{
                         background: currentTheme.cardBg,
                         border: `1px solid ${currentTheme.border}`,
