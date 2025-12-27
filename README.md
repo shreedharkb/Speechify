@@ -1,9 +1,11 @@
 # Speechify - AI-Powered Quiz Platform
 ## Complete Technical Documentation
 
-**Date:** December 2, 2025  
+**Date:** December 26, 2025  
 **Project Type:** Full-Stack Web Application  
-**Tech Stack:** MERN (MongoDB, Express.js, React, Node.js) + AI Integration
+**Tech Stack:** MERN (MongoDB, Express.js, React, Node.js) + SBERT AI Integration
+
+> **🆕 LATEST UPDATE (Dec 26, 2025):** The grading system has been upgraded from Gemini API to **SBERT (Sentence-BERT)** for semantic similarity evaluation. This provides faster, free, offline, and privacy-focused grading. See [SBERT_SETUP.md](SBERT_SETUP.md) for details.
 
 ---
 
@@ -24,7 +26,7 @@
 ## Project Overview
 
 **What is Speechify?**  
-Speechify is an intelligent quiz platform that uses AI (Google Gemini) to grade student answers semantically. Instead of requiring exact matches, it understands the meaning of answers and grades them based on semantic similarity to the correct answer.
+Speechify is an intelligent quiz platform that uses AI (SBERT - Sentence-BERT) to grade student answers semantically. Instead of requiring exact matches, it understands the meaning of answers and grades them based on semantic similarity to the correct answer.
 
 **Key Features:**
 - 🎓 Teacher can create quizzes with questions

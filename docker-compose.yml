@@ -12,6 +12,22 @@ services:
       - whisper-cache:/root/.cache/huggingface
     restart: unless-stopped
 
+  sbert-service:
+    build:
+      context: ./sbert-service
+      dockerfile: Dockerfile
+    container_name: sbert-grading
+    ports:
+      - "5002:5002"
+    volumes:
+      - sbert-cache:/root/.cache/torch
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   postgres:
     image: postgres:16-alpine
     container_name: quiz-postgres-db
@@ -34,5 +50,8 @@ services:
 volumes:
   whisper-cache:
     driver: local
+  sbert-cache:
+    driver: local
   postgres-data:
     driver: local
+
