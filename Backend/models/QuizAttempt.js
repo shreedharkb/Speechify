@@ -94,7 +94,38 @@ const QuizAttempt = {
        ORDER BY qa.score DESC, qa.submitted_at ASC`,
       [quizEventId]
     );
-    return result.rows;
+    
+    // Fetch answers for each attempt and convert to camelCase
+    const attemptsWithAnswers = await Promise.all(
+      result.rows.map(async (attempt) => {
+        const answersResult = await query(
+          'SELECT * FROM attempt_answers WHERE attempt_id = $1 ORDER BY id',
+          [attempt.id]
+        );
+        
+        // Convert answer fields from snake_case to camelCase
+        const answers = answersResult.rows.map(ans => ({
+          id: ans.id,
+          attemptId: ans.attempt_id,
+          questionId: ans.question_id,
+          question: ans.question_text,
+          studentAnswer: ans.student_answer,
+          correctAnswer: ans.correct_answer,
+          isCorrect: ans.is_correct,
+          pointsEarned: ans.points_earned,
+          maxPoints: ans.max_points,
+          similarityScore: ans.similarity_score,
+          explanation: ans.explanation
+        }));
+        
+        return {
+          ...attempt,
+          answers
+        };
+      })
+    );
+    
+    return attemptsWithAnswers;
   },
 
   // Find all attempts by a student

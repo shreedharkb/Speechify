@@ -127,7 +127,37 @@ const QuizEvent = {
        ORDER BY qe.created_at DESC`,
       [creatorId]
     );
-    return result.rows;
+    
+    // Convert snake_case to camelCase and get questions for each quiz
+    const quizEvents = await Promise.all(result.rows.map(async (quiz) => {
+      const questionsResult = await query(
+        'SELECT * FROM questions WHERE quiz_event_id = $1 ORDER BY question_order',
+        [quiz.id]
+      );
+      
+      return {
+        id: quiz.id,
+        title: quiz.title,
+        subject: quiz.subject,
+        description: quiz.description,
+        createdBy: quiz.created_by,
+        startTime: quiz.start_time,
+        endTime: quiz.end_time,
+        createdAt: quiz.created_at,
+        updatedAt: quiz.updated_at,
+        questionCount: parseInt(quiz.question_count) || 0,
+        attemptCount: parseInt(quiz.attempt_count) || 0,
+        questions: questionsResult.rows.map(q => ({
+          id: q.id,
+          questionText: q.question_text,
+          correctAnswerText: q.correct_answer_text,
+          points: q.points,
+          questionOrder: q.question_order
+        }))
+      };
+    }));
+    
+    return quizEvents;
   },
 
   // Find active quiz events

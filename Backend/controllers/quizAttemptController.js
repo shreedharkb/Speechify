@@ -250,4 +250,52 @@ const getAllQuizAttempts = async (req, res) => {
   }
 };
 
-module.exports = { submitQuizAttempt, checkQuizAttempt, getStudentQuizHistory, getAllQuizAttempts };
+const getQuizAttemptsByQuizId = async (req, res) => {
+  try {
+    const { quizEventId } = req.params;
+    const userId = req.user.id;
+
+    console.log('Fetching quiz attempts for quiz:', quizEventId);
+
+    // First verify that this quiz belongs to the teacher
+    const quiz = await QuizEvent.findById(quizEventId);
+    
+    if (!quiz) {
+      return res.status(404).json({ msg: 'Quiz not found' });
+    }
+
+    if (quiz.createdBy !== userId) {
+      return res.status(403).json({ msg: 'Not authorized to view this quiz\'s attempts' });
+    }
+
+    // Get all attempts for this quiz
+    const attempts = await QuizAttempt.findByQuizEvent(quizEventId);
+
+    console.log(`Found ${attempts.length} attempts for quiz ${quizEventId}`);
+
+    res.json({
+      quizTitle: quiz.title,
+      quizSubject: quiz.subject,
+      totalAttempts: attempts.length,
+      attempts: attempts.map(attempt => ({
+        attemptId: attempt.id,
+        studentId: attempt.student_id,
+        studentName: attempt.student_name || 'Unknown Student',
+        studentEmail: attempt.student_email || '',
+        score: attempt.score,
+        startedAt: attempt.started_at,
+        submittedAt: attempt.submitted_at,
+        answers: attempt.answers
+      }))
+    });
+
+  } catch (err) {
+    console.error('Error fetching quiz attempts:', err);
+    res.status(500).json({ 
+      msg: 'Server error while fetching quiz attempts',
+      error: err.message 
+    });
+  }
+};
+
+module.exports = { submitQuizAttempt, checkQuizAttempt, getStudentQuizHistory, getAllQuizAttempts, getQuizAttemptsByQuizId };

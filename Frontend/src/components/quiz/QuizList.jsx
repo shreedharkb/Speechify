@@ -257,8 +257,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar' },
     { id: 'quizzes', label: 'My Quizzes', icon: 'quizzes' },
-    { id: 'recent', label: 'Recent', icon: 'recent' },
-    { id: 'analytics', label: 'Analytics', icon: 'analytics' }
+    { id: 'recent', label: 'Recent', icon: 'recent' }
   ];
 
   // Helper function to format time

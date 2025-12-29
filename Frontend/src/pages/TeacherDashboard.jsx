@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StudentResponses from '../components/quiz/StudentResponses';
 
 function TeacherDashboard({ setPage }) {
   const [quizData, setQuizData] = useState({
@@ -23,6 +24,7 @@ function TeacherDashboard({ setPage }) {
   const [myQuizzes, setMyQuizzes] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [viewingResponses, setViewingResponses] = useState(null);
 
   useEffect(() => {
     fetchTeacherAnalytics();
@@ -44,7 +46,7 @@ function TeacherDashboard({ setPage }) {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz/teacher/quizzes`, {
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token
@@ -53,15 +55,18 @@ function TeacherDashboard({ setPage }) {
 
       if (response.ok) {
         const data = await response.json();
-        const quizzes = data.quizEvents || data;
+        console.log('Teacher quizzes data:', data);
+        // The teacher endpoint returns an array directly
+        const quizzes = Array.isArray(data) ? data : (data.quizEvents || data);
         setMyQuizzes(quizzes);
         
         // Create recent activities from quiz creations
         const activities = quizzes.slice(0, 5).map(quiz => ({
-          _id: quiz._id,
+          id: quiz.id,
           quizTitle: quiz.title,
+          subject: quiz.subject,
           action: 'created',
-          createdAt: quiz.createdAt || quiz.startTime,
+          createdAt: quiz.created_at || quiz.startTime,
           studentsCount: quiz.studentsCount || 0
         }));
         setRecentActivities(activities);
@@ -331,7 +336,7 @@ function TeacherDashboard({ setPage }) {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'create-quiz', label: 'Create Quiz', icon: 'create' },
-    { id: 'analytics', label: 'Analytics', icon: 'analytics' },
+    { id: 'my-quizzes', label: 'My Quizzes', icon: 'quizzes' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar' },
     { id: 'recent', label: 'Recent Activities', icon: 'recent' }
   ];
@@ -343,6 +348,8 @@ function TeacherDashboard({ setPage }) {
         return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>`;
       case 'create':
         return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`;
+      case 'quizzes':
+        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`;
       case 'analytics':
         return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>`;
       case 'calendar':
@@ -787,135 +794,6 @@ function TeacherDashboard({ setPage }) {
               filter: 'blur(50px)'
             }}></div>
           </div>
-
-          {/* Stats Grid */}
-          {analytics && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.5rem',
-              marginBottom: '2.5rem'
-            }}>
-              <div style={{
-                background: currentTheme.cardBg,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '16px',
-                padding: '1.5rem',
-                transition: 'all 0.2s'
-              }}>
-                <div style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  borderRadius: '12px', 
-                  background: '#EFF6FF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1rem'
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0E78FF" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                  </svg>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                  {analytics.totalQuizzes}
-                </div>
-                <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                  Total Quizzes
-                </div>
-              </div>
-
-              <div style={{
-                background: currentTheme.cardBg,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '16px',
-                padding: '1.5rem',
-                transition: 'all 0.2s'
-              }}>
-                <div style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  borderRadius: '12px', 
-                  background: '#F0FDF4',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1rem'
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                  {analytics.activeQuizzes}
-                </div>
-                <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                  Active Now
-                </div>
-              </div>
-
-              <div style={{
-                background: currentTheme.cardBg,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '16px',
-                padding: '1.5rem',
-                transition: 'all 0.2s'
-              }}>
-                <div style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  borderRadius: '12px', 
-                  background: '#FEF3C7',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1rem'
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                  {analytics.totalStudents}
-                </div>
-                <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                  Total Students
-                </div>
-              </div>
-
-              <div style={{
-                background: currentTheme.cardBg,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '16px',
-                padding: '1.5rem',
-                transition: 'all 0.2s'
-              }}>
-                <div style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  borderRadius: '12px', 
-                  background: '#FCE7F3',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1rem'
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EC4899" strokeWidth="2">
-                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
-                  </svg>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                  {analytics.totalQuestions}
-                </div>
-                <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                  Total Questions
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Content based on active section */}
           {activeSection === 'create-quiz' || activeSection === 'dashboard' ? (
@@ -1507,17 +1385,167 @@ function TeacherDashboard({ setPage }) {
             </button>
           </form>
         </div>
-          ) : activeSection === 'analytics' ? (
+          ) : activeSection === 'my-quizzes' ? (
             <div style={{ background: currentTheme.cardBg, borderRadius: '16px', padding: '2.5rem', border: `1px solid ${currentTheme.border}` }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: currentTheme.text, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={currentTheme.accent} strokeWidth="2" strokeLinecap="round">
-                  <line x1="12" y1="20" x2="12" y2="10"/>
-                  <line x1="18" y1="20" x2="18" y2="4"/>
-                  <line x1="6" y1="20" x2="6" y2="16"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={currentTheme.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
                 </svg>
-                Analytics & Reports
+                My Quizzes
               </h2>
-              <p style={{ color: currentTheme.textSecondary, textAlign: 'center', padding: '3rem' }}>Detailed analytics and performance reports will be displayed here...</p>
+              
+              {viewingResponses ? (
+                <StudentResponses 
+                  quizId={viewingResponses.id} 
+                  quizTitle={viewingResponses.title}
+                  onBack={() => setViewingResponses(null)}
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {myQuizzes.length === 0 ? (
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '3rem', 
+                      color: currentTheme.textSecondary,
+                      background: '#F9FAFB',
+                      borderRadius: '12px',
+                      border: '2px dashed #E5E7EB'
+                    }}>
+                      <svg 
+                        width="64" 
+                        height="64" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="#D1D5DB" 
+                        strokeWidth="2"
+                        style={{ margin: '0 auto 1rem' }}
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      <h3 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>No quizzes yet</h3>
+                      <p style={{ margin: 0, fontSize: '0.875rem' }}>Create your first quiz to get started!</p>
+                    </div>
+                  ) : (
+                    myQuizzes.map((quiz) => {
+                      const now = new Date();
+                      const start = new Date(quiz.startTime);
+                      const end = new Date(quiz.endTime);
+                      const status = now < start ? 'upcoming' : now > end ? 'ended' : 'active';
+                      const statusColors = {
+                        upcoming: { bg: '#FEF3C7', text: '#92400E', label: 'Upcoming' },
+                        active: { bg: '#D1FAE5', text: '#065F46', label: 'Active' },
+                        ended: { bg: '#F3F4F6', text: '#374151', label: 'Ended' }
+                      };
+                      
+                      return (
+                        <div
+                          key={quiz.id}
+                          style={{
+                            background: 'white',
+                            padding: '1.5rem',
+                            borderRadius: '12px',
+                            border: '1px solid #E5E7EB',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{ 
+                              margin: '0 0 0.5rem 0', 
+                              fontSize: '1.125rem',
+                              fontWeight: '600',
+                              color: '#111827'
+                            }}>
+                              {quiz.title}
+                            </h3>
+                            <div style={{ 
+                              display: 'flex', 
+                              gap: '1.5rem',
+                              fontSize: '0.875rem',
+                              color: '#6B7280'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                                </svg>
+                                {quiz.subject}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10"/>
+                                  <path d="M12 6v6l4 2"/>
+                                </svg>
+                                {new Date(quiz.startTime).toLocaleDateString()}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                {quiz.questions?.length || 0} questions
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <span style={{
+                              padding: '0.375rem 0.875rem',
+                              borderRadius: '6px',
+                              fontSize: '0.8125rem',
+                              fontWeight: '600',
+                              background: statusColors[status].bg,
+                              color: statusColors[status].text
+                            }}>
+                              {statusColors[status].label}
+                            </span>
+                            
+                            <button
+                              onClick={() => setViewingResponses({ id: quiz.id, title: quiz.title })}
+                              style={{
+                                padding: '0.625rem 1.25rem',
+                                background: '#0E78FF',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'background 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#0056CC'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = '#0E78FF'}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                              </svg>
+                              View Responses
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
           ) : null}
 
@@ -1727,7 +1755,7 @@ function TeacherDashboard({ setPage }) {
                   <div style={{ padding: '1rem' }}>
                     {recentActivities.length > 0 ? (
                       recentActivities.slice(0, 5).map((activity, idx) => (
-                        <div key={activity._id || idx} style={{
+                        <div key={activity.id || idx} style={{
                           padding: '1rem 1.25rem',
                           marginBottom: idx < Math.min(4, recentActivities.length - 1) ? '0.5rem' : '0',
                           borderRadius: '10px',
