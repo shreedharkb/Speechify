@@ -20,7 +20,6 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(false);
   const [currentDate] = useState(new Date());
-  const [calendarDate, setCalendarDate] = useState(new Date());
   const [quizFilter, setQuizFilter] = useState('available');
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -255,9 +254,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
   // Sidebar navigation items
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { id: 'calendar', label: 'Calendar', icon: 'calendar' },
-    { id: 'quizzes', label: 'My Quizzes', icon: 'quizzes' },
-    { id: 'recent', label: 'Recent', icon: 'recent' }
+    { id: 'quizzes', label: 'My Quizzes', icon: 'quizzes' }
   ];
 
   // Helper function to format time
@@ -275,13 +272,6 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
   const activeQuizzes = Array.isArray(quizEvents) ? quizEvents.filter(q => q.status === 'active').length : 0;
   const completedQuizzes = Array.isArray(quizEvents) ? quizEvents.filter(q => q.status === 'completed').length : 0;
   const missedQuizzes = Array.isArray(quizEvents) ? quizEvents.filter(q => getQuizStatus(q).label === 'Missing').length : 0;
-
-  // Get calendar data
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const calendarMonth = monthNames[calendarDate.getMonth()];
-  const calendarYear = calendarDate.getFullYear();
-  const daysInMonth = new Date(calendarYear, calendarDate.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(calendarYear, calendarDate.getMonth(), 1).getDay();
 
   // Get subject-specific icons for quizzes
   const getSubjectIcon = (subject) => {
@@ -361,55 +351,6 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
     if (quizEvent.status === 'active') {
       onQuizSelect(quizEvent);
     }
-  };
-
-  const renderCalendar = () => {
-    const days = [];
-    const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    
-    // Day headers
-    dayNames.forEach((day, idx) => {
-      days.push(
-        <div key={`header-${idx}`} style={{ 
-          textAlign: 'center', 
-          fontWeight: '600', 
-          fontSize: '0.75rem', 
-          color: currentTheme.textSecondary,
-          padding: '0.5rem 0'
-        }}>
-          {day}
-        </div>
-      );
-    });
-
-    // Empty cells before first day
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`}></div>);
-    }
-
-    // Days
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isToday = day === currentDate.getDate() && 
-                      calendarDate.getMonth() === currentDate.getMonth() && 
-                      calendarDate.getFullYear() === currentDate.getFullYear();
-      days.push(
-        <div key={`day-${day}`} style={{ 
-          textAlign: 'center', 
-          padding: '0.5rem',
-          borderRadius: '8px',
-          background: isToday ? currentTheme.accent : 'transparent',
-          color: isToday ? 'white' : currentTheme.text,
-          fontWeight: isToday ? '600' : '400',
-          cursor: 'pointer',
-          fontSize: '0.875rem',
-          transition: 'all 0.2s'
-        }}>
-          {day}
-        </div>
-      );
-    }
-
-    return days;
   };
 
   if (loading) {
@@ -872,181 +813,12 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
             }}></div>
           </div>
 
-          {/* Stats Grid */}
-          <div id="analytics-section" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1.5rem',
-            marginBottom: '2.5rem',
-            scrollMarginTop: '100px'
-          }}>
-            {/* Active Quizzes */}
-            <div style={{
-              background: currentTheme.cardBg,
-              border: `1px solid ${currentTheme.border}`,
-              borderRadius: '16px',
-              padding: '1.5rem',
-              transition: 'all 0.2s'
-            }}>
-              <div style={{ 
-                width: '48px', 
-                height: '48px', 
-                borderRadius: '12px', 
-                background: '#EFF6FF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1rem'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0E78FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="9" y1="15" x2="15" y2="15"/>
-                  <line x1="9" y1="11" x2="15" y2="11"/>
-                </svg>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                {activeQuizzes}
-              </div>
-              <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                Active Quizzes
-              </div>
-            </div>
-
-            {/* Completed */}
-            <div style={{
-              background: currentTheme.cardBg,
-              border: `1px solid ${currentTheme.border}`,
-              borderRadius: '16px',
-              padding: '1.5rem',
-              transition: 'all 0.2s'
-            }}>
-              <div style={{ 
-                width: '48px', 
-                height: '48px', 
-                borderRadius: '12px', 
-                background: '#F0FDF4',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1rem'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                {completedQuizzes}
-              </div>
-              <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                Completed
-              </div>
-            </div>
-
-            {/* Missed Quizzes */}
-            <div style={{
-              background: currentTheme.cardBg,
-              border: `1px solid ${currentTheme.border}`,
-              borderRadius: '16px',
-              padding: '1.5rem',
-              transition: 'all 0.2s'
-            }}>
-              <div style={{ 
-                width: '48px', 
-                height: '48px', 
-                borderRadius: '12px', 
-                background: '#FEF2F2',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1rem'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="15" y1="9" x2="9" y2="15"/>
-                  <line x1="9" y1="9" x2="15" y2="15"/>
-                </svg>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                {missedQuizzes}
-              </div>
-              <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                Missed Quizzes
-              </div>
-            </div>
-
-            {/* Total Quizzes */}
-            <div style={{
-              background: currentTheme.cardBg,
-              border: `1px solid ${currentTheme.border}`,
-              borderRadius: '16px',
-              padding: '1.5rem',
-              transition: 'all 0.2s'
-            }}>
-              <div style={{ 
-                width: '48px', 
-                height: '48px', 
-                borderRadius: '12px', 
-                background: '#FEF3C7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1rem'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                {totalQuizzes}
-              </div>
-              <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                Total Quizzes
-              </div>
-            </div>
-
-            {/* Total Time Spent */}
-            <div style={{
-              background: currentTheme.cardBg,
-              border: `1px solid ${currentTheme.border}`,
-              borderRadius: '16px',
-              padding: '1.5rem',
-              transition: 'all 0.2s'
-            }}>
-              <div style={{ 
-                width: '48px', 
-                height: '48px', 
-                borderRadius: '12px', 
-                background: '#F3E8FF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1rem'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9333EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: currentTheme.text, marginBottom: '0.25rem' }}>
-                {formatTime(analytics.totalTimeMinutes)}
-              </div>
-              <div style={{ fontSize: '0.875rem', color: currentTheme.textSecondary, fontWeight: '500' }}>
-                Total Time Spent
-              </div>
-            </div>
-          </div>
-
-          {/* Main Grid Layout */}
+          {/* Main Content Layout */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr',
-            gap: '2.5rem',
-            marginBottom: '2.5rem'
+            maxWidth: '1400px',
+            margin: '0 auto'
           }}>
-            {/* Left Column - Quizzes */}
+            {/* Quizzes Section */}
             <div id="quiz-section" style={{ scrollMarginTop: '100px' }}>
               {/* Filter Tabs */}
               <div style={{ 
@@ -1135,135 +907,161 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                         }
                       }}
                     >
-                      {/* Header with title */}
+                      {/* Header with title and status */}
                       <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ 
-                            fontSize: '0.9375rem', 
-                            color: currentTheme.textSecondary, 
-                            marginBottom: '0.625rem',
-                            fontWeight: '600',
-                            textTransform: 'capitalize',
-                            letterSpacing: '0.02em'
-                          }}>
-                            {quiz.subject || 'General'}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                            <h3 style={{ 
+                              fontSize: '1.35rem', 
+                              fontWeight: '700', 
+                              color: currentTheme.text, 
+                              lineHeight: '1.2',
+                              margin: 0
+                            }}>
+                              {quiz.title}
+                            </h3>
+                            {/* Status Badge */}
+                            <div style={{
+                              padding: '0.35rem 0.75rem',
+                              borderRadius: '20px',
+                              background: `${getQuizStatus(quiz).color}15`,
+                              border: `1.5px solid ${getQuizStatus(quiz).color}`,
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              color: getQuizStatus(quiz).color,
+                              whiteSpace: 'nowrap',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.35rem'
+                            }}>
+                              <div style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                background: getQuizStatus(quiz).color
+                              }} />
+                              {getQuizStatus(quiz).label}
+                            </div>
                           </div>
-                          <h3 style={{ 
-                            fontSize: '1.25rem', 
-                            fontWeight: '700', 
-                            color: currentTheme.text, 
-                            lineHeight: '1.4' 
-                          }}>
-                            {quiz.title}
-                          </h3>
-                        </div>
-                        {/* Status Badge */}
-                        <div style={{
-                          padding: '0.375rem 0.875rem',
-                          borderRadius: '20px',
-                          background: `${getQuizStatus(quiz).color}15`,
-                          border: `1.5px solid ${getQuizStatus(quiz).color}`,
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          color: getQuizStatus(quiz).color,
-                          whiteSpace: 'nowrap',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.375rem'
-                        }}>
-                          <div style={{
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            background: getQuizStatus(quiz).color
-                          }} />
-                          {getQuizStatus(quiz).label}
+                          {quiz.description && (
+                            <p style={{ 
+                              fontSize: '0.875rem', 
+                              color: currentTheme.textSecondary, 
+                              lineHeight: '1.5',
+                              margin: '0.5rem 0 0 0',
+                              wordWrap: 'break-word'
+                            }}>
+                              {quiz.description}
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      {/* Details Grid */}
+                      {/* Info Pills */}
                       <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(3, 1fr)', 
-                        gap: '1rem',
-                        paddingTop: '0.5rem',
-                        borderTop: `1px solid ${currentTheme.border}`
+                        display: 'flex', 
+                        gap: '0.75rem',
+                        flexWrap: 'wrap',
+                        marginTop: '1rem'
                       }}>
-                        {/* Questions */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <div style={{
+                          background: darkMode ? 'rgba(59, 130, 246, 0.15)' : '#EFF6FF',
+                          border: `1px solid ${darkMode ? 'rgba(59, 130, 246, 0.3)' : '#DBEAFE'}`,
+                          borderRadius: '8px',
+                          padding: '0.5rem 0.875rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={currentTheme.accent} strokeWidth="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                           </svg>
-                          <div>
-                            <div style={{ fontSize: '0.875rem', fontWeight: '500', color: currentTheme.text }}>
-                              {quiz.questions?.length || 0} Questions
-                            </div>
-                          </div>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: currentTheme.text }}>
+                            {quiz.questions?.length || 0} Questions
+                          </span>
                         </div>
-
-                        {/* Total Points */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        
+                        <div style={{
+                          background: darkMode ? 'rgba(251, 146, 60, 0.15)' : '#FFF7ED',
+                          border: `1px solid ${darkMode ? 'rgba(251, 146, 60, 0.3)' : '#FFEDD5'}`,
+                          borderRadius: '8px',
+                          padding: '0.5rem 0.875rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2">
                             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/>
                           </svg>
-                          <div>
-                            <div style={{ fontSize: '0.875rem', fontWeight: '600', color: currentTheme.text }}>
-                              {quiz.questions?.reduce((sum, q) => sum + (q.points || 0), 0) || 0} Points
-                            </div>
-                          </div>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: currentTheme.text }}>
+                            {quiz.questions?.reduce((sum, q) => sum + (q.points || 0), 0) || 0} Points
+                          </span>
                         </div>
-
-                        {/* Duration */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        
+                        <div style={{
+                          background: darkMode ? 'rgba(16, 185, 129, 0.15)' : '#F0FDF4',
+                          border: `1px solid ${darkMode ? 'rgba(16, 185, 129, 0.3)' : '#D1FAE5'}`,
+                          borderRadius: '8px',
+                          padding: '0.5rem 0.875rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                           </svg>
-                          <div>
-                            <div style={{ fontSize: '0.875rem', fontWeight: '600', color: currentTheme.text }}>
-                              {(() => {
-                                const start = new Date(quiz.startTime);
-                                const end = new Date(quiz.endTime);
-                                const diffMinutes = Math.round((end - start) / (1000 * 60));
-                                const hours = Math.floor(diffMinutes / 60);
-                                const mins = diffMinutes % 60;
-                                return hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
-                              })()}
-                            </div>
-                          </div>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: currentTheme.text }}>
+                            {(() => {
+                              const start = new Date(quiz.startTime);
+                              const end = new Date(quiz.endTime);
+                              const diffMinutes = Math.round((end - start) / (1000 * 60));
+                              const hours = Math.floor(diffMinutes / 60);
+                              const mins = diffMinutes % 60;
+                              return hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
+                            })()}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Footer with date and Start button */}
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'flex-end',
-                        paddingTop: '0.5rem'
+                      {/* Dates Section */}
+                      <div style={{
+                        borderTop: `1px solid ${currentTheme.border}`,
+                        paddingTop: '1rem',
+                        marginTop: '1rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '1rem'
                       }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: currentTheme.textSecondary }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: currentTheme.textSecondary }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                               <line x1="16" y1="2" x2="16" y2="6"/>
                               <line x1="8" y1="2" x2="8" y2="6"/>
                               <line x1="3" y1="10" x2="21" y2="10"/>
                             </svg>
-                            Started on {new Date(quiz.startTime).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} at {new Date(quiz.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            <span style={{ fontWeight: '500' }}>
+                              Started on {new Date(quiz.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(quiz.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </span>
                           </div>
                           {quiz.endTime && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: currentTheme.textSecondary }}>
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: currentTheme.textSecondary }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                                 <line x1="16" y1="2" x2="16" y2="6"/>
                                 <line x1="8" y1="2" x2="8" y2="6"/>
                                 <line x1="3" y1="10" x2="21" y2="10"/>
                               </svg>
-                              Ends on {new Date(quiz.endTime).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} at {new Date(quiz.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                              <span style={{ fontWeight: '500' }}>
+                                Ends on {new Date(quiz.endTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(quiz.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                              </span>
                             </div>
                           )}
                         </div>
+                        
                         {getQuizStatus(quiz).status === 'active' && (
                           <button
                             onClick={(e) => {
@@ -1274,31 +1072,32 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                               background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                               color: 'white',
                               border: 'none',
-                              borderRadius: '8px',
-                              padding: '0.625rem 1.25rem',
+                              borderRadius: '12px',
+                              padding: '0.75rem 1.75rem',
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '0.5rem',
+                              gap: '0.625rem',
                               cursor: 'pointer',
-                              fontSize: '0.875rem',
-                              fontWeight: '600',
-                              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                              fontSize: '0.9375rem',
+                              fontWeight: '700',
+                              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
                               transition: 'all 0.2s',
-                              flexShrink: 0
+                              flexShrink: 0,
+                              letterSpacing: '0.01em'
                             }}
                             onMouseOver={(e) => {
                               e.currentTarget.style.transform = 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                              e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
                             }}
                             onMouseOut={(e) => {
                               e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
                             }}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
                               <path d="M8 5v14l11-7z"/>
                             </svg>
-                            Start
+                            Start Quiz
                           </button>
                         )}
                       </div>
@@ -1306,166 +1105,6 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Right Column - Calendar & Schedule */}
-            <div>
-              {/* Calendar */}
-              <div id="calendar-section" style={{
-                background: currentTheme.cardBg,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '16px',
-                padding: '1.5rem',
-                marginBottom: '1.5rem',
-                scrollMarginTop: '100px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: currentTheme.text }}>
-                    {calendarMonth} {calendarYear}
-                  </h3>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button 
-                      onClick={() => {
-                        const newDate = new Date(calendarDate);
-                        newDate.setMonth(newDate.getMonth() - 1);
-                        setCalendarDate(newDate);
-                      }}
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '6px',
-                        border: `1px solid ${currentTheme.border}`,
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        color: currentTheme.text,
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.background = currentTheme.accentLight;
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >←</button>
-                    <button 
-                      onClick={() => {
-                        const newDate = new Date(calendarDate);
-                        newDate.setMonth(newDate.getMonth() + 1);
-                        setCalendarDate(newDate);
-                      }}
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '6px',
-                        border: `1px solid ${currentTheme.border}`,
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem',
-                        color: currentTheme.text,
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.background = currentTheme.accentLight;
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >→</button>
-                  </div>
-                </div>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(7, 1fr)',
-                  gap: '0.25rem'
-                }}>
-                  {renderCalendar()}
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div id="recent-section" style={{
-                background: currentTheme.cardBg,
-                border: `1px solid ${currentTheme.border}`,
-                borderRadius: '16px',
-                padding: '1.5rem',
-                scrollMarginTop: '100px'
-              }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: currentTheme.text, marginBottom: '1.5rem' }}>
-                  Recent Activities
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {quizHistory.length > 0 ? (
-                    quizHistory.slice(0, 5).map((attempt, idx) => (
-                      <div key={attempt._id || idx} style={{
-                        padding: '1rem 1.25rem',
-                        borderRadius: '12px',
-                        background: darkMode ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)',
-                        borderLeft: `3px solid ${currentTheme.accent}`,
-                        transition: 'all 0.2s'
-                      }}>
-                        <div style={{ 
-                          fontSize: '0.95rem', 
-                          fontWeight: '600', 
-                          color: currentTheme.text, 
-                          marginBottom: '0.5rem',
-                          lineHeight: '1.4'
-                        }}>
-                          {attempt.quizTitle || attempt.quiz?.title || 'Quiz'}
-                        </div>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.75rem',
-                          flexWrap: 'wrap'
-                        }}>
-                          <div style={{ 
-                            fontSize: '0.8rem', 
-                            color: currentTheme.textSecondary,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.25rem'
-                          }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10"/>
-                              <polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            {new Date(attempt.submittedAt || attempt.createdAt).toLocaleString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric', 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </div>
-                          {attempt.score !== undefined && (
-                            <div style={{ 
-                              fontSize: '0.8rem',
-                              fontWeight: '600',
-                              color: '#10B981',
-                              background: 'rgba(16, 185, 129, 0.1)',
-                              padding: '0.25rem 0.625rem',
-                              borderRadius: '6px'
-                            }}>
-                              Score: {attempt.score || 0}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: '2.5rem 1rem', 
-                      color: currentTheme.textSecondary, 
-                      fontSize: '0.875rem',
-                      lineHeight: '1.6'
-                    }}>
-                      <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📝</div>
-                      No quiz attempts yet
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         </div>

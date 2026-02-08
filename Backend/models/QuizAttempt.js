@@ -23,8 +23,8 @@ const QuizAttempt = {
           await client.query(
             `INSERT INTO attempt_answers 
              (attempt_id, question_id, question_text, student_answer, correct_answer, 
-              is_correct, points_earned, max_points, similarity_score, explanation)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+              is_correct, points_earned, max_points, similarity_score, explanation, audio, audio_path)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
               attempt.id,
               answer.questionId || null,
@@ -35,7 +35,9 @@ const QuizAttempt = {
               answer.pointsEarned || 0,
               answer.maxPoints || 10,
               answer.similarityScore || null,
-              answer.explanation || null
+              answer.explanation || null,
+              answer.audioBlob || null,  // Store BYTEA in database
+              answer.audioPath || null   // Store file path for .wav file
             ]
           );
         }
@@ -115,7 +117,8 @@ const QuizAttempt = {
           pointsEarned: ans.points_earned,
           maxPoints: ans.max_points,
           similarityScore: ans.similarity_score,
-          explanation: ans.explanation
+          explanation: ans.explanation,
+          audio: ans.audio ? ans.audio.toString('base64') : null  // Convert BYTEA to base64 for transmission
         }));
         
         return {

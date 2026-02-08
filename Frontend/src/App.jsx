@@ -320,7 +320,7 @@ const Navbar = ({ setPage, user, onLogout }) => {
         ) : (
           <>
             <button onClick={() => setPage('login')}>Login</button>
-            <button onClick={() => setPage('signup')} className="btn-primary" style={{ padding: '0.625rem 1.5rem' }}>
+            <button onClick={() => setPage('role-selection')} className="btn-primary" style={{ padding: '0.625rem 1.5rem' }}>
               Sign Up
             </button>
           </>
@@ -1507,10 +1507,872 @@ const LoginPage = ({ setPage, onLoginSuccess }) => {
           </button>
           
           <p style={{ textAlign: 'center', margin: 0, color: '#64748B', fontSize: '0.95rem' }}>
-            New to Speechify? <a href="#" onClick={(e) => { e.preventDefault(); setPage('signup'); }} style={{ color: '#6366F1', textDecoration: 'none', fontWeight: '600' }}>Sign Up</a>
+            New to Speechify? <a href="#" onClick={(e) => { e.preventDefault(); setPage('role-selection'); }} style={{ color: '#6366F1', textDecoration: 'none', fontWeight: '600' }}>Sign Up</a>
           </p>
         </form>
       </div>
+    </div>
+  );
+};
+
+// --- ROLE SELECTION PAGE COMPONENT ---
+const RoleSelectionPage = ({ setPage }) => {
+  const [showTeacherForm, setShowTeacherForm] = useState(false);
+  const [showStudentForm, setShowStudentForm] = useState(false);
+  const [teacherData, setTeacherData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    department: ''
+  });
+  const [studentData, setStudentData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    rollNo: '',
+    branch: '',
+    year: '',
+    semester: ''
+  });
+
+  const handleStudentSelection = () => {
+    setShowStudentForm(true);
+  };
+
+  const handleTeacherSelection = () => {
+    setShowTeacherForm(true);
+  };
+
+  const handleTeacherSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Check if passwords match
+    if (teacherData.password !== teacherData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: teacherData.name, 
+          email: teacherData.email, 
+          password: teacherData.password, 
+          role: 'teacher',
+          department: teacherData.department
+        }),
+      });
+      
+      if (response.ok) {
+        alert('Teacher registration successful! Please log in.');
+        setPage('login');
+      } else {
+        const errorData = await response.json();
+        alert(`Registration failed: ${errorData.msg}`);
+      }
+    } catch (error) {
+      alert('Registration failed. Could not connect to the server.');
+    }
+  };
+
+  const handleStudentSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Check if passwords match
+    if (studentData.password !== studentData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: studentData.name, 
+          email: studentData.email, 
+          password: studentData.password, 
+          role: 'student',
+          rollNo: studentData.rollNo,
+          branch: studentData.branch,
+          year: studentData.year,
+          semester: studentData.semester
+        }),
+      });
+      
+      if (response.ok) {
+        alert('Student registration successful! Please log in.');
+        setPage('login');
+      } else {
+        const errorData = await response.json();
+        alert(`Registration failed: ${errorData.msg}`);
+      }
+    } catch (error) {
+      alert('Registration failed. Could not connect to the server.');
+    }
+  };
+
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #0E78FF 0%, #0A4FB8 100%)', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      padding: '2rem',
+      overflow: 'hidden'
+    }}>
+      <div style={{ 
+        display: 'flex',
+        flexDirection: showStudentForm ? 'row-reverse' : 'row',
+        background: 'white', 
+        borderRadius: '20px', 
+        maxWidth: (showTeacherForm || showStudentForm) ? '1200px' : '700px',
+        width: '100%',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        position: 'relative',
+        transition: 'all 0.5s ease',
+        overflow: 'hidden',
+        minHeight: '600px'
+      }}>
+        {/* Left/Right Side - Role Selection */}
+        <div style={{ 
+          flex: (showTeacherForm || showStudentForm) ? '0 0 45%' : '1',
+          padding: '3rem 2.5rem',
+          transition: 'all 0.5s ease',
+          position: 'relative'
+        }}>
+          {/* Close button */}
+          <button 
+            onClick={() => {
+              if (showTeacherForm) setShowTeacherForm(false);
+              else if (showStudentForm) setShowStudentForm(false);
+              else setPage('home');
+            }}
+            style={{
+              position: 'absolute',
+              top: '1.5rem',
+              right: '1.5rem',
+              background: 'none',
+              border: 'none',
+              color: '#64748B',
+              cursor: 'pointer',
+              padding: '0.5rem',
+              borderRadius: '8px',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#F1F5F9';
+              e.currentTarget.style.color = '#1E293B';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'none';
+              e.currentTarget.style.color = '#64748B';
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <h1 style={{ 
+            fontSize: (showTeacherForm || showStudentForm) ? '1.75rem' : '2.25rem', 
+            fontWeight: '800', 
+            color: '#1E293B', 
+            marginBottom: '3rem',
+            textAlign: 'center',
+            letterSpacing: '-0.02em',
+            transition: 'all 0.5s ease'
+          }}>
+            Sign in to Your Account
+          </h1>
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: (showTeacherForm || showStudentForm) ? '1fr' : 'repeat(2, 1fr)', 
+            gap: '2rem', 
+            marginBottom: '3rem',
+            transition: 'all 0.5s ease'
+          }}>
+            {/* Teacher Card */}
+            <div style={{ display: showStudentForm ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{
+                width: showTeacherForm ? '100px' : '140px',
+                height: showTeacherForm ? '100px' : '140px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #C2E7FF 0%, #A5D8FF 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#0E78FF',
+                transition: 'all 0.5s ease',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <svg width={showTeacherForm ? "50" : "70"} height={showTeacherForm ? "50" : "70"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                  <path d="M14 14h3"></path>
+                  <path d="M14 18h2"></path>
+                </svg>
+              </div>
+              <button 
+                onClick={handleTeacherSelection}
+                disabled={showTeacherForm}
+                style={{
+                  width: '100%',
+                  padding: '1rem 2rem',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  cursor: showTeacherForm ? 'default' : 'pointer',
+                  background: showTeacherForm ? '#94A3B8' : '#0E78FF',
+                  color: 'white',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease',
+                  fontFamily: 'Inter, sans-serif',
+                  opacity: showTeacherForm ? 0.6 : 1
+                }}
+              >
+                I am a Teacher
+              </button>
+            </div>
+
+            {/* Student Card */}
+            {!showTeacherForm && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+                <div style={{
+                  width: showStudentForm ? '100px' : '140px',
+                  height: showStudentForm ? '100px' : '140px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #C2E7FF 0%, #A5D8FF 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#0E78FF',
+                  transition: 'all 0.5s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <svg width={showStudentForm ? "50" : "70"} height={showStudentForm ? "50" : "70"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <button 
+                  onClick={handleStudentSelection}
+                  disabled={showStudentForm}
+                  style={{
+                    width: '100%',
+                    padding: '1rem 2rem',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    cursor: showStudentForm ? 'default' : 'pointer',
+                    background: showStudentForm ? '#94A3B8' : '#0E78FF',
+                    color: 'white',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.3s ease',
+                    fontFamily: 'Inter, sans-serif',
+                    opacity: showStudentForm ? 0.6 : 1
+                  }}
+                >
+                  I am a Student
+                </button>
+              </div>
+            )}
+          </div>
+
+          {!(showTeacherForm || showStudentForm) && (
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.75rem' }}>
+                Haven't signed into your Scholastic account before?
+              </p>
+              <a 
+                href="#" 
+                onClick={(e) => { e.preventDefault(); setPage('signup'); }}
+                style={{ 
+                  display: 'inline-block',
+                  color: '#0E78FF', 
+                  fontWeight: '600', 
+                  textDecoration: 'none',
+                  fontSize: '1rem',
+                  marginBottom: '1.5rem',
+                  transition: 'color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#0C5FD1';
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#0E78FF';
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                Create an account
+              </a>
+              
+              <div style={{ height: '1px', background: '#E2E8F0', margin: '2rem 0' }}></div>
+              
+              <p style={{ color: '#1E293B', fontSize: '0.95rem', marginBottom: '0.5rem', fontWeight: '500' }}>
+                Teachers, not yet a subscriber?
+              </p>
+              <a 
+                href="#"
+                style={{ 
+                  display: 'inline-block',
+                  color: '#0E78FF', 
+                  fontWeight: '600', 
+                  textDecoration: 'none',
+                  fontSize: '1rem',
+                  marginBottom: '1rem',
+                  transition: 'color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#0C5FD1';
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#0E78FF';
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                Subscribe now
+              </a>
+              
+              <p style={{ color: '#64748B', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                Subscribers receive access to the website and print magazine.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side - Teacher Registration Form */}
+        {showTeacherForm && (
+          <div style={{ 
+            flex: '0 0 55%',
+            padding: '3rem 2.5rem',
+            background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
+            borderLeft: '1px solid #E2E8F0',
+            animation: 'slideInRight 0.5s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center'
+          }}>
+            <h2 style={{ 
+              fontSize: '1.75rem', 
+              fontWeight: '800', 
+              color: '#1E293B', 
+              marginBottom: '0.5rem',
+              textAlign: 'center'
+            }}>
+              Teacher Registration
+            </h2>
+            <p style={{ 
+              color: '#64748B', 
+              fontSize: '0.95rem', 
+              marginBottom: '2rem',
+              textAlign: 'center'
+            }}>
+              Fill in your details to create an account
+            </p>
+
+            <form onSubmit={handleTeacherSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label htmlFor="teacher-name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Name
+                </label>
+                <input 
+                  type="text" 
+                  id="teacher-name" 
+                  value={teacherData.name}
+                  onChange={(e) => setTeacherData({...teacherData, name: e.target.value})}
+                  placeholder="Enter your full name"
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.875rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '1rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="teacher-email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Email
+                </label>
+                <input 
+                  type="email" 
+                  id="teacher-email" 
+                  value={teacherData.email}
+                  onChange={(e) => setTeacherData({...teacherData, email: e.target.value})}
+                  placeholder="Enter your email address"
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.875rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '1rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="teacher-password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Password
+                </label>
+                <input 
+                  type="password" 
+                  id="teacher-password" 
+                  value={teacherData.password}
+                  onChange={(e) => setTeacherData({...teacherData, password: e.target.value})}
+                  placeholder="Create a strong password"
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.875rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '1rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="teacher-confirm-password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Confirm Password
+                </label>
+                <input 
+                  type="password" 
+                  id="teacher-confirm-password" 
+                  value={teacherData.confirmPassword}
+                  onChange={(e) => setTeacherData({...teacherData, confirmPassword: e.target.value})}
+                  placeholder="Re-enter your password"
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.875rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '1rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="teacher-department" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Department
+                </label>
+                <select 
+                  id="teacher-department" 
+                  value={teacherData.department}
+                  onChange={(e) => setTeacherData({...teacherData, department: e.target.value})}
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.875rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '1rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s',
+                    backgroundColor: 'white',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                >
+                  <option value="">Select your department</option>
+                  <option value="Computer Science and Engineering">Computer Science and Engineering</option>
+                  <option value="Electronics and Communication Engineering">Electronics and Communication Engineering</option>
+                  <option value="Data Science and Artificial Intelligence">Data Science and Artificial Intelligence</option>
+                  <option value="Arts, Science, and Design">Arts, Science, and Design</option>
+                </select>
+              </div>
+
+              <button 
+                type="submit"
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  background: '#0E78FF',
+                  color: 'white',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'Inter, sans-serif',
+                  marginTop: '0.5rem'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#0C5FD1';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 12px -2px rgba(14, 120, 255, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#0E78FF';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                Register as Teacher
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Student Registration Form - Slides from left */}
+        {showStudentForm && (
+          <div style={{ 
+            flex: '0 0 55%',
+            padding: '3rem 2.5rem',
+            background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
+            borderRight: showStudentForm ? '1px solid #E2E8F0' : 'none',
+            animation: 'slideInLeft 0.5s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            overflowY: 'auto'
+          }}>
+            <h2 style={{ 
+              fontSize: '1.75rem', 
+              fontWeight: '800', 
+              color: '#1E293B', 
+              marginBottom: '0.5rem',
+              textAlign: 'center'
+            }}>
+              Student Registration
+            </h2>
+            <p style={{ 
+              color: '#64748B', 
+              fontSize: '0.95rem', 
+              marginBottom: '2rem',
+              textAlign: 'center'
+            }}>
+              Fill in your details to create an account
+            </p>
+
+            <form onSubmit={handleStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label htmlFor="student-name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Name
+                </label>
+                <input 
+                  type="text" 
+                  id="student-name" 
+                  value={studentData.name}
+                  onChange={(e) => setStudentData({...studentData, name: e.target.value})}
+                  placeholder="Enter your full name"
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.75rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '0.95rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="student-email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Email
+                </label>
+                <input 
+                  type="email" 
+                  id="student-email" 
+                  value={studentData.email}
+                  onChange={(e) => setStudentData({...studentData, email: e.target.value})}
+                  placeholder="Enter your email address"
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.75rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '0.95rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label htmlFor="student-password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                    Password
+                  </label>
+                  <input 
+                    type="password" 
+                    id="student-password" 
+                    value={studentData.password}
+                    onChange={(e) => setStudentData({...studentData, password: e.target.value})}
+                    placeholder="Create password"
+                    required
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem 1rem', 
+                      border: '2px solid #E5E7EB', 
+                      borderRadius: '8px', 
+                      fontSize: '0.95rem',
+                      fontFamily: 'Inter, sans-serif',
+                      transition: 'border 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="student-confirm-password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                    Confirm Password
+                  </label>
+                  <input 
+                    type="password" 
+                    id="student-confirm-password" 
+                    value={studentData.confirmPassword}
+                    onChange={(e) => setStudentData({...studentData, confirmPassword: e.target.value})}
+                    placeholder="Re-enter password"
+                    required
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem 1rem', 
+                      border: '2px solid #E5E7EB', 
+                      borderRadius: '8px', 
+                      fontSize: '0.95rem',
+                      fontFamily: 'Inter, sans-serif',
+                      transition: 'border 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="student-roll" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Roll No.
+                </label>
+                <input 
+                  type="text" 
+                  id="student-roll" 
+                  value={studentData.rollNo}
+                  onChange={(e) => setStudentData({...studentData, rollNo: e.target.value})}
+                  placeholder="Enter your roll number"
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.75rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '0.95rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="student-branch" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                  Branch
+                </label>
+                <select 
+                  id="student-branch" 
+                  value={studentData.branch}
+                  onChange={(e) => setStudentData({...studentData, branch: e.target.value})}
+                  required
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.75rem 1rem', 
+                    border: '2px solid #E5E7EB', 
+                    borderRadius: '8px', 
+                    fontSize: '0.95rem',
+                    fontFamily: 'Inter, sans-serif',
+                    transition: 'border 0.2s',
+                    backgroundColor: 'white',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                  onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                >
+                  <option value="">Select your branch</option>
+                  <option value="Computer Science and Engineering">Computer Science and Engineering</option>
+                  <option value="Electronics and Communication Engineering">Electronics and Communication Engineering</option>
+                  <option value="Data Science and Artificial Intelligence">Data Science and Artificial Intelligence</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label htmlFor="student-year" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                    Year
+                  </label>
+                  <select 
+                    id="student-year" 
+                    value={studentData.year}
+                    onChange={(e) => setStudentData({...studentData, year: e.target.value})}
+                    required
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem 1rem', 
+                      border: '2px solid #E5E7EB', 
+                      borderRadius: '8px', 
+                      fontSize: '0.95rem',
+                      fontFamily: 'Inter, sans-serif',
+                      transition: 'border 0.2s',
+                      backgroundColor: 'white',
+                      cursor: 'pointer'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                  >
+                    <option value="">Select year</option>
+                    <option value="1st year">1st year</option>
+                    <option value="2nd year">2nd year</option>
+                    <option value="3rd year">3rd year</option>
+                    <option value="4th year">4th year</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="student-semester" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#1E293B', fontSize: '0.9rem' }}>
+                    Semester
+                  </label>
+                  <select 
+                    id="student-semester" 
+                    value={studentData.semester}
+                    onChange={(e) => setStudentData({...studentData, semester: e.target.value})}
+                    required
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem 1rem', 
+                      border: '2px solid #E5E7EB', 
+                      borderRadius: '8px', 
+                      fontSize: '0.95rem',
+                      fontFamily: 'Inter, sans-serif',
+                      transition: 'border 0.2s',
+                      backgroundColor: 'white',
+                      cursor: 'pointer'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#0E78FF'}
+                    onBlur={(e) => e.target.style.borderColor = '#E5E7EB'}
+                  >
+                    <option value="">Select semester</option>
+                    <option value="I">I</option>
+                    <option value="II">II</option>
+                    <option value="III">III</option>
+                    <option value="IV">IV</option>
+                    <option value="V">V</option>
+                    <option value="VI">VI</option>
+                    <option value="VII">VII</option>
+                    <option value="VIII">VIII</option>
+                  </select>
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                style={{
+                  width: '100%',
+                  padding: '0.875rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  background: '#0E78FF',
+                  color: 'white',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'Inter, sans-serif',
+                  marginTop: '0.5rem'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#0C5FD1';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 12px -2px rgba(14, 120, 255, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#0E78FF';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                Register as Student
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
 };
@@ -1521,6 +2383,16 @@ const SignupPage = ({ setPage }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
+  
+  // Get the selected role from localStorage if it exists
+  useEffect(() => {
+    const selectedRole = localStorage.getItem('selectedRole');
+    if (selectedRole) {
+      setRole(selectedRole);
+      // Clear the stored role after using it
+      localStorage.removeItem('selectedRole');
+    }
+  }, []);
   
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -1763,6 +2635,8 @@ export default function App() {
         return <QuizPage setPage={setPage} />;
       case 'login':
         return <LoginPage setPage={setPage} onLoginSuccess={handleLogin} />;
+      case 'role-selection':
+        return <RoleSelectionPage setPage={setPage} />;
       case 'signup':
         return <SignupPage setPage={setPage} />;
       case 'dashboard':

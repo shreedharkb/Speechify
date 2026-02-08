@@ -1,45 +1,125 @@
 const QuizEvent = require('../models/QuizEvent');
 const QuizAttempt = require('../models/QuizAttempt');
+const Quiz = require('../models/Quiz.prisma');
+const { saveBase64Image, isDataUri } = require('../utils/imageUtils');
 
 // Create a new quiz
 exports.createQuiz = async (req, res) => {
   try {
-    const { title, subject, description, startTime, endTime, questions } = req.body;
+    const { title, subject, courseCode, description, startTime, endTime, questions, correctAnswers } = req.body;
     
     console.log('Creating quiz with data:', {
       title,
       subject,
+      courseCode,
       startTime,
       endTime,
       questions: questions?.length,
-      userId: req.user.id
+      teacherId: req.user.id
     });
 
     // Validate required fields
-    if (!title || !subject || !startTime || !endTime || !questions || questions.length === 0) {
-      return res.status(400).json({ msg: 'Please provide all required fields' });
+    if (!title || !subject || !courseCode || !startTime || !endTime || !questions || questions.length === 0) {
+      return res.status(400).json({ msg: 'Please provide all required fields including courseCode' });
     }
 
-    // Create quiz event with questions
-    const quizEvent = await QuizEvent.create({
+    // Log incoming questions to debug image issue
+    console.log('Incoming questions:', JSON.stringify(questions, null, 2));
+
+    // Format questions to include points field (default 10 if not provided)
+    // Process images asynchronously to convert base64 to files
+    const formattedQuestions = await Promise.all(questions.map(async (q, index) => {
+      // Handle image field properly - check both 'image' and 'imageUrl' properties
+      let imageData = null;
+      const imageSource = q.image || q.imageUrl;
+      
+      if (imageSource) {
+        // If image is already an object with type and value, use it
+        if (typeof imageSource === 'object' && imageSource.type && imageSource.value) {
+          imageData = imageSource;
+        }
+        // If image is a string (URL or data URI), format it properly
+        else if (typeof imageSource === 'string' && imageSource.trim() !== '') {
+          // Check if it's a data URI (base64 encoded image)
+          if (imageSource.startsWith('data:image/')) {
+            try {
+              // Convert base64 to file and get the URL
+              const savedImageUrl = await saveBase64Image(imageSource, `quiz-q${index + 1}`);
+              imageData = {
+                type: 'url',
+                value: savedImageUrl
+              };
+              console.log(`✅ Converted base64 image to file: ${savedImageUrl}`);
+            } catch (error) {
+              console.error(`❌ Failed to save base64 image for question ${index + 1}:`, error);
+              // Fallback: store as base64 in database (not recommended for large images)
+              imageData = {
+                type: 'base64',
+                value: imageSource
+              };
+            }
+          } else {
+            // Regular URL
+            imageData = {
+              type: 'url',
+              value: imageSource
+            };
+          }
+        }
+        // If image has url property, use it
+        else if (imageSource.url) {
+          imageData = {
+            type: 'url',
+            value: imageSource.url
+          };
+        }
+      }
+
+      return {
+        id: q.id || index + 1,
+        text: q.text || q.questionText || q.question,
+        points: q.points || 10,
+        image: imageData
+      };
+    }));
+
+    console.log('Formatted questions:', JSON.stringify(formattedQuestions, null, 2));
+
+    // Format correct answers
+    const formattedAnswers = correctAnswers ? correctAnswers : questions.map((q, index) => ({
+      questionId: q.id || index + 1,
+      answer: q.correctAnswer || q.correctAnswerText || ''
+    }));
+
+    // Create quiz using Prisma model with JSONB questions
+    const quiz = await Quiz.create({
+      teacherId: req.user.id,
       title,
       subject,
-      description,
-      createdBy: req.user.id,
+      courseCode,
+      description: description || '',
+      questions: formattedQuestions,
+      correctAnswers: formattedAnswers,
       startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      questions: questions.map(q => ({
-        questionText: q.questionText || q.question,
-        correctAnswerText: q.correctAnswer || q.correctAnswerText,
-        points: q.points || 10
-      }))
+      endTime: new Date(endTime)
     });
 
-    console.log('Quiz created successfully:', quizEvent.id);
+    console.log('Quiz created successfully:', quiz.id);
     
     res.json({ 
       msg: 'Quiz created successfully',
-      quizEvent
+      quiz: {
+        id: quiz.id,
+        title: quiz.title,
+        subject: quiz.subject,
+        courseCode: quiz.courseCode,
+        description: quiz.description,
+        startTime: quiz.startTime,
+        endTime: quiz.endTime,
+        questions: quiz.questions,
+        questionCount: quiz.questions.length,
+        totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 0), 0)
+      }
     });
   } catch (err) {
     console.error('Error creating quiz:', err);
@@ -53,69 +133,85 @@ exports.getAllQuizzes = async (req, res) => {
     console.log('Fetching quizzes...');
     const now = new Date();
     
-    // Get all quiz events
-    const quizEvents = await QuizEvent.findAll();
+    // Get all quizzes from Prisma
+    const quizzes = await Quiz.findAll();
     
-    console.log(`Found ${quizEvents.length} quiz events`);
+    console.log(`Found ${quizzes.length} quizzes`);
 
-    // Add status and time information to each quiz event
-    const updatedQuizEvents = await Promise.all(quizEvents.map(async (event) => {
-      const startDate = new Date(event.startTime);
-      const endDate = new Date(event.endTime);
+    // Add status and time information to each quiz
+    const updatedQuizzes = quizzes.map(quiz => {
+      const startDate = new Date(quiz.startTime);
+      const endDate = new Date(quiz.endTime);
 
       // Calculate total points
-      const totalPoints = event.questions.reduce((sum, q) => sum + (q.points || 10), 0);
+      const totalPoints = quiz.questions.reduce((sum, q) => sum + (q.points || 10), 0);
 
       // Format dates for display
-      event.formattedStartTime = startDate.toLocaleString();
-      event.formattedEndTime = endDate.toLocaleString();
+      const formattedStartTime = startDate.toLocaleString();
+      const formattedEndTime = endDate.toLocaleString();
 
       // Calculate quiz duration in minutes
       const durationMs = endDate - startDate;
-      event.duration = Math.floor(durationMs / (1000 * 60));
+      const duration = Math.floor(durationMs / (1000 * 60));
 
       // Calculate status
+      let status;
       if (now >= startDate && now <= endDate) {
-        event.status = 'active';
+        status = 'active';
       } else if (now < startDate) {
-        event.status = 'upcoming';
+        status = 'upcoming';
       } else {
-        event.status = 'completed';
+        status = 'completed';
       }
 
       // Calculate time information
-      if (event.status === 'upcoming') {
+      let timeInfo = {};
+      if (status === 'upcoming') {
         const timeUntilStart = startDate - now;
-        event.startsIn = {
+        timeInfo.startsIn = {
           hours: Math.floor(timeUntilStart / (1000 * 60 * 60)),
           minutes: Math.floor((timeUntilStart % (1000 * 60 * 60)) / (1000 * 60))
         };
-        event.timeRemaining = Math.floor(timeUntilStart / (1000 * 60));
-      } else if (event.status === 'active') {
+        timeInfo.timeRemaining = Math.floor(timeUntilStart / (1000 * 60));
+      } else if (status === 'active') {
         const timeUntilEnd = endDate - now;
-        event.timeRemaining = Math.floor(timeUntilEnd / (1000 * 60));
-        event.startsIn = { hours: 0, minutes: 0 };
+        timeInfo.timeRemaining = Math.floor(timeUntilEnd / (1000 * 60));
+        timeInfo.startsIn = { hours: 0, minutes: 0 };
       }
 
-      // Check if student has attempted this quiz
-      if (req.user && req.user.id) {
-        const attempt = await QuizAttempt.findByStudentAndQuiz(req.user.id, event.id);
-        event.hasAttempted = !!attempt;
-        event.attempts = attempt ? 1 : 0;
-      } else {
-        event.hasAttempted = false;
-        event.attempts = 0;
-      }
-
-      // Add total points
-      event.totalPoints = totalPoints;
-
-      console.log(`Quiz ${event.id}: ${event.status}, Duration: ${event.duration} minutes, Questions: ${event.questions.length}, Points: ${totalPoints}`);
-      return event;
-    }));
+      console.log(`Quiz ${quiz.id}: ${status}, Duration: ${duration} minutes, Questions: ${quiz.questions.length}, Points: ${totalPoints}`);
+      
+      // Transform questions to match frontend expectations
+      const transformedQuestions = quiz.questions.map(q => ({
+        id: q.id,
+        questionText: q.text,  // Convert 'text' to 'questionText'
+        points: q.points || 10,
+        imageUrl: q.image && q.image.value ? q.image.value : null  // Extract image URL if exists
+      }));
+      
+      return {
+        id: quiz.id,
+        title: quiz.title,
+        subject: quiz.subject,
+        courseCode: quiz.courseCode,
+        description: quiz.description,
+        startTime: quiz.startTime,
+        endTime: quiz.endTime,
+        formattedStartTime,
+        formattedEndTime,
+        duration,
+        status,
+        questions: transformedQuestions,  // Include transformed questions
+        questionCount: quiz.questions.length,
+        totalPoints,
+        hasAttempted: false,
+        attempts: 0,
+        ...timeInfo
+      };
+    });
 
     res.json({
-      quizEvents: updatedQuizEvents,
+      quizEvents: updatedQuizzes,  // Changed from 'quizzes' to 'quizEvents' to match frontend expectation
       timestamp: now.toISOString()
     });
   } catch (err) {
@@ -127,8 +223,21 @@ exports.getAllQuizzes = async (req, res) => {
 // Get quizzes by teacher
 exports.getTeacherQuizzes = async (req, res) => {
   try {
-    const quizEvents = await QuizEvent.findByCreator(req.user.id);
-    res.json(quizEvents);
+    const quizzes = await Quiz.findByTeacherId(req.user.id);
+    
+    // Add calculated fields
+    const enrichedQuizzes = quizzes.map(quiz => ({
+      ...quiz,
+      questionCount: quiz.questions.length,
+      totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 10), 0),
+      status: new Date() >= new Date(quiz.startTime) && new Date() <= new Date(quiz.endTime) 
+        ? 'active' 
+        : new Date() < new Date(quiz.startTime) 
+        ? 'upcoming' 
+        : 'completed'
+    }));
+    
+    res.json(enrichedQuizzes);
   } catch (err) {
     console.error('Error fetching teacher quizzes:', err);
     res.status(500).send('Server error');
@@ -138,11 +247,28 @@ exports.getTeacherQuizzes = async (req, res) => {
 // Get quiz by ID
 exports.getQuizById = async (req, res) => {
   try {
-    const quiz = await QuizEvent.findById(req.params.id);
+    const quiz = await Quiz.findById(parseInt(req.params.id));
     if (!quiz) {
       return res.status(404).json({ msg: 'Quiz not found' });
     }
-    res.json(quiz);
+    
+    // Transform questions to match frontend expectations
+    const transformedQuestions = quiz.questions.map(q => ({
+      id: q.id,
+      questionText: q.text,  // Convert 'text' to 'questionText'
+      points: q.points || 10,
+      imageUrl: q.image && q.image.value ? q.image.value : null  // Extract image URL if exists
+    }));
+    
+    // Add calculated fields
+    const enrichedQuiz = {
+      ...quiz,
+      questions: transformedQuestions,  // Use transformed questions
+      questionCount: quiz.questions.length,
+      totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 10), 0)
+    };
+    
+    res.json(enrichedQuiz);
   } catch (err) {
     console.error('Error fetching quiz:', err);
     res.status(500).send('Server error');

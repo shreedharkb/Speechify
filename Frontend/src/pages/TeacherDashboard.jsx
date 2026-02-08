@@ -5,6 +5,8 @@ function TeacherDashboard({ setPage }) {
   const [quizData, setQuizData] = useState({
     title: '',
     subject: '',
+    courseCode: '',
+    description: '',
     startTime: '',
     endTime: '',
     questions: []
@@ -13,16 +15,15 @@ function TeacherDashboard({ setPage }) {
   const [currentQuestion, setCurrentQuestion] = useState({
     questionText: '',
     correctAnswer: '',
-    points: 1
+    points: 1,
+    imageUrl: ''
   });
 
   const [analytics, setAnalytics] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [userName, setUserName] = useState('Teacher');
-  const [calendarDate, setCalendarDate] = useState(new Date());
   const [myQuizzes, setMyQuizzes] = useState([]);
-  const [recentActivities, setRecentActivities] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [viewingResponses, setViewingResponses] = useState(null);
 
@@ -159,7 +160,8 @@ function TeacherDashboard({ setPage }) {
     setCurrentQuestion({
       questionText: '',
       correctAnswer: '',
-      points: 1
+      points: 1,
+      imageUrl: ''
     });
   };
 
@@ -210,6 +212,8 @@ function TeacherDashboard({ setPage }) {
         setQuizData({
           title: '',
           subject: '',
+          courseCode: '',
+          description: '',
           startTime: '',
           endTime: '',
           questions: []
@@ -225,79 +229,6 @@ function TeacherDashboard({ setPage }) {
       console.error('Failed to create quiz:', error);
       alert('An error occurred while creating the quiz.');
     }
-  };
-
-  // Calendar helper variables
-  const currentDate = new Date();
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const calendarMonth = monthNames[calendarDate.getMonth()];
-  const calendarYear = calendarDate.getFullYear();
-  const daysInMonth = new Date(calendarYear, calendarDate.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(calendarYear, calendarDate.getMonth(), 1).getDay();
-
-  const renderCalendar = () => {
-    const days = [];
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
-    // Day headers
-    dayNames.forEach((day, idx) => {
-      days.push(
-        <div key={`header-${idx}`} style={{ 
-          textAlign: 'center', 
-          fontWeight: '600', 
-          fontSize: '0.75rem', 
-          color: '#9CA3AF',
-          padding: '0.5rem 0',
-          marginBottom: '0.25rem',
-          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-        }}>
-          {day.substring(0, 2)}
-        </div>
-      );
-    });
-
-    // Empty cells before first day
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`}></div>);
-    }
-
-    // Days
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isToday = day === currentDate.getDate() && 
-                      calendarDate.getMonth() === currentDate.getMonth() && 
-                      calendarDate.getFullYear() === currentDate.getFullYear();
-      days.push(
-        <div key={`day-${day}`} style={{ 
-          textAlign: 'center', 
-          padding: '0.625rem',
-          borderRadius: '8px',
-          background: isToday ? '#3B82F6' : 'transparent',
-          color: isToday ? '#FFFFFF' : '#1F2937',
-          fontWeight: isToday ? '700' : '500',
-          cursor: 'pointer',
-          fontSize: '0.875rem',
-          transition: 'all 0.15s ease',
-          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-        }}
-        onMouseOver={(e) => {
-          if (!isToday) {
-            e.currentTarget.style.background = '#F3F4F6';
-            e.currentTarget.style.fontWeight = '600';
-          }
-        }}
-        onMouseOut={(e) => {
-          if (!isToday) {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.fontWeight = '500';
-          }
-        }}
-        >
-          {day}
-        </div>
-      );
-    }
-
-    return days;
   };
 
   // Theme configuration (matching student dashboard)
@@ -336,9 +267,7 @@ function TeacherDashboard({ setPage }) {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'create-quiz', label: 'Create Quiz', icon: 'create' },
-    { id: 'my-quizzes', label: 'My Quizzes', icon: 'quizzes' },
-    { id: 'calendar', label: 'Calendar', icon: 'calendar' },
-    { id: 'recent', label: 'Recent Activities', icon: 'recent' }
+    { id: 'my-quizzes', label: 'My Quizzes', icon: 'quizzes' }
   ];
 
   const getIconSVG = (iconName, isActive) => {
@@ -963,6 +892,99 @@ function TeacherDashboard({ setPage }) {
                     )}
                   </div>
 
+                  {/* Course Code Input */}
+                  <div>
+                    <label style={{ 
+                      display: 'block',
+                      marginBottom: '0.625rem', 
+                      fontWeight: '600', 
+                      color: '#111827',
+                      fontSize: '0.9375rem',
+                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                      letterSpacing: '-0.01em'
+                    }}>
+                      Course Code
+                    </label>
+                    <input
+                      type="text"
+                      value={quizData.courseCode}
+                      onChange={(e) => setQuizData(prev => ({ ...prev, courseCode: e.target.value }))}
+                      placeholder="e.g., CS458, EC888, ASD444"
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.875rem 1.125rem', 
+                        border: '2px solid #E5E7EB', 
+                        borderRadius: '10px', 
+                        fontSize: '1rem',
+                        outline: 'none',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        background: '#F9FAFB',
+                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                        color: '#111827',
+                        fontWeight: '500',
+                        lineHeight: '1.5'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#667EEA';
+                        e.target.style.background = '#FFFFFF';
+                        e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#E5E7EB';
+                        e.target.style.background = '#F9FAFB';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      required
+                    />
+                  </div>
+
+                  {/* Description Input */}
+                  <div>
+                    <label style={{ 
+                      display: 'block',
+                      marginBottom: '0.625rem', 
+                      fontWeight: '600', 
+                      color: '#111827',
+                      fontSize: '0.9375rem',
+                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                      letterSpacing: '-0.01em'
+                    }}>
+                      Description
+                    </label>
+                    <textarea
+                      value={quizData.description}
+                      onChange={(e) => setQuizData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Provide a brief description of the quiz content and objectives..."
+                      rows="4"
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.875rem 1.125rem', 
+                        border: '2px solid #E5E7EB', 
+                        borderRadius: '10px', 
+                        fontSize: '1rem',
+                        outline: 'none',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        background: '#F9FAFB',
+                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                        color: '#111827',
+                        fontWeight: '500',
+                        lineHeight: '1.5',
+                        resize: 'vertical',
+                        minHeight: '100px'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#667EEA';
+                        e.target.style.background = '#FFFFFF';
+                        e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#E5E7EB';
+                        e.target.style.background = '#F9FAFB';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                    />
+                  </div>
+
                   {/* Time Inputs */}
                   <div style={{
                     background: 'linear-gradient(135deg, #F0F4FF 0%, #E9EEFF 100%)',
@@ -1170,6 +1192,150 @@ function TeacherDashboard({ setPage }) {
                         e.target.style.boxShadow = 'none';
                       }}
                     />
+                  </div>
+
+                  {/* Add Photo Option */}
+                  <div>
+                    <label style={{ 
+                      display: 'block',
+                      marginBottom: '0.625rem', 
+                      fontWeight: '600', 
+                      color: '#111827',
+                      fontSize: '0.9375rem',
+                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                      letterSpacing: '-0.01em'
+                    }}>
+                      Add Photo (Optional)
+                    </label>
+                    <div style={{
+                      border: '2px dashed #E5E7EB',
+                      borderRadius: '10px',
+                      padding: '1.5rem',
+                      textAlign: 'center',
+                      background: '#F9FAFB',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      cursor: 'pointer'
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.style.borderColor = '#667EEA';
+                      e.currentTarget.style.background = '#EEF2FF';
+                    }}
+                    onDragLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#E5E7EB';
+                      e.currentTarget.style.background = '#F9FAFB';
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.currentTarget.style.borderColor = '#E5E7EB';
+                      e.currentTarget.style.background = '#F9FAFB';
+                      const file = e.dataTransfer.files[0];
+                      if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setCurrentQuestion(prev => ({ ...prev, imageUrl: event.target.result }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}>
+                      {currentQuestion.imageUrl ? (
+                        <div style={{ position: 'relative' }}>
+                          <img 
+                            src={currentQuestion.imageUrl} 
+                            alt="Question" 
+                            style={{ 
+                              maxWidth: '100%', 
+                              maxHeight: '300px', 
+                              borderRadius: '8px',
+                              objectFit: 'contain'
+                            }} 
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentQuestion(prev => ({ ...prev, imageUrl: '' }));
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              background: '#EF4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '32px',
+                              height: '32px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '18px',
+                              fontWeight: 'bold',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="question-image-upload"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  setCurrentQuestion(prev => ({ ...prev, imageUrl: event.target.result }));
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            style={{ display: 'none' }}
+                          />
+                          <label 
+                            htmlFor="question-image-upload"
+                            style={{
+                              cursor: 'pointer',
+                              display: 'block'
+                            }}
+                          >
+                            <svg 
+                              width="48" 
+                              height="48" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="#667EEA" 
+                              strokeWidth="2"
+                              style={{ margin: '0 auto 1rem' }}
+                            >
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                              <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <p style={{
+                              color: '#667EEA',
+                              fontWeight: '600',
+                              fontSize: '1rem',
+                              marginBottom: '0.5rem',
+                              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+                            }}>
+                              Click to upload or drag and drop
+                            </p>
+                            <p style={{
+                              color: '#9CA3AF',
+                              fontSize: '0.875rem',
+                              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+                            }}>
+                              PNG, JPG, GIF up to 10MB
+                            </p>
+                          </label>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -1548,383 +1714,6 @@ function TeacherDashboard({ setPage }) {
               )}
             </div>
           ) : null}
-
-          {/* Calendar and Recent Activities Section */}
-          {(activeSection === 'dashboard' || activeSection === 'calendar' || activeSection === 'recent') && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr',
-              gap: '2.5rem',
-              marginTop: activeSection === 'dashboard' ? '0' : '2.5rem'
-            }}>
-              {/* Left Column - Placeholder or can show quiz list */}
-              <div></div>
-
-              {/* Right Column - Calendar & Recent Activities */}
-              <div>
-                {/* Calendar */}
-                <div id="calendar-section" style={{
-                  background: '#FFFFFF',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '12px',
-                  padding: '1.75rem',
-                  marginBottom: '2rem',
-                  scrollMarginTop: '100px',
-                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
-                }}>
-                  {/* Calendar Header */}
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '1.5rem'
-                  }}>
-                    <div>
-                      <h3 style={{ 
-                        fontSize: '1.625rem', 
-                        fontWeight: '700', 
-                        color: '#1F2937',
-                        letterSpacing: '-0.025em',
-                        margin: '0',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                      }}>
-                        {calendarMonth} {calendarYear}
-                      </h3>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button 
-                        onClick={() => {
-                          const newDate = new Date(calendarDate);
-                          newDate.setMonth(newDate.getMonth() - 1);
-                          setCalendarDate(newDate);
-                        }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '8px',
-                          border: '1px solid #E5E7EB',
-                          background: '#FFFFFF',
-                          cursor: 'pointer',
-                          color: '#6B7280',
-                          transition: 'all 0.15s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#F3F4F6';
-                          e.currentTarget.style.color = '#1F2937';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = '#FFFFFF';
-                          e.currentTarget.style.color = '#6B7280';
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="15 18 9 12 15 6"></polyline>
-                        </svg>
-                      </button>
-                      <button 
-                        onClick={() => setCalendarDate(new Date())}
-                        style={{
-                          padding: '0 1rem',
-                          height: '36px',
-                          borderRadius: '8px',
-                          border: '1px solid #E5E7EB',
-                          background: '#FFFFFF',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          color: '#374151',
-                          transition: 'all 0.15s ease',
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#F3F4F6';
-                          e.currentTarget.style.color = '#1F2937';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = '#FFFFFF';
-                          e.currentTarget.style.color = '#374151';
-                        }}
-                      >
-                        Today
-                      </button>
-                      <button 
-                        onClick={() => {
-                          const newDate = new Date(calendarDate);
-                          newDate.setMonth(newDate.getMonth() + 1);
-                          setCalendarDate(newDate);
-                        }}
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '8px',
-                          border: '1px solid #E5E7EB',
-                          background: '#FFFFFF',
-                          cursor: 'pointer',
-                          color: '#6B7280',
-                          transition: 'all 0.15s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#F3F4F6';
-                          e.currentTarget.style.color = '#1F2937';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = '#FFFFFF';
-                          e.currentTarget.style.color = '#6B7280';
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(7, 1fr)',
-                    gap: '0.5rem'
-                  }}>
-                    {renderCalendar()}
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div id="recent-section" style={{
-                  background: '#FFFFFF',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '12px',
-                  padding: '0',
-                  scrollMarginTop: '100px',
-                  overflow: 'hidden'
-                }}>
-                  {/* Header */}
-                  <div style={{
-                    padding: '1.5rem 1.75rem',
-                    borderBottom: '1px solid #F3F4F6',
-                    background: 'linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%)'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}>
-                      <div>
-                        <h3 style={{ 
-                          fontSize: '1.125rem', 
-                          fontWeight: '700', 
-                          color: '#111827', 
-                          margin: '0 0 0.25rem 0',
-                          letterSpacing: '-0.02em',
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                        }}>
-                          Recent Activity
-                        </h3>
-                        <p style={{
-                          fontSize: '0.8125rem',
-                          color: '#6B7280',
-                          margin: 0,
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                          fontWeight: '500'
-                        }}>
-                          Last {recentActivities.length} actions
-                        </p>
-                      </div>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-                      }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Activities List */}
-                  <div style={{ padding: '1rem' }}>
-                    {recentActivities.length > 0 ? (
-                      recentActivities.slice(0, 5).map((activity, idx) => (
-                        <div key={activity.id || idx} style={{
-                          padding: '1rem 1.25rem',
-                          marginBottom: idx < Math.min(4, recentActivities.length - 1) ? '0.5rem' : '0',
-                          borderRadius: '10px',
-                          background: '#FAFBFC',
-                          border: '1px solid #F3F4F6',
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#FFFFFF';
-                          e.currentTarget.style.borderColor = '#E5E7EB';
-                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.06)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = '#FAFBFC';
-                          e.currentTarget.style.borderColor = '#F3F4F6';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
-                        >
-                          {/* Status Indicator */}
-                          <div style={{
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: '3px',
-                            background: 'linear-gradient(180deg, #10B981 0%, #059669 100%)'
-                          }}></div>
-                          
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            gap: '1rem'
-                          }}>
-                            {/* Left Content */}
-                            <div style={{ flex: 1 }}>
-                              <div style={{ 
-                                fontSize: '0.9375rem', 
-                                fontWeight: '600', 
-                                color: '#111827', 
-                                marginBottom: '0.5rem',
-                                lineHeight: '1.4',
-                                letterSpacing: '-0.01em',
-                                fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                              }}>
-                                {activity.quizTitle || 'Quiz Activity'}
-                              </div>
-                              
-                              {/* Metadata Row */}
-                              <div style={{ 
-                                display: 'flex', 
-                                alignItems: 'center',
-                                gap: '1rem',
-                                flexWrap: 'wrap'
-                              }}>
-                                <div style={{ 
-                                  fontSize: '0.8125rem', 
-                                  color: '#6B7280',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.375rem',
-                                  fontWeight: '500',
-                                  fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                                }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <polyline points="12 6 12 12 16 14"/>
-                                  </svg>
-                                  {new Date(activity.createdAt).toLocaleString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric',
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                  })}
-                                </div>
-                                
-                                {activity.subject && (
-                                  <div style={{ 
-                                    fontSize: '0.8125rem', 
-                                    color: '#6B7280',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.375rem',
-                                    fontWeight: '500',
-                                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                                  }}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                    </svg>
-                                    {activity.subject}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Right Status Badge */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.5rem'
-                            }}>
-                              <div style={{ 
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                color: '#10B981',
-                                background: 'rgba(16, 185, 129, 0.1)',
-                                padding: '0.375rem 0.75rem',
-                                borderRadius: '6px',
-                                letterSpacing: '0.02em',
-                                fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                                whiteSpace: 'nowrap',
-                                border: '1px solid rgba(16, 185, 129, 0.2)'
-                              }}>
-                                ✓ Created
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div style={{ 
-                        textAlign: 'center', 
-                        padding: '3rem 1.5rem', 
-                        color: '#9CA3AF', 
-                        fontSize: '0.875rem',
-                        lineHeight: '1.6',
-                        background: '#FAFBFC',
-                        borderRadius: '10px',
-                        border: '1px dashed #E5E7EB'
-                      }}>
-                        <div style={{ 
-                          width: '48px',
-                          height: '48px',
-                          margin: '0 auto 1rem',
-                          borderRadius: '12px',
-                          background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                          </svg>
-                        </div>
-                        <div style={{ 
-                          fontWeight: '600',
-                          color: '#6B7280',
-                          marginBottom: '0.25rem',
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                        }}>
-                          No Activity Yet
-                        </div>
-                        <div style={{
-                          fontSize: '0.8125rem',
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                        }}>
-                          Your recent actions will appear here
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

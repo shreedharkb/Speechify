@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/speech": "^7.2.0",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -22,9 +24,10 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
     "multer": "^2.0.2",
-    "pg": "^8.16.3"
+    "pg": "^8.18.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "prisma": "^7.3.0"
   }
 }

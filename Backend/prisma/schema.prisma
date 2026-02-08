@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// 1. STUDENTS TABLE
+// Purpose: Store student identity and academic information
+// ============================================
+model Student {
+  id          Int                  @id @default(autoincrement())
+  name        String               @db.VarChar(255)
+  email       String               @unique @db.VarChar(255)
+  password    String               @db.VarChar(255)
+  rollNo      String               @unique @map("roll_no") @db.VarChar(50)
+  year        Int                  @default(1) // Academic year (1-4)
+  branch      String               @db.VarChar(100)
+  semester    Int
+  createdAt   DateTime?            @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime?            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  submissions StudentSubmission[]
+  evaluations SubmissionEvaluation[]
+
+  @@index([email], map: "idx_students_email")
+  @@index([rollNo], map: "idx_students_roll_no")
+  @@map("students")
+}
+
+// ============================================
+// 2. TEACHERS TABLE
+// Purpose: Store teacher identity information
+// ============================================
+model Teacher {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  branch    String    @db.VarChar(100)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  quizzes   Quiz[]
+
+  @@index([email], map: "idx_teachers_email")
+  @@map("teachers")
+}
+
+// ============================================
+// 3. QUIZZES TABLE
+// Purpose: Store quiz metadata and all quiz questions as JSON
+// Design: Questions are NOT in a separate table
+// ============================================
+model Quiz {
+  id             Int                  @id @default(autoincrement())
+  teacherId      Int                  @map("teacher_id")
+  title          String               @db.VarChar(255)
+  subject        String               @db.VarChar(255)
+  courseCode     String               @map("course_code") @db.VarChar(50)
+  description    String?              @db.Text
+  questions      Json                 // Array of question objects: {id, text, points, image?}
+  correctAnswers Json                 @map("correct_answers") // Array of correct answers
+  startTime      DateTime             @map("start_time") @db.Timestamp(6)
+  endTime        DateTime             @map("end_time") @db.Timestamp(6)
+  createdAt      DateTime?            @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime?            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  teacher        Teacher              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  submissions    StudentSubmission[]
+  evaluations    SubmissionEvaluation[]
+
+  @@index([teacherId], map: "idx_quizzes_teacher_id")
+  @@index([startTime], map: "idx_quizzes_start_time")
+  @@index([endTime], map: "idx_quizzes_end_time")
+  @@index([courseCode], map: "idx_quizzes_course_code")
+  @@map("quizzes")
+}
+
+// ============================================
+// 4. STUDENT_SUBMISSIONS TABLE
+// Purpose: Store what a student submitted for a quiz question
+// Design: One row = one student answering one question from one quiz
+// Audio: .wav format at 16kHz frequency
+// ============================================
+model StudentSubmission {
+  id                Int                      @id @default(autoincrement())
+  studentId         Int                      @map("student_id")
+  quizId            Int                      @map("quiz_id")
+  questionId        Int                      @map("question_id") // Logical reference to questions JSON
+  audioPath         String?                  @map("audio_path") @db.VarChar(500) // .wav format, 16kHz
+  transcribedAnswer String?                  @map("transcribed_answer") @db.Text
+  submittedAt       DateTime?                @default(now()) @map("submitted_at") @db.Timestamp(6)
+  createdAt         DateTime?                @default(now()) @map("created_at") @db.Timestamp(6)
+  student           Student                  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  quiz              Quiz                     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([studentId], map: "idx_submissions_student_id")
+  @@index([quizId], map: "idx_submissions_quiz_id")
+  @@index([questionId], map: "idx_submissions_question_id")
+  @@map("student_submissions")
+}
+
+// ============================================
+// 5. SUBMISSION_EVALUATIONS TABLE
+// Purpose: Store aggregated evaluation results for a student's entire quiz attempt
+// Design: One evaluation per student per quiz (NOT per question)
+// ============================================
+model SubmissionEvaluation {
+  id              Int      @id @default(autoincrement())
+  studentId       Int      @map("student_id")
+  quizId          Int      @map("quiz_id")
+  questionResults Json     @map("question_results") // Array of {question_id, actual_answer, similarity_score, marks_awarded}
+  totalSimilarity Decimal  @map("total_similarity") @db.Decimal(5, 4)
+  totalMarks      Decimal  @map("total_marks") @db.Decimal(5, 2)
+  evaluatedAt     DateTime @default(now()) @map("evaluated_at") @db.Timestamp(6)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  quiz            Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, quizId], map: "unique_student_quiz_evaluation")
+  @@index([studentId], map: "idx_evaluations_student_id")
+  @@index([quizId], map: "idx_evaluations_quiz_id")
+  @@map("submission_evaluations")
+}

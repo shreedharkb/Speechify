@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS attempt_answers (
     max_points DECIMAL(5,2) NOT NULL DEFAULT 10.00,
     similarity_score DECIMAL(5,4),
     explanation TEXT,
+    audio BYTEA,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE

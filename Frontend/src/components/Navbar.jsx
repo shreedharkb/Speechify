@@ -25,7 +25,7 @@ export default function Navbar({ setPage, user, onLogout }) {
         ) : (
           <>
             <button onClick={() => setPage('login')}>Login</button>
-            <button onClick={() => setPage('signup')}>Sign Up</button>
+            <button onClick={() => setPage('role-selection')}>Sign Up</button>
           </>
         )}
       </div>

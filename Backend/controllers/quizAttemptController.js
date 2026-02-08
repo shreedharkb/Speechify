@@ -1,141 +1,183 @@
-const QuizEvent = require('../models/QuizEvent');
-const QuizAttempt = require('../models/QuizAttempt');
+const Quiz = require('../models/Quiz.prisma');
+const StudentSubmission = require('../models/StudentSubmission.prisma');
+const SubmissionEvaluation = require('../models/SubmissionEvaluation.prisma');
 const { gradeAnswerWithAI } = require('./gradeController');
+const { saveAudioToFile } = require('../utils/audioUtils');
 
 const submitQuizAttempt = async (req, res) => {
+  console.log('\n========== QUIZ SUBMISSION REQUEST ==========');
+  console.log('Request Body:', JSON.stringify(req.body, null, 2));
+  console.log('User:', req.user);
+  
   try {
-    const { quizEventId, answers } = req.body;
-    const userId = req.user.id;
+    const { quizEventId, answers, startedAt } = req.body;
+    const studentId = req.user.id;
 
-    console.log('Submitting quiz attempt:', { quizEventId, userId, answersCount: answers?.length });
+    console.log('Submitting quiz attempt:', { quizId: quizEventId, studentId, answersCount: answers?.length });
 
     if (!quizEventId || !answers) {
-      return res.status(400).json({ msg: 'Quiz event ID and answers are required' });
+      return res.status(400).json({ msg: 'Quiz ID and answers are required' });
     }
 
-    // Find the quiz event
-    const quizEvent = await QuizEvent.findById(quizEventId);
-    if (!quizEvent) {
-      return res.status(404).json({ msg: 'Quiz event not found' });
+    // Find the quiz using Prisma
+    const quiz = await Quiz.findById(parseInt(quizEventId));
+    if (!quiz) {
+      return res.status(404).json({ msg: 'Quiz not found' });
     }
 
-    // Check if student has already attempted this quiz
-    const existingAttempt = await QuizAttempt.findByStudentAndQuiz(userId, quizEventId);
-    if (existingAttempt) {
-      return res.status(400).json({ 
-        msg: 'You have already submitted this quiz',
-        alreadyAttempted: true,
-        attemptId: existingAttempt.id
+    // Check if student has already submitted this quiz
+    const existingEvaluation = await SubmissionEvaluation.findByStudentAndQuiz(studentId, quiz.id);
+    if (existingEvaluation) {
+      console.log('Student already submitted this quiz - returning existing evaluation');
+      // Return existing evaluation instead of error (handles double-submit gracefully)
+      const totalPossible = quiz.questions.reduce((sum, q) => sum + (q.points || 10), 0);
+      const percentage = totalPossible > 0 ? ((parseFloat(existingEvaluation.totalMarks) / totalPossible) * 100).toFixed(2) : 0;
+      
+      const gradedAnswers = existingEvaluation.questionResults.map(qr => ({
+        questionId: qr.question_id,
+        question: qr.question_text,
+        studentAnswer: qr.student_answer,
+        correctAnswer: qr.actual_answer,
+        isCorrect: qr.similarity_score >= 0.70,
+        pointsEarned: qr.marks_awarded,
+        maxPoints: qr.max_points,
+        similarityScore: qr.similarity_score,
+        explanation: qr.similarity_score >= 0.70 ? 'Correct answer!' : 'Incorrect or partially correct'
+      }));
+      
+      return res.json({
+        msg: 'Quiz already submitted - returning previous results',
+        score: parseFloat(existingEvaluation.totalMarks),
+        totalPossible: totalPossible,
+        percentage: percentage,
+        answers: gradedAnswers,
+        evaluationId: existingEvaluation.id,
+        alreadySubmitted: true
       });
     }
 
     // Check if quiz is still active
     const now = new Date();
-    if (now < new Date(quizEvent.startTime)) {
+    if (now < new Date(quiz.startTime)) {
       return res.status(400).json({ msg: 'Quiz has not started yet' });
     }
-    if (now > new Date(quizEvent.endTime)) {
+    if (now > new Date(quiz.endTime)) {
       return res.status(400).json({ msg: 'Quiz has already ended' });
     }
 
-    // Calculate score using AI semantic grading
-    let totalPoints = 0;
-    let correctAnswers = 0;
+    // Grade all answers using AI and prepare submission data
+    const questionResults = [];
+    const submissions = [];
+    let totalMarks = 0;
+    let totalSimilarity = 0;
     
-    // Grade all answers using AI
-    const gradedAnswers = [];
+    console.log(`Processing ${answers.length} answers...`);
     
     for (let index = 0; index < answers.length; index++) {
       const answerObj = answers[index];
-      const question = quizEvent.questions[index];
+      const question = quiz.questions[index];
       
       if (!question) {
-        gradedAnswers.push({
-          questionId: null,
-          question: answerObj.question,
-          studentAnswer: answerObj.studentAnswer,
-          correctAnswer: '',
-          isCorrect: false,
-          pointsEarned: 0,
-          maxPoints: 10,
-          similarityScore: 0,
-          explanation: 'Question not found'
-        });
+        console.log(`Question ${index + 1} not found in quiz`);
         continue;
       }
 
-      // Use AI grading
+      // Find the correct answer for this question from the correctAnswers array
+      const correctAnswerObj = quiz.correctAnswers?.find(ca => ca.questionId === question.id);
+      const correctAnswerText = correctAnswerObj?.answer || '';
+
+      // Save audio file if provided
+      let audioPath = null;
+      if (answerObj.audioBlob) {
+        // Save as .wav file in sounds/ folder
+        audioPath = await saveAudioToFile(answerObj.audioBlob, Date.now(), question.id);
+        if (audioPath) {
+          console.log(`✓ Audio saved: sounds/${audioPath}`);
+        }
+      }
+
+      // Grade the answer using AI
       const gradeResult = await gradeAnswerWithAI(
-        question.questionText,
+        question.text || question.questionText,
         answerObj.studentAnswer,
-        question.correctAnswerText,
+        correctAnswerText,
         0.70 // 70% threshold for correct answer
       );
       
       const maxPoints = question.points || 10;
-      let pointsEarned = 0;
-      let percentageEarned = 0;
-      let isCorrect = false;
+      const similarityScore = gradeResult.similarityScore;
+      const marksAwarded = Math.round(maxPoints * similarityScore * 100) / 100;
       
-      // Use AI's similarity score
-      percentageEarned = gradeResult.similarityScore;
+      totalMarks += marksAwarded;
+      totalSimilarity += similarityScore;
       
-      // Determine if correct based on threshold
-      if (gradeResult.similarityScore >= 0.70) {
-        isCorrect = true;
-      }
-      
-      // Calculate points based on AI similarity assessment
-      pointsEarned = maxPoints * percentageEarned;
-      
-      // Round to 2 decimal places
-      pointsEarned = Math.round(pointsEarned * 100) / 100;
-      
-      // Ensure we never exceed max points
-      pointsEarned = Math.min(pointsEarned, maxPoints);
-      
-      totalPoints += pointsEarned;
-      if (isCorrect) correctAnswers++;
-
-      gradedAnswers.push({
+      // Store submission data (will be saved later)
+      submissions.push({
+        studentId: studentId,
+        quizId: quiz.id,
         questionId: question.id,
-        question: question.questionText,
-        studentAnswer: answerObj.studentAnswer,
-        correctAnswer: question.correctAnswerText,
-        isCorrect: isCorrect,
-        pointsEarned: pointsEarned,
-        maxPoints: maxPoints,
-        similarityScore: gradeResult.similarityScore,
-        explanation: gradeResult.explanation
+        audioPath: audioPath,
+        transcribedAnswer: answerObj.studentAnswer
       });
       
-      console.log(`Question ${index + 1}: ${isCorrect ? 'CORRECT' : 'INCORRECT'} - ${pointsEarned.toFixed(2)}/${maxPoints} pts - Similarity: ${Math.round(gradeResult.similarityScore * 100)}%`);
+      // Store question result for evaluation
+      questionResults.push({
+        question_id: question.id,
+        question_text: question.text,
+        student_answer: answerObj.studentAnswer,
+        actual_answer: correctAnswerText,
+        similarity_score: similarityScore,
+        marks_awarded: marksAwarded,
+        max_points: maxPoints
+      });
+      
+      console.log(`Question ${index + 1}: ${marksAwarded.toFixed(2)}/${maxPoints} pts - Similarity: ${Math.round(similarityScore * 100)}%`);
     }
 
-    // Create quiz attempt record
-    const quizAttempt = await QuizAttempt.create({
-      quizEventId: quizEventId,
-      studentId: userId,
-      answers: gradedAnswers,
-      score: totalPoints,
-      startedAt: req.body.startedAt || now,
-      submittedAt: now
+    // Calculate average similarity
+    const avgSimilarity = answers.length > 0 ? totalSimilarity / answers.length : 0;
+
+    // Save all submissions to database
+    if (submissions.length > 0) {
+      await StudentSubmission.createMany(submissions);
+      console.log(`✓ Saved ${submissions.length} question submissions`);
+    }
+
+    // Create or update evaluation record (upsert to handle duplicate submissions gracefully)
+    const evaluation = await SubmissionEvaluation.createOrUpdate({
+      studentId: studentId,
+      quizId: quiz.id,
+      questionResults: questionResults,
+      totalSimilarity: avgSimilarity,
+      totalMarks: totalMarks
     });
 
-    console.log('Quiz attempt saved:', quizAttempt.id);
+    console.log(`✓ Evaluation saved: ID ${evaluation.id}`);
 
-    const totalPossible = quizEvent.questions.reduce((sum, q) => sum + (q.points || 10), 0);
-    const percentage = totalPossible > 0 ? ((totalPoints / totalPossible) * 100).toFixed(2) : 0;
+    // Calculate total possible marks
+    const totalPossible = quiz.questions.reduce((sum, q) => sum + (q.points || 10), 0);
+    const percentage = totalPossible > 0 ? ((totalMarks / totalPossible) * 100).toFixed(2) : 0;
+
+    // Format response for frontend
+    const gradedAnswers = questionResults.map(qr => ({
+      questionId: qr.question_id,
+      question: qr.question_text,
+      studentAnswer: qr.student_answer,
+      correctAnswer: qr.actual_answer,
+      isCorrect: qr.similarity_score >= 0.70,
+      pointsEarned: qr.marks_awarded,
+      maxPoints: qr.max_points,
+      similarityScore: qr.similarity_score,
+      explanation: qr.similarity_score >= 0.70 ? 'Correct answer!' : 'Incorrect or partially correct'
+    }));
 
     res.json({
       msg: 'Quiz submitted successfully',
-      score: totalPoints,
+      score: totalMarks,
       totalPossible: totalPossible,
       percentage: percentage,
-      correctAnswers: correctAnswers,
-      totalQuestions: quizEvent.questions.length,
       answers: gradedAnswers,
-      attemptId: quizAttempt.id
+      evaluationId: evaluation.id
     });
 
   } catch (err) {
@@ -150,18 +192,22 @@ const submitQuizAttempt = async (req, res) => {
 const checkQuizAttempt = async (req, res) => {
   try {
     const { quizEventId } = req.params;
-    const userId = req.user.id;
+    const studentId = req.user.id;
 
-    console.log('Checking quiz attempt:', { quizEventId, userId });
+    console.log('Checking quiz attempt:', { quizId: quizEventId, studentId });
 
-    const existingAttempt = await QuizAttempt.findByStudentAndQuiz(userId, quizEventId);
+    // Check if evaluation exists for this student and quiz
+    const existingEvaluation = await SubmissionEvaluation.findByStudentAndQuiz(
+      studentId, 
+      parseInt(quizEventId)
+    );
 
-    if (existingAttempt) {
+    if (existingEvaluation) {
       return res.json({
         attempted: true,
-        attemptId: existingAttempt.id,
-        score: existingAttempt.score,
-        submittedAt: existingAttempt.submitted_at
+        evaluationId: existingEvaluation.id,
+        score: existingEvaluation.totalMarks,
+        submittedAt: existingEvaluation.createdAt
       });
     }
 
@@ -180,25 +226,44 @@ const checkQuizAttempt = async (req, res) => {
 
 const getStudentQuizHistory = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const studentId = req.user.id;
 
-    console.log('Fetching quiz history for student:', userId);
+    console.log('Fetching quiz history for student:', studentId);
 
-    // Get all quiz attempts for the student
-    const attempts = await QuizAttempt.findByStudent(userId);
+    // Get all evaluations for the student using Prisma
+    const evaluations = await SubmissionEvaluation.findByStudent(studentId);
 
-    const history = attempts.map(attempt => ({
-      attemptId: attempt.id,
-      quizTitle: attempt.quiz_title || 'Unknown Quiz',
-      quizSubject: attempt.subject || 'N/A',
-      score: attempt.score,
-      startedAt: attempt.started_at,
-      submittedAt: attempt.submitted_at
-    }));
+    const attempts = evaluations.map(evaluation => {
+      const quiz = evaluation.quiz;
+      const questionResults = evaluation.questionResults || [];
+      
+      return {
+        id: evaluation.id,
+        quizId: quiz.id,
+        quizTitle: quiz.title,
+        subject: quiz.subject,
+        score: evaluation.totalMarks,
+        totalPossible: questionResults.reduce((sum, qr) => sum + (qr.max_points || 10), 0),
+        percentage: questionResults.length > 0 
+          ? ((evaluation.totalMarks / questionResults.reduce((sum, qr) => sum + (qr.max_points || 10), 0)) * 100).toFixed(1)
+          : 0,
+        submittedAt: evaluation.createdAt,
+        startedAt: evaluation.createdAt, // Use createdAt as fallback
+        answers: questionResults.map(qr => ({
+          question: qr.question_text,
+          studentAnswer: qr.student_answer,
+          correctAnswer: qr.actual_answer,
+          isCorrect: qr.similarity_score >= 0.70,
+          pointsEarned: qr.marks_awarded,
+          maxPoints: qr.max_points || 10,
+          similarityScore: qr.similarity_score
+        }))
+      };
+    });
 
     res.json({
-      totalAttempts: history.length,
-      attempts: history
+      totalAttempts: attempts.length,
+      attempts: attempts
     });
 
   } catch (err) {
@@ -212,12 +277,12 @@ const getStudentQuizHistory = async (req, res) => {
 
 const getAllQuizAttempts = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const teacherId = req.user.id;
 
-    console.log('Fetching all quiz attempts for teacher:', userId);
+    console.log('Fetching all quiz attempts for teacher:', teacherId);
 
     // Get all quizzes created by this teacher
-    const teacherQuizzes = await QuizEvent.findByCreator(userId);
+    const teacherQuizzes = await Quiz.findByTeacherId(teacherId);
     const quizIds = teacherQuizzes.map(q => q.id);
 
     if (quizIds.length === 0) {
@@ -227,18 +292,29 @@ const getAllQuizAttempts = async (req, res) => {
       });
     }
 
-    // Get all attempts for these quizzes
-    let allAttempts = [];
+    // Get all evaluations for these quizzes
+    let allEvaluations = [];
     for (const quizId of quizIds) {
-      const attempts = await QuizAttempt.findByQuizEvent(quizId);
-      allAttempts = allAttempts.concat(attempts);
+      const evaluations = await SubmissionEvaluation.findByQuiz(quizId);
+      allEvaluations = allEvaluations.concat(evaluations);
     }
 
-    console.log('Teacher attempts:', allAttempts.length);
+    const attempts = allEvaluations.map(evaluation => ({
+      id: evaluation.id,
+      studentName: evaluation.student.name,
+      studentRollNo: evaluation.student.rollNo,
+      quizId: evaluation.quizId,
+      quizTitle: evaluation.quiz.title,
+      subject: evaluation.quiz.subject,
+      score: evaluation.totalMarks,
+      submittedAt: evaluation.createdAt
+    }));
+
+    console.log('Teacher attempts:', attempts.length);
 
     res.json({
-      totalAttempts: allAttempts.length,
-      attempts: allAttempts
+      totalAttempts: attempts.length,
+      attempts: attempts
     });
 
   } catch (err) {
@@ -253,39 +329,39 @@ const getAllQuizAttempts = async (req, res) => {
 const getQuizAttemptsByQuizId = async (req, res) => {
   try {
     const { quizEventId } = req.params;
-    const userId = req.user.id;
+    const teacherId = req.user.id;
 
     console.log('Fetching quiz attempts for quiz:', quizEventId);
 
     // First verify that this quiz belongs to the teacher
-    const quiz = await QuizEvent.findById(quizEventId);
+    const quiz = await Quiz.findById(parseInt(quizEventId));
     
     if (!quiz) {
       return res.status(404).json({ msg: 'Quiz not found' });
     }
 
-    if (quiz.createdBy !== userId) {
+    if (quiz.teacherId !== teacherId) {
       return res.status(403).json({ msg: 'Not authorized to view this quiz\'s attempts' });
     }
 
-    // Get all attempts for this quiz
-    const attempts = await QuizAttempt.findByQuizEvent(quizEventId);
+    // Get all evaluations for this quiz
+    const evaluations = await SubmissionEvaluation.findByQuiz(parseInt(quizEventId));
 
-    console.log(`Found ${attempts.length} attempts for quiz ${quizEventId}`);
+    console.log(`Found ${evaluations.length} attempts for quiz ${quizEventId}`);
 
     res.json({
       quizTitle: quiz.title,
       quizSubject: quiz.subject,
-      totalAttempts: attempts.length,
-      attempts: attempts.map(attempt => ({
-        attemptId: attempt.id,
-        studentId: attempt.student_id,
-        studentName: attempt.student_name || 'Unknown Student',
-        studentEmail: attempt.student_email || '',
-        score: attempt.score,
-        startedAt: attempt.started_at,
-        submittedAt: attempt.submitted_at,
-        answers: attempt.answers
+      totalAttempts: evaluations.length,
+      attempts: evaluations.map(evaluation => ({
+        evaluationId: evaluation.id,
+        studentId: evaluation.studentId,
+        studentName: evaluation.student.name,
+        studentRollNo: evaluation.student.rollNo,
+        studentEmail: evaluation.student.email,
+        score: evaluation.totalMarks,
+        submittedAt: evaluation.createdAt,
+        questionResults: evaluation.questionResults
       }))
     });
 

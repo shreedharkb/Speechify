@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
   const [answers, setAnswers] = useState({});
+  const [audioBlobs, setAudioBlobs] = useState({});  // Store audio blobs for each question
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [recording, setRecording] = useState(false);
@@ -83,6 +84,12 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
           const audioBlob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
           console.log('Recording stopped, blob size:', audioBlob.size);
           
+          // Store the audio blob for this question
+          setAudioBlobs(prev => ({
+            ...prev,
+            [currentQuestionIndex]: audioBlob
+          }));
+          
           // Stop all tracks to release microphone
           stream.getTracks().forEach(track => track.stop());
           
@@ -135,12 +142,34 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
     }
   };
 
-  const handleSubmit = () => {
-    const formattedAnswers = quiz.questions.map((question, index) => ({
-      question: question.questionText,
-      studentAnswer: answers[index] || '',
-      isCorrect: false, // This will be determined by the backend
-    }));
+  const handleSubmit = async () => {
+    // Convert audio blobs to base64 for each answer
+    const formattedAnswers = await Promise.all(
+      quiz.questions.map(async (question, index) => {
+        let audioBase64 = null;
+        
+        // Convert blob to base64 if audio exists for this question
+        if (audioBlobs[index]) {
+          // Use FileReader to convert blob to base64 (browser-native API)
+          audioBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              // Remove the data:audio/...;base64, prefix
+              const base64String = reader.result.split(',')[1];
+              resolve(base64String);
+            };
+            reader.readAsDataURL(audioBlobs[index]);
+          });
+        }
+        
+        return {
+          question: question.questionText,
+          studentAnswer: answers[index] || '',
+          isCorrect: false, // This will be determined by the backend
+          audioBlob: audioBase64
+        };
+      })
+    );
 
     onSubmit(formattedAnswers);
   };
@@ -484,6 +513,31 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
             }}>
               {currentQuestion.questionText}
             </div>
+
+            {/* Question Image (if exists) */}
+            {currentQuestion.imageUrl && (
+              <div style={{
+                marginBottom: '1.75rem',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                border: '1px solid #E5E7EB'
+              }}>
+                <img 
+                  src={`${import.meta.env.VITE_API_URL}${currentQuestion.imageUrl}`}
+                  alt={`Question ${currentQuestionIndex + 1}`}
+                  style={{
+                    width: '100%',
+                    maxWidth: '600px',
+                    height: 'auto',
+                    display: 'block'
+                  }}
+                  onError={(e) => {
+                    console.error('Image failed to load:', currentQuestion.imageUrl);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
 
             {/* Professional Answer Section */}
             <div>
