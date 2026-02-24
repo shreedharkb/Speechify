@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { cache } = require('../config/redis');
 
 // SBERT service URL - can be configured via environment variable
 const SBERT_SERVICE_URL = process.env.SBERT_SERVICE_URL || 'http://localhost:5002';
@@ -38,6 +39,17 @@ async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, thr
       };
     }
 
+    // Check cache first
+    const cacheKey = cache.gradingKey(
+      `${questionText}:${correctAnswer}`,
+      studentAnswer
+    );
+    const cachedResult = await cache.get(cacheKey);
+    if (cachedResult) {
+      console.log('✅ Cache hit for grading');
+      return cachedResult;
+    }
+
     // Call SBERT service for semantic similarity grading
     console.log(`📡 Calling SBERT service at ${SBERT_SERVICE_URL}/grade...`);
     
@@ -60,11 +72,15 @@ async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, thr
 
     console.log(`Grading result: Score=${similarityScore}, Threshold=${threshold}, Correct=${isCorrect}`);
 
-    return {
+    // Cache the result for 10 minutes
+    const result = {
       isCorrect,
       similarityScore,
       explanation
     };
+    await cache.set(cacheKey, result, 600);
+
+    return result;
 
   } catch (error) {
     console.error('❌ ERROR in SBERT grading:', error.message);

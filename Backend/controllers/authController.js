@@ -1,4 +1,3 @@
-const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/prisma');
@@ -80,23 +79,8 @@ exports.register = async (req, res) => {
       return res.status(201).json({ msg: 'Student registered successfully!', userId: student.id });
       
     } else {
-      // Fallback to old User model for backward compatibility
-      const existingUser = await User.findByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ msg: 'User with this email already exists' });
-      }
-
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      await User.create({
-        name,
-        email,
-        password: hashedPassword,
-        role: role || 'student'
-      });
-
-      return res.status(201).json({ msg: 'User registered successfully!' });
+      // Invalid role specified
+      return res.status(400).json({ msg: 'Invalid role. Must be either "teacher" or "student"' });
     }
   } catch (err) {
     console.error('Registration error:', err.message);
@@ -130,12 +114,6 @@ exports.login = async (req, res) => {
       if (student) {
         user = student;
         role = 'student';
-      } else {
-        // Fallback to old User model for backward compatibility
-        user = await User.findByEmail(email);
-        if (user) {
-          role = user.role;
-        }
       }
     }
     
@@ -186,23 +164,12 @@ exports.login = async (req, res) => {
 };
 
 // --- Update User Role to Teacher ---
+// NOTE: This function is deprecated after migration to separate teachers/students tables
+// To migrate a student to teacher, you need to create a new teacher record and
+// optionally delete the student record if needed
 exports.makeTeacher = async (req, res) => {
-  try {
-    const { email } = req.body;
-    
-    // Find user
-    const user = await User.findByEmail(email);
-    if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
-    }
-
-    // Update role
-    await User.update(user.id, { role: 'teacher' });
-
-    res.json({ msg: `User ${user.name} has been updated to a teacher.` });
-  } catch (err) {
-    console.error('Make teacher error:', err.message);
-    res.status(500).send('Server Error');
-  }
+  return res.status(501).json({ 
+    msg: 'This endpoint is deprecated. Users are now created directly as teachers or students.' 
+  });
 };
 

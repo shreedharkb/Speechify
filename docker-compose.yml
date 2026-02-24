@@ -11,6 +11,11 @@ services:
     volumes:
       - whisper-cache:/root/.cache/huggingface
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
 
   sbert-service:
     build:
@@ -27,6 +32,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
 
   postgres:
     image: postgres:16-alpine
@@ -37,6 +47,7 @@ services:
       POSTGRES_USER: quiz_admin
       POSTGRES_PASSWORD: quiz_secure_password
       POSTGRES_DB: quiz_app
+      POSTGRES_MAX_CONNECTIONS: 200
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./Backend/init-database.sql:/docker-entrypoint-initdb.d/init-database.sql
@@ -46,6 +57,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    command: postgres -c max_connections=200 -c shared_buffers=256MB
+
+  redis:
+    image: redis:7-alpine
+    container_name: quiz-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   whisper-cache:
@@ -53,5 +80,7 @@ volumes:
   sbert-cache:
     driver: local
   postgres-data:
+    driver: local
+  redis-data:
     driver: local
 

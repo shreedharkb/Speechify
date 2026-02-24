@@ -23,5 +23,6 @@ COPY app.py .
 # Expose port
 EXPOSE 5002
 
-# Run the application
-CMD ["python", "app.py"]
+# Run with Gunicorn for production (8 workers for 200+ concurrent users)
+# gevent worker handles async I/O efficiently
+CMD ["gunicorn", "--workers", "8", "--worker-class", "gevent", "--bind", "0.0.0.0:5002", "--timeout", "120", "--keep-alive", "5", "app:app"]

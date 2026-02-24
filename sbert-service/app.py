@@ -259,4 +259,5 @@ def batch_grade():
         }), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002, debug=True)
+    # For development only - production uses gunicorn
+    app.run(host='0.0.0.0', port=5002, debug=False)

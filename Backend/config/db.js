@@ -7,9 +7,9 @@ const pool = new Pool({
   user: process.env.DB_USER || 'quiz_admin',
   password: process.env.DB_PASSWORD || 'quiz_secure_password',
   database: process.env.DB_NAME || 'quiz_app',
-  max: 20, // Maximum number of clients in the pool
+  max: 100, // Maximum connections for 200 concurrent users
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
 });
 
 // Test the connection

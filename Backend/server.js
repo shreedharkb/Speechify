@@ -3,6 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { pool } = require('./config/db');
+const { redis } = require('./config/redis');
+const { getQueueStats, cleanQueues } = require('./utils/queue');
+const { apiRateLimit } = require('./middleware/rateLimitMiddleware');
 
 // Route Imports
 const authRoutes = require('./routes/auth');
@@ -26,6 +29,51 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Global API rate limiting (100 requests per minute per IP)
+app.use('/api', apiRateLimit);
+
+// --- Health & Stats Endpoints ---
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbHealth = await pool.query('SELECT 1');
+    const redisHealth = await redis.ping();
+    const queueStats = await getQueueStats();
+    
+    res.json({
+      status: 'healthy',
+      database: dbHealth ? 'connected' : 'disconnected',
+      redis: redisHealth === 'PONG' ? 'connected' : 'disconnected',
+      queues: queueStats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      error: error.message
+    });
+  }
+});
+
+// Queue stats endpoint
+app.get('/api/queue-stats', async (req, res) => {
+  try {
+    const stats = await getQueueStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Clean old jobs periodically (every hour)
+setInterval(async () => {
+  try {
+    await cleanQueues();
+    console.log('🧹 Cleaned old queue jobs');
+  } catch (error) {
+    console.error('Error cleaning queues:', error);
+  }
+}, 3600000);
 
 // --- DATABASE CONNECTION ---
 // Test PostgreSQL connection
