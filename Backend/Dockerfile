@@ -1,0 +1,20 @@
+# Use official Node image
+FROM node:18-alpine
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files first
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --production
+
+# Copy remaining source code
+COPY . .
+
+# Expose backend port (change if different)
+EXPOSE 5000
+
+# Start the server
+CMD ["npm", "start"]
