@@ -1,5 +1,5 @@
 # Use official Node image
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Create app directory
 WORKDIR /app
@@ -12,6 +12,9 @@ RUN npm install
 
 # Copy remaining source code
 COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
 
 # Expose backend port (change if different)
 EXPOSE 5000
