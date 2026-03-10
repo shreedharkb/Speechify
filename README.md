@@ -1,45 +1,93 @@
+<div align="center">
+
 # Speechify
 
-AI-powered quiz platform that uses semantic understanding to grade student answers based on meaning, not exact word matching.
+### AI-Powered Semantic Quiz Grading Platform
+
+An intelligent educational platform that revolutionizes quiz assessment using Natural Language Processing and Machine Learning to evaluate student answers based on semantic meaning rather than exact string matching.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com/)
 
-## What is Speechify?
+[Features](#key-features) | [Architecture](#system-architecture) | [Installation](#quick-start) | [API Documentation](#api-overview) | [Contributing](#contributing)
 
-Speechify transforms quiz grading by understanding **what students mean**, not just what they write. Using Sentence-BERT AI models, it evaluates answers semantically — so "Plants make food using sunlight" and "Photosynthesis converts light energy" both get marked correct.
+</div>
 
-**The Problem:**
+---
+
+## Project Overview
+
+**Speechify** is a full-stack web application that solves a critical problem in educational technology: **the rigidity of traditional quiz grading systems**. By leveraging state-of-the-art NLP models (Sentence-BERT), this platform understands the semantic meaning of student responses, enabling fair and accurate assessment even when answers are phrased differently from the expected response.
+
+### The Problem & Solution
+
+| Traditional Grading | Speechify AI Grading |
+|---------------------|----------------------|
+| Exact string matching only | Semantic understanding |
+| "Plants make food" ≠ "Photosynthesis" | "Plants make food" ≈ "Photosynthesis" |
+| High false negatives | Context-aware evaluation |
+| Frustrating for students | Fair and accurate |
+
 ```
-✗ Traditional System
-  Correct: "Photosynthesis is the process plants use to convert sunlight into energy"
-  Student: "Plants make food using light from the sun"
-  Result: ❌ Wrong (doesn't match exactly)
+Traditional System:
+  Expected: "Photosynthesis is the process plants use to convert sunlight into energy"
+  Student:  "Plants make food using light from the sun"
+  Result:   ❌ INCORRECT (no exact match)
 
-✓ Speechify
-  Correct: "Photosynthesis is the process plants use to convert sunlight into energy"
-  Student: "Plants make food using light from the sun"
-  Result: ✅ Correct (85% semantic similarity)
+Speechify:
+  Expected: "Photosynthesis is the process plants use to convert sunlight into energy"
+  Student:  "Plants make food using light from the sun"
+  Result:   ✅ CORRECT (85% semantic similarity)
 ```
 
 ## Key Features
 
-- **🤖 AI Semantic Grading** - Sentence-BERT evaluates meaning, not exact words
-- **👨‍🏫 Teacher Portal** - Create, schedule, and manage quizzes with time restrictions
-- **👨‍🎓 Student Portal** - Take quizzes and receive instant AI-graded feedback
-- **🎙️ Voice Transcription** - Optional Whisper AI integration for spoken answers
-- **📊 Real-time Results** - Instant grading with detailed explanations
-- **🔐 Secure Authentication** - JWT-based auth with role-based access control
-- **🐳 Docker Ready** - Complete containerized setup with Docker Compose
+| Feature | Description | Technology Used |
+|---------|-------------|-----------------|
+| **AI Semantic Grading** | Evaluates answer meaning using cosine similarity | Sentence-BERT, PyTorch |
+| **Real-time Processing** | Instant grading with detailed feedback | Redis Queue, WebSockets |
+| **Voice Transcription** | Speech-to-text for accessibility | OpenAI Whisper |
+| **Role-Based Access** | Separate Teacher & Student portals | JWT, RBAC |
+| **Quiz Scheduling** | Time-bound assessments with auto-publish | Cron Jobs, PostgreSQL |
+| **Containerized Deployment** | One-command setup for all services | Docker Compose |
+| **RESTful API** | Well-documented, scalable API design | Express.js, Prisma ORM |
+
+## System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND (React 19)                            │
+│                         Vite | Axios | React Router                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           BACKEND (Node.js + Express)                       │
+│              JWT Auth | Prisma ORM | Rate Limiting | Validation             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                     │                 │                    │
+                     ▼                 ▼                    ▼
+        ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+        │   PostgreSQL   │  │  SBERT Service   │  │ Whisper Service  │
+        │   (Database)   │  │  (AI Grading)    │  │ (Transcription)  │
+        │    Prisma      │  │  Flask + PyTorch │  │  FastAPI + ASR   │
+        └────────────────┘  └──────────────────┘  └──────────────────┘
+```
 
 ## Tech Stack
 
-**Frontend:** React 19, Vite, Axios  
-**Backend:** Node.js 18+, Express 4, PostgreSQL 16  
-**AI Services:** Sentence-BERT (all-MiniLM-L6-v2), OpenAI Whisper (base)  
-**DevOps:** Docker, Docker Compose
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | React 19, Vite, Axios, React Router, CSS3 |
+| **Backend** | Node.js 18+, Express.js, Prisma ORM, JWT |
+| **Database** | PostgreSQL 16, Redis (caching) |
+| **AI/ML Services** | Sentence-BERT (all-MiniLM-L6-v2), OpenAI Whisper |
+| **DevOps** | Docker, Docker Compose, GitHub Actions |
+| **Testing** | Jest, Supertest, pytest |
 
 ## Quick Start
 
@@ -305,11 +353,9 @@ Configure these in `Backend/.env`:
 - **Audio Storage**: See [SETUP_AUDIO_STORAGE.md](SETUP_AUDIO_STORAGE.md) for audio file handling details
 - **Database Migrations**: See [Backend/PRISMA_MIGRATION_GUIDE.md](Backend/PRISMA_MIGRATION_GUIDE.md) for schema evolution
 
-## Support
 
-- **Issues**: Open an issue on GitHub for bug reports or feature requests
-- **Discussions**: Use GitHub Discussions for questions and community support
-- **Documentation**: Check the `docs/` folder and linked markdown files
+
+
 
 ## Contributing
 
@@ -323,14 +369,53 @@ Contributions are welcome! To contribute:
 
 Please ensure your code follows the existing style and includes appropriate tests.
 
-## Who Maintains This?
+---
 
-This project is actively maintained by the Speechify development team. See [PROJECT_HISTORY.md](PROJECT_HISTORY.md) for contributor information.
+## Author & Maintainer
 
-## License
+<div align="center">
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+<img src="https://github.com/shreedharkb.png" width="100" height="100" style="border-radius: 50%;" alt="Shreedhar K B"/>
+
+### Shreedhar K B
+
+**Full Stack Developer | Cloud Enthusiast**
+
+[![GitHub](https://img.shields.io/badge/GitHub-shreedharkb-181717?style=for-the-badge&logo=github)](https://github.com/shreedharkb)
+[![Email](https://img.shields.io/badge/Email-shreedharkb4%40gmail.com-EA4335?style=for-the-badge&logo=gmail)](mailto:shreedharkb4@gmail.com)
+
+*Designed, developed, and maintained by Shreedhar K B*
+
+</div>
 
 ---
 
-**Built for better education through AI** 🎓
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+```
+MIT License
+
+Copyright (c) 2026 Shreedhar K B
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
+
+---
+
+<div align="center">
+
+**If you found this project helpful, please consider giving it a ⭐**
+
+*Built with passion for better education through AI*
+
+</div>
