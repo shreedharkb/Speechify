@@ -147,7 +147,6 @@ const rateLimiter = {
 module.exports = {
   redis,
   redisSubscriber,
-  redisConfig,
   cache,
   rateLimiter
 };
