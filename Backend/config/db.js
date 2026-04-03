@@ -1,16 +1,30 @@
 const { Pool } = require('pg');
 
 // Create a PostgreSQL connection pool
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER || 'quiz_admin',
-  password: process.env.DB_PASSWORD || 'quiz_secure_password',
-  database: process.env.DB_NAME || 'quiz_app',
-  max: 100, // Maximum connections for 200 concurrent users
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-});
+// Support both local development (individual vars) and Render (DATABASE_URL)
+let pool;
+
+if (process.env.DATABASE_URL) {
+  // Render provides DATABASE_URL as full connection string
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 100,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+} else {
+  // Local development uses individual variables
+  pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    user: process.env.DB_USER || 'quiz_admin',
+    password: process.env.DB_PASSWORD || 'quiz_secure_password',
+    database: process.env.DB_NAME || 'quiz_app',
+    max: 100,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+}
 
 // Test the connection
 pool.on('connect', () => {

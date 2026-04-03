@@ -1,19 +1,39 @@
 const Redis = require('ioredis');
 
 // Redis connection configuration
-const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-  maxRetriesPerRequest: null, // Required for Bull queue
-  enableReadyCheck: false,
-  retryStrategy: (times) => {
-    if (times > 10) {
-      console.error('Redis connection failed after 10 retries');
-      return null;
+// Support both local development (host/port) and Render (REDIS_URL)
+let redisConfig;
+
+if (process.env.REDIS_URL) {
+  // Render provides REDIS_URL as full connection string
+  redisConfig = {
+    url: process.env.REDIS_URL,
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+    retryStrategy: (times) => {
+      if (times > 10) {
+        console.error('Redis connection failed after 10 retries');
+        return null;
+      }
+      return Math.min(times * 200, 2000);
     }
-    return Math.min(times * 200, 2000);
-  }
-};
+  };
+} else {
+  // Local development uses host/port
+  redisConfig = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+    retryStrategy: (times) => {
+      if (times > 10) {
+        console.error('Redis connection failed after 10 retries');
+        return null;
+      }
+      return Math.min(times * 200, 2000);
+    }
+  };
+}
 
 // Main Redis client for caching
 const redis = new Redis(redisConfig);
