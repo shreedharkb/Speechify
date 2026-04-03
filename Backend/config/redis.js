@@ -2,12 +2,12 @@ const Redis = require('ioredis');
 
 // Redis connection configuration
 // Support both local development (host/port) and Render (REDIS_URL)
-let redisConfig;
+let redis;
 
 if (process.env.REDIS_URL) {
   // Render provides REDIS_URL as full connection string
-  redisConfig = {
-    url: process.env.REDIS_URL,
+  // ioredis accepts URL directly as first parameter
+  redis = new Redis(process.env.REDIS_URL, {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
     retryStrategy: (times) => {
@@ -17,10 +17,10 @@ if (process.env.REDIS_URL) {
       }
       return Math.min(times * 200, 2000);
     }
-  };
+  });
 } else {
   // Local development uses host/port
-  redisConfig = {
+  redis = new Redis({
     host: process.env.REDIS_HOST || 'localhost',
     port: process.env.REDIS_PORT || 6379,
     maxRetriesPerRequest: null,
@@ -32,14 +32,21 @@ if (process.env.REDIS_URL) {
       }
       return Math.min(times * 200, 2000);
     }
-  };
+  });
 }
 
-// Main Redis client for caching
-const redis = new Redis(redisConfig);
-
 // Subscriber client for pub/sub (required by Bull)
-const redisSubscriber = new Redis(redisConfig);
+const redisSubscriber = process.env.REDIS_URL 
+  ? new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false
+    })
+  : new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false
+    });
 
 redis.on('connect', () => {
   console.log('✅ Connected to Redis successfully!');
