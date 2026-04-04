@@ -23,6 +23,7 @@ COPY app.py .
 # Expose port
 EXPOSE 5002
 
-# Run with Gunicorn for production (8 workers for 200+ concurrent users)
-# gevent worker handles async I/O efficiently
-CMD ["gunicorn", "--workers", "8", "--worker-class", "gevent", "--bind", "0.0.0.0:5002", "--timeout", "120", "--keep-alive", "5", "app:app"]
+# Run with Gunicorn for production
+# Using 1 worker with sync class to fit within free tier memory limits (512MB)
+# The SBERT model is loaded once per worker, so fewer workers = less memory
+CMD ["gunicorn", "--workers", "1", "--worker-class", "sync", "--bind", "0.0.0.0:5002", "--timeout", "120", "app:app"]
