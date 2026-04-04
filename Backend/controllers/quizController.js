@@ -92,6 +92,14 @@ exports.createQuiz = async (req, res) => {
     }));
 
     // Create quiz using Prisma model with JSONB questions
+    // Convert local time to UTC (assuming IST timezone)
+    // When Frontend sends "11:00 AM", it's in IST. Convert to UTC by subtracting 5.5 hours
+    const convertToUTC = (localTime) => {
+      const date = new Date(localTime);
+      // IST is UTC+5:30, so subtract 5.5 hours to get UTC
+      return new Date(date.getTime() - (5.5 * 60 * 60 * 1000));
+    };
+
     const quiz = await Quiz.create({
       teacherId: req.user.id,
       title,
@@ -100,8 +108,8 @@ exports.createQuiz = async (req, res) => {
       description: description || '',
       questions: formattedQuestions,
       correctAnswers: formattedAnswers,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime)
+      startTime: convertToUTC(startTime),
+      endTime: convertToUTC(endTime)
     });
 
     console.log('Quiz created successfully:', quiz.id);
@@ -311,12 +319,18 @@ exports.updateQuiz = async (req, res) => {
       return res.status(403).json({ msg: 'Not authorized to update this quiz' });
     }
 
+    // Convert local time to UTC (assuming IST timezone)
+    const convertToUTC = (localTime) => {
+      const date = new Date(localTime);
+      return new Date(date.getTime() - (5.5 * 60 * 60 * 1000));
+    };
+
     const updatedQuiz = await QuizEvent.update(req.params.id, {
       title,
       subject,
       description,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime)
+      startTime: convertToUTC(startTime),
+      endTime: convertToUTC(endTime)
     });
 
     res.json({ msg: 'Quiz updated successfully', quiz: updatedQuiz });
