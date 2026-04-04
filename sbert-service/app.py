@@ -11,11 +11,17 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Initialize the SBERT model (using a lightweight but accurate model)
-# 'all-MiniLM-L6-v2' is a good balance of speed and accuracy
-logger.info("Loading SBERT model...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
-logger.info("SBERT model loaded successfully!")
+# Global model variable - lazy loaded on first request
+model = None
+
+def get_model():
+    """Lazy load the SBERT model on first request to reduce startup memory usage"""
+    global model
+    if model is None:
+        logger.info("Loading SBERT model...")
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        logger.info("SBERT model loaded successfully!")
+    return model
 
 def normalize_text(text):
     """Normalize text for better comparison"""
@@ -29,6 +35,7 @@ def calculate_semantic_similarity(text1, text2):
     Returns a score between 0 and 1
     """
     # Encode both texts
+    model = get_model()
     embedding1 = model.encode(text1, convert_to_tensor=True)
     embedding2 = model.encode(text2, convert_to_tensor=True)
     

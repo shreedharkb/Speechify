@@ -273,7 +273,7 @@ KMP_DUPLICATE_LIB_OK=TRUE
 - **Region**: Same as others
 - **Root Directory**: `sbert-service`
 - **Runtime**: `Python`
-- **Build Command**: `pip install -r requirements.txt && python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"`
+- **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `gunicorn --workers 1 --worker-class sync --bind 0.0.0.0:5002 --timeout 120 app:app`
 
 ### 8.3 Set Environment Variables
