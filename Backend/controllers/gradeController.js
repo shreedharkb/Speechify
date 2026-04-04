@@ -62,7 +62,7 @@ async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, thr
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 10000 // 10 second timeout
+      timeout: 60000 // 60 second timeout (allows cold-start model loading on free tier)
     });
 
     const data = response.data;
