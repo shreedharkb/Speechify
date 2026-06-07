@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Textarea } from '../ui/textarea';
+import { Progress } from '../ui/progress';
+import { Mic, Square, Loader2, ArrowLeft, ArrowRight, Clock, CheckCircle2, AlertTriangle, LayoutGrid } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
   const [answers, setAnswers] = useState({});
-  const [audioBlobs, setAudioBlobs] = useState({});  // Store audio blobs for each question
+  const [audioBlobs, setAudioBlobs] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [transcribing, setTranscribing] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const audioChunksRef = React.useRef([]);
 
   useEffect(() => {
     if (quiz) {
-      console.log('QuizAttempt received quiz:', quiz);
-      console.log('Number of questions:', quiz.questions ? quiz.questions.length : 0);
-      
-      // Initialize answers
       const initialAnswers = {};
       if (quiz.questions && Array.isArray(quiz.questions)) {
         quiz.questions.forEach((q, index) => {
@@ -24,7 +28,6 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
       }
       setAnswers(initialAnswers);
 
-      // Set up timer
       const endTime = new Date(quiz.endTime).getTime();
       const now = new Date().getTime();
       setTimeRemaining(Math.max(0, endTime - now));
@@ -43,66 +46,41 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
   }, [timeRemaining]);
 
   const handleAnswerChange = (questionIndex, value) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionIndex]: value
-    }));
+    setAnswers(prev => ({ ...prev, [questionIndex]: value }));
   };
 
   const handleMicClick = async () => {
     if (recording) {
-      // Stop recording
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
       }
       setRecording(false);
     } else {
-      // Start recording
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        // Try to use a supported MIME type
         let options = {};
-        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-          options.mimeType = 'audio/webm;codecs=opus';
-        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-          options.mimeType = 'audio/webm';
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          options.mimeType = 'audio/mp4';
-        }
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) options.mimeType = 'audio/webm;codecs=opus';
+        else if (MediaRecorder.isTypeSupported('audio/webm')) options.mimeType = 'audio/webm';
+        else if (MediaRecorder.isTypeSupported('audio/mp4')) options.mimeType = 'audio/mp4';
 
         const recorder = new MediaRecorder(stream, options);
         audioChunksRef.current = [];
 
         recorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
-          }
+          if (event.data.size > 0) audioChunksRef.current.push(event.data);
         };
 
         recorder.onstop = async () => {
           const audioBlob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
-          console.log('Recording stopped, blob size:', audioBlob.size);
-          
-          // Store the audio blob for this question
-          setAudioBlobs(prev => ({
-            ...prev,
-            [currentQuestionIndex]: audioBlob
-          }));
-          
-          // Stop all tracks to release microphone
+          setAudioBlobs(prev => ({ ...prev, [currentQuestionIndex]: audioBlob }));
           stream.getTracks().forEach(track => track.stop());
-          
-          // Upload and transcribe
           await uploadAndTranscribe(audioBlob);
         };
 
         recorder.start();
         setMediaRecorder(recorder);
         setRecording(true);
-        console.log('Recording started');
       } catch (error) {
-        console.error('Error accessing microphone:', error);
         alert('Could not access microphone. Please check permissions.');
       }
     }
@@ -114,7 +92,6 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
     formData.append('audio', audioBlob, 'recording.webm');
 
     try {
-      console.log('Uploading audio for transcription...');
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/whisper/transcribe`, {
         method: 'POST',
         body: formData,
@@ -122,20 +99,14 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Transcription result:', data.text);
-        
-        // Append transcribed text to current answer
         setAnswers(prev => ({
           ...prev,
-          [currentQuestionIndex]: (prev[currentQuestionIndex] || '') + ' ' + data.text
+          [currentQuestionIndex]: (prev[currentQuestionIndex] || '') + (prev[currentQuestionIndex] ? ' ' : '') + data.text
         }));
       } else {
-        const errorText = await response.text();
-        console.error('Transcription failed:', errorText);
         alert('Transcription failed. Please try again or type your answer.');
       }
     } catch (error) {
-      console.error('Error uploading audio:', error);
       alert('Error uploading audio. Please check your connection.');
     } finally {
       setTranscribing(false);
@@ -143,34 +114,25 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
   };
 
   const handleSubmit = async () => {
-    // Convert audio blobs to base64 for each answer
     const formattedAnswers = await Promise.all(
       quiz.questions.map(async (question, index) => {
         let audioBase64 = null;
-        
-        // Convert blob to base64 if audio exists for this question
         if (audioBlobs[index]) {
-          // Use FileReader to convert blob to base64 (browser-native API)
           audioBase64 = await new Promise((resolve) => {
             const reader = new FileReader();
-            reader.onloadend = () => {
-              // Remove the data:audio/...;base64, prefix
-              const base64String = reader.result.split(',')[1];
-              resolve(base64String);
-            };
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
             reader.readAsDataURL(audioBlobs[index]);
           });
         }
-        
+
         return {
-          question: question.questionText,
+          question: question.questionText || question.text || question.question || '',
           studentAnswer: answers[index] || '',
-          isCorrect: false, // This will be determined by the backend
+          isCorrect: false,
           audioBlob: audioBase64
         };
       })
     );
-
     onSubmit(formattedAnswers);
   };
 
@@ -178,570 +140,200 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
     const seconds = Math.floor((ms / 1000) % 60);
     const minutes = Math.floor((ms / (1000 * 60)) % 60);
     const hours = Math.floor(ms / (1000 * 60 * 60));
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${hours > 0 ? hours.toString().padStart(2, '0') + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  if (!quiz) return <div>Loading quiz...</div>;
-  
+  if (!quiz) return <div className="flex items-center justify-center h-screen bg-muted"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
+
   if (!quiz.questions || quiz.questions.length === 0) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h2>No questions available in this quiz</h2>
-        <p>This quiz doesn't have any questions yet.</p>
-        <button className="btn" onClick={onCancel}>Back to Dashboard</button>
+      <div className="bg-muted flex items-center justify-center px-4 py-10 lg:py-20 min-h-screen">
+        <Card className="w-full max-w-md mx-auto shadow-none">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 bg-muted p-3 rounded-full inline-flex">
+              <AlertTriangle className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <CardTitle className="text-xl">No questions available</CardTitle>
+            <CardDescription>This quiz doesn't have any questions yet.</CardDescription>
+          </CardHeader>
+          <CardFooter className="justify-center">
+            <Button variant="outline" onClick={onCancel}>Return to Dashboard</Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
+  const isTimeRunningOut = timeRemaining !== null && timeRemaining < 300000;
+  const progressPercentage = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
+  const answeredCount = Object.values(answers).filter(a => a && a.trim() !== '').length;
 
   return (
-    <div style={{
-      background: '#FAFBFC',
-      minHeight: '100vh',
-      padding: '2rem 1.5rem',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    }}>
-      {/* Professional Container */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        background: 'white',
-        borderRadius: '20px',
-        overflow: 'hidden',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)',
-        border: '1px solid #E8E8E8'
-      }}>
-        {/* Professional Header */}
-        <div style={{
-          background: 'linear-gradient(to bottom, #FFFFFF 0%, #FAFBFC 100%)',
-          padding: '2rem 2.5rem',
-          borderBottom: '1px solid #E5E7EB'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: '2rem',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{ flex: 1, minWidth: '300px' }}>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0.375rem 0.875rem',
-                background: '#F0F4F8',
-                borderRadius: '6px',
-                marginBottom: '0.875rem',
-                border: '1px solid #E5E7EB'
-              }}>
-                <div style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: '#10B981',
-                  marginRight: '0.625rem',
-                  animation: 'pulse 2s infinite'
-                }}></div>
-                <div style={{
-                  fontSize: '0.6875rem',
-                  color: '#687588',
-                  fontWeight: '600',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1.2px'
-                }}>
-                  Assessment in Progress
-                </div>
-              </div>
-              <h1 style={{ 
-                fontSize: '1.75rem', 
-                fontWeight: '600', 
-                color: '#111827',
-                margin: 0,
-                marginBottom: '0.5rem',
-                letterSpacing: '-0.025em',
-                lineHeight: '1.3'
-              }}>
-                {quiz.title}
-              </h1>
-              <div style={{
-                color: '#6B7280',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                letterSpacing: '-0.01em'
-              }}>
-                {quiz.subject}
-              </div>
-            </div>
-            <div style={{
-              background: timeRemaining < 300000 ? '#FEF2F2' : '#F9FAFB',
-              padding: '1.25rem 1.75rem',
-              borderRadius: '10px',
-              textAlign: 'center',
-              border: timeRemaining < 300000 ? '1px solid #FEE2E2' : '1px solid #E5E7EB',
-              minWidth: '160px'
-            }}>
-              <div style={{ 
-                fontSize: '0.6875rem', 
-                fontWeight: '600', 
-                color: timeRemaining < 300000 ? '#DC2626' : '#6B7280',
-                marginBottom: '0.5rem',
-                textTransform: 'uppercase',
-                letterSpacing: '1.2px'
-              }}>
-                Time Remaining
-              </div>
-              <div style={{
-                fontSize: '1.875rem',
-                fontWeight: '600',
-                color: timeRemaining < 300000 ? '#DC2626' : '#111827',
-                letterSpacing: '-0.025em',
-                fontVariantNumeric: 'tabular-nums',
-                lineHeight: '1'
-              }}>
-                {formatTime(timeRemaining)}
-              </div>
-            </div>
+    <div className="bg-muted min-h-screen">
+      {/* Header / Nav Bar Area */}
+      <header className="bg-background border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={onCancel} title="Exit Quiz">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight">{quiz.title}</h1>
+            <p className="text-sm text-muted-foreground">{quiz.subject}</p>
           </div>
         </div>
-
-        {/* Content Area */}
-        <div style={{ padding: '2.5rem' }}>
-          {/* Professional Stats Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '1.25rem',
-            marginBottom: '2rem'
-          }}>
-            <div style={{
-              background: 'white',
-              padding: '1.5rem',
-              borderRadius: '10px',
-              border: '1px solid #E5E7EB',
-              borderLeft: '3px solid #4f46e5',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              transition: 'box-shadow 0.2s ease'
-            }}>
-              <div style={{
-                fontSize: '0.6875rem',
-                fontWeight: '600',
-                color: '#6B7280',
-                marginBottom: '0.625rem',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                Questions
-              </div>
-              <div style={{
-                fontSize: '2.25rem',
-                fontWeight: '600',
-                color: '#111827',
-                letterSpacing: '-0.025em',
-                lineHeight: '1'
-              }}>
-                {quiz.questions.length}
-              </div>
-            </div>
-
-            <div style={{
-              background: 'white',
-              padding: '1.5rem',
-              borderRadius: '10px',
-              border: '1px solid #E5E7EB',
-              borderLeft: '3px solid #10B981',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              transition: 'box-shadow 0.2s ease'
-            }}>
-              <div style={{
-                fontSize: '0.6875rem',
-                fontWeight: '600',
-                color: '#6B7280',
-                marginBottom: '0.625rem',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                Total Points
-              </div>
-              <div style={{
-                fontSize: '2.25rem',
-                fontWeight: '600',
-                color: '#111827',
-                letterSpacing: '-0.025em',
-                lineHeight: '1'
-              }}>
-                {quiz.questions.reduce((sum, q) => sum + q.points, 0)}
-              </div>
-            </div>
+        <div className="flex items-center gap-6">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-xs text-muted-foreground font-medium uppercase">Progress</span>
+            <span className="text-sm font-medium">{answeredCount} / {quiz.questions.length}</span>
           </div>
-
-          {/* Question Navigator */}
-          <div style={{
-            background: '#F9FAFB',
-            padding: '1.5rem',
-            borderRadius: '10px',
-            marginBottom: '2rem',
-            border: '1px solid #E5E7EB'
-          }}>
-            <div style={{
-              fontSize: '0.8125rem',
-              fontWeight: '600',
-              color: '#6B7280',
-              marginBottom: '1rem',
-              letterSpacing: '-0.01em'
-            }}>
-              Question Progress
-            </div>
-            <div style={{
-              display: 'flex',
-              gap: '0.625rem',
-              flexWrap: 'wrap'
-            }}>
-              {quiz.questions.map((_, index) => {
-                const isActive = currentQuestionIndex === index;
-                const isAnswered = answers[index] && answers[index].trim() !== '';
-                
-                return (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentQuestionIndex(index)}
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      border: isActive ? '2px solid #4f46e5' : '1px solid #E5E7EB',
-                      borderRadius: '8px',
-                      background: isActive 
-                        ? '#4f46e5' 
-                        : isAnswered 
-                        ? '#10B981'
-                        : 'white',
-                      color: isActive || isAnswered ? 'white' : '#6B7280',
-                      cursor: 'pointer',
-                      fontSize: '0.9375rem',
-                      fontWeight: '600',
-                      transition: 'all 0.15s ease',
-                      boxShadow: isActive ? '0 0 0 3px rgba(79, 70, 229, 0.1)' : 'none'
-                    }}
-                    onMouseOver={(e) => {
-                      if (!isActive && !isAnswered) {
-                        e.currentTarget.style.background = '#F3F4F6';
-                        e.currentTarget.style.borderColor = '#D1D5DB';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!isActive && !isAnswered) {
-                        e.currentTarget.style.background = 'white';
-                        e.currentTarget.style.borderColor = '#E5E7EB';
-                      }
-                    }}
-                  >
-                    {index + 1}
-                  </button>
-                );
-              })}
-            </div>
+          <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-md border", isTimeRunningOut ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-muted text-foreground")}>
+            <Clock className="w-4 h-4" />
+            <span className="font-medium font-mono">
+              {timeRemaining !== null ? formatTime(timeRemaining) : '--:--'}
+            </span>
           </div>
+        </div>
+      </header>
+      <Progress value={progressPercentage} className="h-1 rounded-none" />
 
-          {/* Professional Question Card */}
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '10px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-            border: '1px solid #E5E7EB'
-          }}>
-            {/* Question Header */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.75rem',
-              paddingBottom: '1.25rem',
-              borderBottom: '1px solid #E5E7EB'
-            }}>
-              <h2 style={{ 
-                fontSize: '1rem', 
-                fontWeight: '600', 
-                color: '#111827', 
-                margin: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.625rem'
-              }}>
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.375rem 0.75rem',
-                  background: '#EEF2FF',
-                  borderRadius: '6px',
-                  color: '#4f46e5',
-                  fontSize: '0.8125rem',
-                  fontWeight: '600',
-                  border: '1px solid #E0E7FF',
-                  letterSpacing: '-0.01em'
-                }}>
-                  Question {currentQuestionIndex + 1} of {quiz.questions.length}
-                </span>
-              </h2>
-              <div style={{
-                background: '#F0FDF4',
-                color: '#166534',
-                padding: '0.375rem 0.875rem',
-                borderRadius: '6px',
-                fontSize: '0.8125rem',
-                fontWeight: '600',
-                border: '1px solid #BBF7D0',
-                letterSpacing: '-0.01em'
-              }}>
-                {currentQuestion.points} pts
-              </div>
+      {/* Main Layout Area */}
+      <main className="max-w-5xl mx-auto px-4 py-8 flex flex-col gap-6">
+
+        {/* Question Grid Overview */}
+        <Card className="shadow-none">
+          <CardHeader className="pb-3 border-b">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                Question Navigation
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowGrid(!showGrid)}>
+                <LayoutGrid className="w-4 h-4 mr-2" />
+                {showGrid ? 'Hide' : 'Show'} Overview
+              </Button>
             </div>
-            
+          </CardHeader>
+          {showGrid && (
+            <CardContent className="pt-6">
+              <div className="flex flex-wrap gap-2">
+                {quiz.questions.map((_, idx) => {
+                  const answered = answers[idx] && answers[idx].trim() !== '';
+                  const active = currentQuestionIndex === idx;
+                  return (
+                    <Button
+                      key={idx}
+                      variant={active ? "default" : answered ? "secondary" : "outline"}
+                      className={cn("w-10 h-10 p-0 font-semibold", answered && !active && "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-transparent")}
+                      onClick={() => setCurrentQuestionIndex(idx)}
+                    >
+                      {idx + 1}
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        {/* Current Question Card */}
+        <Card className="shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/50 pb-4">
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="text-sm">
+                Question {currentQuestionIndex + 1}
+              </Badge>
+              <span className="text-sm text-muted-foreground font-medium">
+                {currentQuestion.points || 0} Points
+              </span>
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-6 space-y-6">
             {/* Question Text */}
-            <div style={{
-              fontSize: '1.0625rem',
-              marginBottom: '1.75rem',
-              color: '#111827',
-              lineHeight: '1.7',
-              fontWeight: '400',
-              padding: '1.25rem',
-              background: '#F9FAFB',
-              borderRadius: '8px',
-              border: '1px solid #E5E7EB',
-              letterSpacing: '-0.01em'
-            }}>
-              {currentQuestion.questionText}
+            <div className="text-lg md:text-xl font-medium leading-relaxed">
+              {currentQuestion.questionText || currentQuestion.text || currentQuestion.question || ''}
             </div>
 
-            {/* Question Image (if exists) */}
+            {/* Question Image */}
             {currentQuestion.imageUrl && (
-              <div style={{
-                marginBottom: '1.75rem',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                border: '1px solid #E5E7EB'
-              }}>
-                <img 
+              <div className="rounded-lg overflow-hidden border bg-muted p-2 flex justify-center">
+                <img
                   src={`${import.meta.env.VITE_API_URL}${currentQuestion.imageUrl}`}
-                  alt={`Question ${currentQuestionIndex + 1}`}
-                  style={{
-                    width: '100%',
-                    maxWidth: '600px',
-                    height: 'auto',
-                    display: 'block'
-                  }}
-                  onError={(e) => {
-                    console.error('Image failed to load:', currentQuestion.imageUrl);
-                    e.target.style.display = 'none';
-                  }}
+                  alt="Question"
+                  className="max-w-full max-h-[400px] object-contain rounded"
+                  onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </div>
             )}
 
-            {/* Professional Answer Section */}
-            <div>
-              <label style={{
-                display: 'block',
-                fontSize: '0.8125rem',
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: '0.625rem',
-                letterSpacing: '-0.01em'
-              }}>
-                Your Answer
-              </label>
-              <textarea
-                value={answers[currentQuestionIndex] || ''}
-                onChange={(e) => handleAnswerChange(currentQuestionIndex, e.target.value)}
-                placeholder="Type your answer here..."
-                disabled={recording || transcribing}
-                style={{
-                  width: '100%',
-                  minHeight: '160px',
-                  padding: '0.875rem',
-                  marginBottom: '1.25rem',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                  lineHeight: '1.6',
-                  resize: 'vertical',
-                  transition: 'all 0.15s ease',
-                  outline: 'none',
-                  background: 'white',
-                  color: '#111827',
-                  boxSizing: 'border-box',
-                  letterSpacing: '-0.01em'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#4f46e5';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.05)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#D1D5DB';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
-              
-              {/* Professional Microphone Section */}
-              <div style={{
-                background: '#F9FAFB',
-                padding: '1rem',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.875rem',
-                border: '1px solid #E5E7EB'
-              }}>
-                <button
+            {/* Answer Input */}
+            <div className="space-y-3 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold tracking-tight">Your Answer</label>
+                <Button
                   type="button"
+                  size="sm"
+                  variant={recording ? "destructive" : "secondary"}
                   onClick={handleMicClick}
                   disabled={transcribing}
-                  style={{
-                    padding: '0.625rem 1.25rem',
-                    border: 'none',
-                    borderRadius: '7px',
-                    background: recording ? '#DC2626' : '#4f46e5',
-                    color: 'white',
-                    cursor: transcribing ? 'not-allowed' : 'pointer',
-                    fontWeight: '600',
-                    fontSize: '0.8125rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.15s ease',
-                    opacity: transcribing ? 0.6 : 1,
-                    letterSpacing: '-0.01em'
-                  }}
-                  onMouseOver={(e) => {
-                    if (!transcribing) {
-                      e.currentTarget.style.background = recording ? '#B91C1C' : '#4338ca';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (!transcribing) {
-                      e.currentTarget.style.background = recording ? '#DC2626' : '#4f46e5';
-                    }
-                  }}
+                  className="gap-2"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="2" width="6" height="12" rx="3" />
-                    <line x1="12" y1="14" x2="12" y2="22" />
-                    <line x1="8" y1="22" x2="16" y2="22" />
-                    <path d="M19 10a7 7 0 0 1-14 0" />
-                  </svg>
-                  {recording ? 'Stop Recording' : transcribing ? 'Processing...' : 'Voice Input'}
-                </button>
-                <span style={{
-                  color: recording ? '#DC2626' : transcribing ? '#D97706' : '#6B7280',
-                  fontSize: '0.8125rem',
-                  fontWeight: '500',
-                  flex: 1,
-                  letterSpacing: '-0.01em'
-                }}>
-                  {recording 
-                    ? 'Recording...'
-                    : transcribing 
-                    ? 'Processing audio...'
-                    : 'Use voice input to answer'}
-                </span>
+                  {recording ? <Square className="w-4 h-4 fill-current" /> : transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+                  {recording ? 'Stop Recording' : transcribing ? 'Transcribing...' : 'Voice Input'}
+                </Button>
+              </div>
+
+              <div className="relative">
+                <Textarea
+                  value={answers[currentQuestionIndex] || ''}
+                  onChange={(e) => handleAnswerChange(currentQuestionIndex, e.target.value)}
+                  placeholder="Type your answer here..."
+                  disabled={recording || transcribing}
+                  className="min-h-[200px] resize-y text-base p-4"
+                />
+                {(recording || transcribing) && (
+                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-md flex items-center justify-center border z-10">
+                    <div className="flex items-center gap-3 bg-background border px-4 py-2 rounded-md shadow-sm">
+                      {recording ? (
+                        <><div className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse"></div><span className="font-medium text-sm">Listening...</span></>
+                      ) : (
+                        <><Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /><span className="font-medium text-sm">Processing audio...</span></>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+          </CardContent>
 
-            {/* Professional Navigation */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: '1.75rem',
-              gap: '0.75rem',
-              paddingTop: '1.25rem',
-              borderTop: '1px solid #E5E7EB'
-            }}>
-              {currentQuestionIndex > 0 && (
-                <button
-                  onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-                  style={{
-                    padding: '0.625rem 1.25rem',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '7px',
-                    background: 'white',
-                    color: '#6B7280',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    letterSpacing: '-0.01em'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = '#F9FAFB';
-                    e.currentTarget.style.borderColor = '#9CA3AF';
-                    e.currentTarget.style.color = '#374151';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'white';
-                    e.currentTarget.style.color = '#6B7280';
-                    e.currentTarget.style.borderColor = '#D1D5DB';
-                  }}
-                >
-                  ← Previous
-                </button>
-              )}
-              {currentQuestionIndex < quiz.questions.length - 1 ? (
-                <button
-                  onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                  style={{
-                    padding: '0.625rem 1.25rem',
-                    border: 'none',
-                    borderRadius: '7px',
-                    background: '#4f46e5',
-                    color: 'white',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    marginLeft: 'auto',
-                    letterSpacing: '-0.01em'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = '#4338ca';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = '#4f46e5';
-                  }}
-                >
-                  Next →
-                </button>
-              ) : (
-                <button 
-                  onClick={handleSubmit}
-                  style={{
-                    padding: '0.75rem 1.75rem',
-                    border: 'none',
-                    borderRadius: '7px',
-                    background: '#10B981',
-                    color: 'white',
-                    fontSize: '0.9375rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    marginLeft: 'auto',
-                    letterSpacing: '-0.01em'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = '#059669';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = '#10B981';
-                  }}
-                >
-                  Submit Quiz
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+          <CardFooter className="flex items-center justify-between border-t bg-muted/20 py-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+              disabled={currentQuestionIndex === 0}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Previous
+            </Button>
+
+            {currentQuestionIndex < quiz.questions.length - 1 ? (
+              <Button
+                onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                className="gap-2"
+              >
+                Next <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                className="gap-2"
+              >
+                Submit Quiz <CheckCircle2 className="w-4 h-4" />
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </main>
     </div>
   );
 };

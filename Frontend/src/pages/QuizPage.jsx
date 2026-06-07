@@ -110,8 +110,14 @@ export default function QuizPage({ setPage }) {
 
   if (loading) {
     return (
-      <div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>
-        <h2>Loading quiz...</h2>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <svg className="animate-spin h-8 w-8 text-[#0f172a] mx-auto mb-4" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          <p className="text-sm text-[#94a3b8] font-medium">Loading quiz...</p>
+        </div>
       </div>
     );
   }
@@ -129,11 +135,16 @@ export default function QuizPage({ setPage }) {
           onCancel={handleCancelQuiz} 
         />
       ) : (
-        <div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>
-          <h2>No quiz available</h2>
-          <button onClick={() => setPage('dashboard')} className="btn">
-            Back to Dashboard
-          </button>
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-[#0f172a] mb-4">No quiz available</h2>
+            <button
+              onClick={() => setPage('dashboard')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0f172a] text-white rounded-full text-sm font-medium hover:bg-[#1e293b] transition-colors cursor-pointer"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -1,49 +1,63 @@
 import React, { useState, useEffect } from 'react';
+import DashboardLayout from '../components/layout/DashboardLayout';
 import StudentResponses from '../components/quiz/StudentResponses';
+import DashboardPage from './DashboardPage';
+import { Calendar } from '../components/ui/calendar';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { Progress } from '../components/ui/progress';
+import { Skeleton } from '../components/ui/skeleton';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '../components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../components/ui/empty';
+import { 
+  Play, 
+  Trash2, 
+  FileText, 
+  CheckCircle2, 
+  Clock,
+  Lock,
+  RotateCcw,
+  Maximize,
+  Smartphone,
+  Monitor,
+  Library
+} from 'lucide-react';
 
-function TeacherDashboard({ setPage }) {
-  const [quizData, setQuizData] = useState({
-    title: '',
-    subject: '',
-    courseCode: '',
-    description: '',
-    startTime: '',
-    endTime: '',
-    questions: []
-  });
-
-  const [currentQuestion, setCurrentQuestion] = useState({
-    questionText: '',
-    correctAnswer: '',
-    points: 1,
-    imageUrl: ''
-  });
-
-  const [analytics, setAnalytics] = useState(null);
-  const [darkMode, setDarkMode] = useState(false);
+export default function TeacherDashboard({ setPage }) {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [userName, setUserName] = useState('Teacher');
   const [myQuizzes, setMyQuizzes] = useState([]);
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [viewingResponses, setViewingResponses] = useState(null);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTeacherAnalytics();
     fetchMyQuizzes();
-    // Get user info from localStorage
     try {
       const userString = localStorage.getItem('user');
       if (userString) {
         const user = JSON.parse(userString);
         setUserName(user.name || 'Teacher');
       }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
+    } catch (error) {}
   }, []);
 
   const fetchMyQuizzes = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       if (!token) return;
 
@@ -56,1668 +70,350 @@ function TeacherDashboard({ setPage }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Teacher quizzes data:', data);
-        // The teacher endpoint returns an array directly
         const quizzes = Array.isArray(data) ? data : (data.quizEvents || data);
         setMyQuizzes(quizzes);
-        
-        // Create recent activities from quiz creations
-        const activities = quizzes.slice(0, 5).map(quiz => ({
-          id: quiz.id,
-          quizTitle: quiz.title,
-          subject: quiz.subject,
-          action: 'created',
-          createdAt: quiz.created_at || quiz.startTime,
-          studentsCount: quiz.studentsCount || 0
-        }));
-        setRecentActivities(activities);
       }
     } catch (error) {
       console.error('Error fetching quizzes:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchTeacherAnalytics = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const quizzes = data.quizEvents || data;
-        const totalQuizzes = quizzes.length;
-        const now = new Date();
-        const activeQuizzes = quizzes.filter(q => {
-          const start = new Date(q.startTime);
-          const end = new Date(q.endTime);
-          return now >= start && now <= end;
-        }).length;
-        const totalQuestions = quizzes.reduce((sum, q) => sum + (q.questions?.length || 0), 0);
-        const completedQuizzes = quizzes.filter(q => new Date(q.endTime) < now).length;
-        const avgQuestionsPerQuiz = totalQuizzes > 0 ? (totalQuestions / totalQuizzes).toFixed(1) : 0;
-        
-        // Fetch total students who attempted quizzes
-        console.log('Fetching quiz attempts from API...');
-        const attemptResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz-attempt/all`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-auth-token': token
-          }
-        });
-        
-        console.log('Attempt response status:', attemptResponse.status);
-        let totalStudents = 0;
-        if (attemptResponse.ok) {
-          const attemptData = await attemptResponse.json();
-          console.log('Attempt data received:', attemptData);
-          // Get unique student IDs
-          const uniqueStudents = new Set();
-          if (attemptData.attempts) {
-            attemptData.attempts.forEach(attempt => {
-              if (attempt.student) {
-                uniqueStudents.add(attempt.student._id || attempt.student);
-              }
-            });
-          }
-          totalStudents = uniqueStudents.size;
-          console.log('Total unique students:', totalStudents);
-        } else {
-          console.error('Failed to fetch attempts:', await attemptResponse.text());
-        }
-        
-        setAnalytics({
-          totalQuizzes,
-          activeQuizzes,
-          totalQuestions,
-          totalStudents,
-          completedQuizzes,
-          avgQuestionsPerQuiz
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching teacher analytics:', error);
-    }
-  };
-
-  const handleAddQuestion = () => {
-    if (!currentQuestion.questionText || !currentQuestion.correctAnswer) {
-      alert('Please fill in both question text and correct answer.');
-      return;
-    }
+  const getStatusBadge = (quiz) => {
+    const now = new Date();
+    const start = new Date(quiz.startTime);
+    const end = new Date(quiz.endTime);
     
-    setQuizData(prev => ({
-      ...prev,
-      questions: [...prev.questions, { ...currentQuestion }]
-    }));
+    if (now < start) {
+      return (
+        <Badge variant="outline" className="gap-1 border-amber-200 bg-amber-50 text-amber-700">
+          <Clock size={12} />Upcoming
+        </Badge>
+      );
+    }
+    if (now > end) {
+      return (
+        <Badge variant="outline" className="gap-1 border-emerald-200 bg-emerald-50 text-emerald-700">
+          <CheckCircle2 size={12} />Completed
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="gap-1 border-blue-200 bg-blue-50 text-blue-700">
+        <Play size={12} />Active
+      </Badge>
+    );
+  };
 
-    setCurrentQuestion({
-      questionText: '',
-      correctAnswer: '',
-      points: 1,
-      imageUrl: ''
+  const totalStudents = myQuizzes.reduce((sum, q) => sum + (q.assignedTo?.length || q.totalStudents || q.participants?.length || 0), 0);
+  const attemptedStudents = myQuizzes.reduce((sum, q) => sum + (q.participants?.length || q.attemptCount || 0), 0);
+  const successRate = totalStudents > 0 ? Math.round((attemptedStudents / totalStudents) * 100) : 0;
+
+  const getSubjectBreakdown = () => {
+    if (!myQuizzes || myQuizzes.length === 0) {
+      return [];
+    }
+
+    const subjectCounts = {};
+    let total = 0;
+
+    myQuizzes.forEach(quiz => {
+      const subject = quiz.subject || 'Other';
+      subjectCounts[subject] = (subjectCounts[subject] || 0) + 1;
+      total++;
     });
+
+    return Object.entries(subjectCounts)
+      .map(([name, count]) => ({
+        name,
+        percentage: Math.round((count / total) * 100)
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
   };
 
-  const handleRemoveQuestion = (index) => {
-    setQuizData(prev => ({
-      ...prev,
-      questions: prev.questions.filter((_, i) => i !== index)
-    }));
-  };
+  const subjects = getSubjectBreakdown();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      alert('You are not logged in. Please log in as a teacher.');
-      setPage('login');
-      return;
-    }
-
-    if (!quizData.title || !quizData.subject || !quizData.startTime || !quizData.endTime) {
-      alert('Please fill in all quiz details');
-      return;
-    }
-
-    if (quizData.questions.length === 0) {
-      alert('Please add at least one question to the quiz');
-      return;
-    }
-
-    if (new Date(quizData.startTime) >= new Date(quizData.endTime)) {
-      alert('End time must be after start time');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
-        body: JSON.stringify(quizData),
-      });
-
-      if (response.ok) {
-        alert('🎉 Quiz created successfully!');
-        setQuizData({
-          title: '',
-          subject: '',
-          courseCode: '',
-          description: '',
-          startTime: '',
-          endTime: '',
-          questions: []
-        });
-        // Refresh analytics after creating quiz
-        fetchTeacherAnalytics();
-        fetchMyQuizzes();
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.msg}`);
-      }
-    } catch (error) {
-      console.error('Failed to create quiz:', error);
-      alert('An error occurred while creating the quiz.');
-    }
-  };
-
-  // Theme configuration (matching student dashboard)
-  const theme = {
-    light: {
-      bg: '#F5F7FA',
-      cardBg: '#FFFFFF',
-      text: '#1F2937',
-      textSecondary: '#6B7280',
-      sidebarBg: '#FFFFFF',
-      sidebarText: '#6B7280',
-      sidebarActive: '#0E78FF',
-      sidebarActiveBg: '#EFF6FF',
-      border: '#E5E7EB',
-      accent: '#0E78FF',
-      accentLight: '#EFF6FF'
-    },
-    dark: {
-      bg: '#0F172A',
-      cardBg: '#1E293B',
-      text: '#F1F5F9',
-      textSecondary: '#94A3B8',
-      sidebarBg: '#1E293B',
-      sidebarText: '#94A3B8',
-      sidebarActive: '#3B82F6',
-      sidebarActiveBg: '#1E3A5F',
-      border: '#334155',
-      accent: '#3B82F6',
-      accentLight: '#1E3A5F'
-    }
-  };
-
-  const currentTheme = darkMode ? theme.dark : theme.light;
-
-  // Sidebar navigation items for teacher
-  const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { id: 'create-quiz', label: 'Create Quiz', icon: 'create' },
-    { id: 'my-quizzes', label: 'My Quizzes', icon: 'quizzes' }
-  ];
-
-  const getIconSVG = (iconName, isActive) => {
-    const color = isActive ? currentTheme.sidebarActive : currentTheme.sidebarText;
-    switch(iconName) {
-      case 'dashboard':
-        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>`;
-      case 'create':
-        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`;
-      case 'quizzes':
-        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`;
-      case 'analytics':
-        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>`;
-      case 'calendar':
-        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-      case 'recent':
-        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-      default:
-        return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
-    }
-  };
+  if (loading) {
+    return (
+      <DashboardLayout 
+        role="teacher"
+        userName={userName}
+        activeSection={activeSection}
+        onNavigate={setActiveSection}
+        setPage={setPage}
+      >
+        <div className="space-y-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 gap-6">
+            <Skeleton className="w-full h-[240px] rounded-[20px]" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Skeleton className="h-[300px] rounded-[20px]" />
+            <Skeleton className="h-[300px] rounded-[20px]" />
+            <Skeleton className="h-[300px] rounded-[20px]" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: currentTheme.bg }}>
-      {/* Modern Sidebar */}
-      <div style={{ 
-        width: '280px',
-        background: currentTheme.sidebarBg,
-        padding: '2rem 1.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRight: `1px solid ${currentTheme.border}`,
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        overflowY: 'auto'
-      }}>
-        {/* Logo & Brand */}
-        <div 
-          onClick={() => window.location.reload()}
-          style={{ 
-            marginBottom: '2.5rem', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.875rem',
-            cursor: 'pointer',
-            transition: 'transform 0.2s ease'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <rect width="48" height="48" rx="12" fill="white"/>
-            <rect x="12" y="18" width="24" height="3" rx="1.5" fill="#0E78FF"/>
-            <rect x="12" y="24" width="24" height="3" rx="1.5" fill="#0E78FF"/>
-            <rect x="12" y="30" width="15" height="3" rx="1.5" fill="#0E78FF"/>
-          </svg>
-          <div style={{ 
-            fontSize: '1.75rem', 
-            fontWeight: '800', 
-            color: darkMode ? '#F8FAFC' : '#0E78FF',
-            letterSpacing: '-0.02em'
-          }}>
-            Speechify
-          </div>
-        </div>
+    <DashboardLayout 
+      role="teacher"
+      userName={userName}
+      activeSection={activeSection}
+      onNavigate={setActiveSection}
+      setPage={setPage}
+    >
+      {activeSection === 'create-quiz' && (
+        <DashboardPage setPage={setPage} />
+      )}
 
-        {/* Navigation */}
-        <nav style={{ flex: 1, marginBottom: '2rem' }}>
-          {sidebarItems.map((item) => {
-            const isActive = activeSection === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveSection(item.id);
-                  // Scroll to corresponding section
-                  const scrollToSection = (sectionId) => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  };
-                  
-                  switch(item.id) {
-                    case 'calendar':
-                      scrollToSection('calendar-section');
-                      break;
-                    case 'create-quiz':
-                      scrollToSection('quiz-form-section');
-                      break;
-                    case 'recent':
-                      scrollToSection('recent-section');
-                      break;
-                    case 'analytics':
-                      scrollToSection('analytics-section');
-                      break;
-                    default:
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem 1rem',
-                  marginBottom: '0.25rem',
-                  background: isActive ? currentTheme.sidebarActiveBg : 'transparent',
-                  border: 'none',
-                  borderRadius: '12px',
-                  color: isActive ? currentTheme.sidebarActive : currentTheme.sidebarText,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  gap: '0.875rem',
-                  fontSize: '0.95rem',
-                  fontWeight: isActive ? '600' : '500',
-                  transition: 'all 0.2s',
-                  textAlign: 'center'
-                }}
-                onMouseOver={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
-              >
-                <div dangerouslySetInnerHTML={{ __html: getIconSVG(item.icon, isActive) }} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+      {(activeSection === 'dashboard' || activeSection === 'my-quizzes') && (
+        <div className="space-y-6 max-w-7xl mx-auto">
+          
+          {/* Top Row Grid - Just Hero */}
+          <div className="grid grid-cols-1 gap-6">
 
-        {/* User Profile */}
-        <div style={{
-          padding: '1rem',
-          background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.875rem',
-          marginBottom: '1rem'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            background: currentTheme.cardBg,
-            border: `2px solid ${currentTheme.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: currentTheme.text
-          }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ fontWeight: '600', color: currentTheme.text, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {userName}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: currentTheme.textSecondary }}>Teacher</div>
-          </div>
-        </div>
+            {/* Hero Banner (Spans full width) */}
+            <div className="w-full bg-white rounded-[20px] border border-slate-200/60 p-8 md:p-10 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[240px]">
+              {/* Decorative background elements */}
+              <div className="absolute top-4 right-1/4 w-2 h-2 rounded-full bg-blue-400 opacity-50"></div>
+              <div className="absolute bottom-1/4 left-1/3 w-3 h-3 rounded-full bg-amber-400 opacity-50"></div>
+              <div className="absolute top-1/3 right-12 w-2 h-2 rounded-full bg-emerald-400 opacity-50"></div>
+              <div className="absolute -right-8 -bottom-8 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
 
-        {/* Logout Button */}
-        <button
-          onClick={() => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setPage('login');
-          }}
-          style={{
-            width: '100%',
-            padding: '0.875rem 1rem',
-            background: darkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2',
-            border: 'none',
-            borderRadius: '12px',
-            color: '#DC2626',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            fontSize: '0.95rem',
-            fontWeight: '600',
-            transition: 'all 0.2s'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = darkMode ? 'rgba(239, 68, 68, 0.25)' : '#FECACA';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = darkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2';
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          <span>Logout</span>
-        </button>
-      </div>
-
-      {/* Main Content Area */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        {/* Top Header */}
-        <div style={{ 
-          background: currentTheme.cardBg,
-          borderBottom: `1px solid ${currentTheme.border}`,
-          padding: '1.5rem 2.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10
-        }}>
-          <div>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: '800', color: darkMode ? '#F8FAFC' : '#0F172A', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
-              Dashboard
-            </h1>
-            <p style={{ fontSize: '1rem', color: darkMode ? '#94A3B8' : '#64748B', fontWeight: '500' }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                border: `1px solid ${currentTheme.border}`,
-                background: currentTheme.cardBg,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.125rem',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = currentTheme.accentLight;
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = currentTheme.cardBg;
-              }}
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button>
-
-            {/* User Profile Menu */}
-            <div style={{ position: 'relative' }}>
-              <button 
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  border: `2px solid ${currentTheme.border}`,
-                  background: currentTheme.cardBg,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: currentTheme.text,
-                  transition: 'all 0.2s',
-                  boxShadow: showUserMenu ? `0 4px 12px ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` : 'none'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.background = currentTheme.accentLight;
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = currentTheme.cardBg;
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-              </button>
-              
-              {/* Dropdown Menu - Logout Only */}
-              {showUserMenu && (
-                <div style={{
-                  position: 'absolute',
-                  top: '50px',
-                  right: '0',
-                  width: '160px',
-                  background: currentTheme.cardBg,
-                  border: `1px solid ${currentTheme.border}`,
-                  borderRadius: '12px',
-                  boxShadow: darkMode ? '0 8px 24px rgba(0,0,0,0.4)' : '0 8px 24px rgba(0,0,0,0.15)',
-                  overflow: 'hidden',
-                  zIndex: 1000
-                }}>
-                  <button
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      localStorage.removeItem('token');
-                      localStorage.removeItem('user');
-                      setPage('login');
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#EF4444',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      fontSize: '0.9rem',
-                      fontWeight: '500',
-                      transition: 'all 0.2s',
-                      textAlign: 'left'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                      <polyline points="16 17 21 12 16 7"/>
-                      <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    <span>Logout</span>
-                  </button>
+              <div className="relative z-10 max-w-2xl">
+                <h2 className="text-[32px] font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  Welcome back, {userName?.split(' ')[0] || 'Teacher'} <span className="text-3xl animate-wave origin-bottom-right inline-block">👋</span>
+                </h2>
+                <h3 className="text-[22px] font-medium text-slate-800 mb-3 tracking-tight leading-tight">
+                  Ready to manage your classes<br/>and track student progress?
+                </h3>
+                <p className="text-slate-500 text-[15px] mb-8 max-w-md leading-relaxed">
+                  Create quizzes, monitor student performance, and achieve your teaching goals seamlessly.
+                </p>
+                <div className="flex gap-4">
+                  <Button className="bg-[#111827] hover:bg-black text-white rounded-[10px] px-7 h-[42px] font-medium shadow-sm" onClick={() => setActiveSection('create-quiz')}>
+                    Create New Quiz
+                  </Button>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Page Content */}
-        <div style={{ padding: '2.5rem' }}>
-          {/* Welcome Card with Character */}
-          <div style={{
-            background: `linear-gradient(135deg, ${currentTheme.accent} 0%, #EC4899 100%)`,
-            borderRadius: '20px',
-            padding: '2.5rem',
-            marginBottom: '2.5rem',
-            position: 'relative',
-            overflow: 'hidden',
-            color: 'white',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            minHeight: '180px'
-          }}>
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: '60%' }}>
-              <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.75rem', color: '#FFFFFF' }}>
-                Hello, {userName}!
-              </h2>
-              <p style={{ fontSize: '1rem', opacity: 0.95, color: '#FFFFFF', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                Ready to create amazing quizzes? Manage your quizzes and track student progress all in one place.
-              </p>
-              <button style={{
-                background: 'white',
-                color: currentTheme.accent,
-                border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '10px',
-                fontWeight: '600',
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-              }}
-              onClick={() => {
-                setActiveSection('create-quiz');
-                setTimeout(() => {
-                  const element = document.getElementById('quiz-form-section');
-                  if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-                }, 100);
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-              }}>
-                Create New Quiz
-              </button>
-            </div>
-            
-            {/* Professional Teacher Icon */}
-            <div style={{ 
-              position: 'relative', 
-              zIndex: 1, 
-              marginRight: '2rem',
-              width: '180px',
-              height: '180px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
-            }}>
-              {/* You can replace this div with: <img src="/path-to-your-image.png" alt="Teacher" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} /> */}
-              <div style={{
-                width: '160px',
-                height: '160px',
-                borderRadius: '50%',
-                background: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '80px'
-              }}>
-                👩‍🏫
               </div>
             </div>
-            
-            {/* Decorative circles */}
-            <div style={{
-              position: 'absolute',
-              left: '-30px',
-              top: '-30px',
-              width: '150px',
-              height: '150px',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '50%',
-              filter: 'blur(40px)'
-            }}></div>
-            <div style={{
-              position: 'absolute',
-              right: '50px',
-              bottom: '-40px',
-              width: '180px',
-              height: '180px',
-              background: 'rgba(255,255,255,0.08)',
-              borderRadius: '50%',
-              filter: 'blur(50px)'
-            }}></div>
+
           </div>
 
-          {/* Content based on active section */}
-          {activeSection === 'create-quiz' || activeSection === 'dashboard' ? (
-            <div id="quiz-form-section" style={{ background: currentTheme.cardBg, borderRadius: '16px', padding: '2.5rem', border: `1px solid ${currentTheme.border}`, scrollMarginTop: '100px' }}>
-              <form onSubmit={handleSubmit}>
-            {/* Quiz Details */}
-            <div style={{ 
-              marginBottom: '2.5rem'
-            }}>
-              <div style={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                border: '1px solid #E5E7EB',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-              }}>
-                {/* Header with accent */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)',
-                  padding: '2rem 2.5rem',
-                  color: 'white',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    top: '-50%',
-                    right: '-10%',
-                    width: '300px',
-                    height: '300px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: '50%',
-                    filter: 'blur(40px)'
-                  }}></div>
-                  <h2 style={{ 
-                    fontSize: '1.75rem',
-                    fontWeight: '700',
-                    margin: '0 0 0.5rem 0',
-                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                    letterSpacing: '-0.03em',
-                    color: 'white',
-                    position: 'relative',
-                    zIndex: 1
-                  }}>
-                    Quiz Details
-                  </h2>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.95)',
-                    margin: '0',
-                    fontSize: '1rem',
-                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                    fontWeight: '400',
-                    position: 'relative',
-                    zIndex: 1
-                  }}>
-                    Configure the essential information for your quiz
-                  </p>
-                </div>
-              
-                <div style={{ padding: '2.5rem', display: 'grid', gap: '2rem' }}>
-                  {/* Quiz Title Input */}
-                  <div>
-                    <label style={{ 
-                      display: 'block',
-                      marginBottom: '0.625rem', 
-                      fontWeight: '600', 
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Quiz Title
-                    </label>
-                    <input
-                      type="text"
-                      value={quizData.title}
-                      onChange={(e) => setQuizData(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Enter an engaging title for your quiz"
-                      style={{ 
-                        width: '100%', 
-                        padding: '0.875rem 1.125rem', 
-                        border: '2px solid #E5E7EB', 
-                        borderRadius: '10px', 
-                        fontSize: '1rem',
-                        outline: 'none',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        background: '#F9FAFB',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        color: '#111827',
-                        fontWeight: '500',
-                        lineHeight: '1.5'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#667EEA';
-                        e.target.style.background = '#FFFFFF';
-                        e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#E5E7EB';
-                        e.target.style.background = '#F9FAFB';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      required
-                    />
-                  </div>
+          {/* Bottom Row Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Student Overall Success Rate */}
+            <div className="bg-white rounded-[20px] border border-slate-200/60 p-6 shadow-sm flex flex-col">
+              <h3 className="font-semibold text-slate-900 text-[15px] mb-6 tracking-tight">Student Overall Success Rate</h3>
 
-                  {/* Subject Input */}
-                  <div>
-                    <label style={{ 
-                      display: 'block',
-                      marginBottom: '0.625rem', 
-                      fontWeight: '600', 
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Subject
-                    </label>
-                    <input
-                      type="text"
-                      value={quizData.subject}
-                      onChange={(e) => setQuizData(prev => ({ ...prev, subject: e.target.value }))}
-                      placeholder="Mathematics, Science, History..."
-                      style={{ 
-                        width: '100%', 
-                        padding: '0.875rem 1.125rem', 
-                        border: '2px solid #E5E7EB', 
-                        borderRadius: '10px', 
-                        fontSize: '1rem',
-                        outline: 'none',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        background: '#F9FAFB',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        color: '#111827',
-                        fontWeight: '500',
-                        lineHeight: '1.5'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#667EEA';
-                        e.target.style.background = '#FFFFFF';
-                        e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#E5E7EB';
-                        e.target.style.background = '#F9FAFB';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      required
-                    />
-                    {!quizData.subject && (
-                      <div style={{ 
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        color: '#EF4444', 
-                        fontSize: '0.875rem', 
-                        marginTop: '0.625rem',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        fontWeight: '500'
-                      }}>
-                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        This field is required
-                      </div>
+              <div className="flex items-end justify-between mb-4">
+                <span className="text-[42px] font-bold text-slate-900 leading-none tracking-tight">{successRate}%</span>
+                {successRate > 0 && (
+                  <span className="text-sm font-semibold text-emerald-500 flex items-center mb-1">
+                    &uarr; 3%
+                  </span>
+                )}
+              </div>
+
+              <Progress value={successRate} className="h-2.5 mb-2 [&>div]:bg-slate-900" />
+
+              <div className="flex justify-between text-[13px] text-slate-500 font-medium mb-8">
+                <span>Previous: 0%</span>
+                <span>Target: 100%</span>
+              </div>
+
+              <div className="space-y-4 mb-4">
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-2.5 text-slate-700 font-medium">
+                    <div className="w-5 flex justify-center text-blue-500">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    Total Students
+                  </div>
+                  <span className="font-bold text-slate-900">{totalStudents}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-2.5 text-slate-700 font-medium">
+                    <div className="w-5 flex justify-center text-emerald-500">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    Attempted Students
+                  </div>
+                  <span className="font-bold text-slate-900">{attemptedStudents}</span>
+                </div>
+              </div>
+
+              <Progress value={successRate} className="h-2.5 mt-1 mb-2 [&>div]:bg-slate-900" />
+              <div className="text-[13px] text-slate-500 font-medium mb-6">
+                {successRate.toFixed(1)}% of total
+              </div>
+
+              <Button onClick={() => setActiveSection('analytics')} variant="outline" className="w-full mt-auto text-slate-700 font-medium text-[13px] border-slate-200/80 hover:bg-slate-50 shadow-sm h-10">
+                View Details
+              </Button>
+            </div>
+
+            {/* Most Activity */}
+            <div className="bg-white rounded-[20px] border border-slate-200/60 p-6 shadow-sm flex flex-col items-center justify-center">
+              <h3 className="font-semibold text-slate-900 text-[15px] mb-8 self-start tracking-tight">Most Activity</h3>
+              
+              {/* Pseudo Donut Chart */}
+              <div className="relative w-44 h-44 mb-10 mt-4">
+                {subjects.length > 0 ? (
+                  <>
+                    <div className="absolute inset-0 rounded-full border-[22px] border-[#111827]"></div>
+                    <div className="absolute inset-0 rounded-full border-[22px] border-[#4b5563]" style={{ clipPath: 'polygon(50% 50%, 100% 0, 100% 100%, 50% 100%)' }}></div>
+                    <div className="absolute inset-0 rounded-full border-[22px] border-[#9ca3af]" style={{ clipPath: 'polygon(50% 50%, 100% 100%, 0 100%, 0 50%)' }}></div>
+                  </>
+                ) : (
+                  <div className="absolute inset-0 rounded-full border-[22px] border-[#f1f5f9]"></div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-[132px] h-[132px] bg-white rounded-full flex items-center justify-center">
+                    {subjects.length === 0 && (
+                      <span className="text-slate-400 font-medium text-[13px]">No activity yet</span>
                     )}
                   </div>
-
-                  {/* Course Code Input */}
-                  <div>
-                    <label style={{ 
-                      display: 'block',
-                      marginBottom: '0.625rem', 
-                      fontWeight: '600', 
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Course Code
-                    </label>
-                    <input
-                      type="text"
-                      value={quizData.courseCode}
-                      onChange={(e) => setQuizData(prev => ({ ...prev, courseCode: e.target.value }))}
-                      placeholder="e.g., CS458, EC888, ASD444"
-                      style={{ 
-                        width: '100%', 
-                        padding: '0.875rem 1.125rem', 
-                        border: '2px solid #E5E7EB', 
-                        borderRadius: '10px', 
-                        fontSize: '1rem',
-                        outline: 'none',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        background: '#F9FAFB',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        color: '#111827',
-                        fontWeight: '500',
-                        lineHeight: '1.5'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#667EEA';
-                        e.target.style.background = '#FFFFFF';
-                        e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#E5E7EB';
-                        e.target.style.background = '#F9FAFB';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      required
-                    />
-                  </div>
-
-                  {/* Description Input */}
-                  <div>
-                    <label style={{ 
-                      display: 'block',
-                      marginBottom: '0.625rem', 
-                      fontWeight: '600', 
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Description
-                    </label>
-                    <textarea
-                      value={quizData.description}
-                      onChange={(e) => setQuizData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Provide a brief description of the quiz content and objectives..."
-                      rows="4"
-                      style={{ 
-                        width: '100%', 
-                        padding: '0.875rem 1.125rem', 
-                        border: '2px solid #E5E7EB', 
-                        borderRadius: '10px', 
-                        fontSize: '1rem',
-                        outline: 'none',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        background: '#F9FAFB',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        color: '#111827',
-                        fontWeight: '500',
-                        lineHeight: '1.5',
-                        resize: 'vertical',
-                        minHeight: '100px'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#667EEA';
-                        e.target.style.background = '#FFFFFF';
-                        e.target.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#E5E7EB';
-                        e.target.style.background = '#F9FAFB';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-
-                  {/* Time Inputs */}
-                  <div style={{
-                    background: 'linear-gradient(135deg, #F0F4FF 0%, #E9EEFF 100%)',
-                    padding: '2rem',
-                    borderRadius: '12px',
-                    border: '2px solid #D4DBFF'
-                  }}>
-                    <div style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: '1fr 1fr', 
-                      gap: '1.5rem'
-                    }}>
-                      <div>
-                        <label style={{ 
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          marginBottom: '0.625rem', 
-                          fontWeight: '600', 
-                          color: '#111827',
-                          fontSize: '0.9375rem',
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                          letterSpacing: '-0.01em'
-                        }}>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="#10B981">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                          </svg>
-                          Start Time
-                        </label>
-                        <input
-                          type="datetime-local"
-                          value={quizData.startTime}
-                          onChange={(e) => setQuizData(prev => ({ ...prev, startTime: e.target.value }))}
-                          style={{ 
-                            width: '100%', 
-                            padding: '0.875rem 1.125rem', 
-                            border: '2px solid #E5E7EB', 
-                            borderRadius: '10px', 
-                            fontSize: '0.9375rem',
-                            outline: 'none',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                            background: '#FFFFFF',
-                            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                            color: '#111827',
-                            fontWeight: '500'
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = '#10B981';
-                            e.target.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.1)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = '#E5E7EB';
-                            e.target.style.boxShadow = 'none';
-                          }}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ 
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          marginBottom: '0.625rem', 
-                          fontWeight: '600', 
-                          color: '#111827',
-                          fontSize: '0.9375rem',
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                          letterSpacing: '-0.01em'
-                        }}>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="#F59E0B">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                          </svg>
-                          End Time
-                        </label>
-                        <input
-                          type="datetime-local"
-                          value={quizData.endTime}
-                          onChange={(e) => setQuizData(prev => ({ ...prev, endTime: e.target.value }))}
-                          style={{ 
-                            width: '100%', 
-                            padding: '0.875rem 1.125rem', 
-                            border: '2px solid #E5E7EB', 
-                            borderRadius: '10px', 
-                            fontSize: '0.9375rem',
-                            outline: 'none',
-                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                            background: '#FFFFFF',
-                            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                            color: '#111827',
-                            fontWeight: '500'
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = '#F59E0B';
-                            e.target.style.boxShadow = '0 0 0 4px rgba(245, 158, 11, 0.1)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = '#E5E7EB';
-                            e.target.style.boxShadow = 'none';
-                          }}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Add Question Section */}
-            <div style={{ 
-              marginBottom: '2.5rem'
-            }}>
-              <div style={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                border: '1px solid #E5E7EB',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-              }}>
-                {/* Header with accent */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                  padding: '2rem 2.5rem',
-                  color: 'white',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    top: '-50%',
-                    right: '-10%',
-                    width: '300px',
-                    height: '300px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: '50%',
-                    filter: 'blur(40px)'
-                  }}></div>
-                  <h2 style={{ 
-                    fontSize: '1.75rem',
-                    fontWeight: '700',
-                    margin: '0 0 0.5rem 0',
-                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                    letterSpacing: '-0.03em',
-                    color: 'white',
-                    position: 'relative',
-                    zIndex: 1
-                  }}>
-                    Add Question
-                  </h2>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.95)',
-                    margin: '0',
-                    fontSize: '1rem',
-                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                    fontWeight: '400',
-                    position: 'relative',
-                    zIndex: 1
-                  }}>
-                    Build your quiz with custom questions
-                  </p>
-                </div>
-
-                <div style={{ padding: '2.5rem', display: 'grid', gap: '2rem' }}>
-                  <div>
-                    <label style={{ 
-                      display: 'block',
-                      marginBottom: '0.625rem', 
-                      fontWeight: '600', 
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Question Text
-                    </label>
-                    <textarea
-                      rows="4"
-                      value={currentQuestion.questionText}
-                      onChange={(e) => setCurrentQuestion(prev => ({ ...prev, questionText: e.target.value }))}
-                      placeholder="Enter your question here..."
-                      style={{ 
-                        width: '100%', 
-                        padding: '0.875rem 1.125rem', 
-                        border: '2px solid #E5E7EB', 
-                        borderRadius: '10px', 
-                        fontSize: '1rem',
-                        outline: 'none',
-                        resize: 'vertical',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        background: '#F9FAFB',
-                        color: '#111827',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        lineHeight: '1.6',
-                        fontWeight: '500'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#F59E0B';
-                        e.target.style.background = '#FFFFFF';
-                        e.target.style.boxShadow = '0 0 0 4px rgba(245, 158, 11, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#E5E7EB';
-                        e.target.style.background = '#F9FAFB';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-
-                  {/* Add Photo Option */}
-                  <div>
-                    <label style={{ 
-                      display: 'block',
-                      marginBottom: '0.625rem', 
-                      fontWeight: '600', 
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Add Photo (Optional)
-                    </label>
-                    <div style={{
-                      border: '2px dashed #E5E7EB',
-                      borderRadius: '10px',
-                      padding: '1.5rem',
-                      textAlign: 'center',
-                      background: '#F9FAFB',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      cursor: 'pointer'
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.currentTarget.style.borderColor = '#667EEA';
-                      e.currentTarget.style.background = '#EEF2FF';
-                    }}
-                    onDragLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#E5E7EB';
-                      e.currentTarget.style.background = '#F9FAFB';
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.currentTarget.style.borderColor = '#E5E7EB';
-                      e.currentTarget.style.background = '#F9FAFB';
-                      const file = e.dataTransfer.files[0];
-                      if (file && file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setCurrentQuestion(prev => ({ ...prev, imageUrl: event.target.result }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}>
-                      {currentQuestion.imageUrl ? (
-                        <div style={{ position: 'relative' }}>
-                          <img 
-                            src={currentQuestion.imageUrl} 
-                            alt="Question" 
-                            style={{ 
-                              maxWidth: '100%', 
-                              maxHeight: '300px', 
-                              borderRadius: '8px',
-                              objectFit: 'contain'
-                            }} 
-                          />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCurrentQuestion(prev => ({ ...prev, imageUrl: '' }));
-                            }}
-                            style={{
-                              position: 'absolute',
-                              top: '8px',
-                              right: '8px',
-                              background: '#EF4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: '32px',
-                              height: '32px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '18px',
-                              fontWeight: 'bold',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                            }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            id="question-image-upload"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  setCurrentQuestion(prev => ({ ...prev, imageUrl: event.target.result }));
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                            style={{ display: 'none' }}
-                          />
-                          <label 
-                            htmlFor="question-image-upload"
-                            style={{
-                              cursor: 'pointer',
-                              display: 'block'
-                            }}
-                          >
-                            <svg 
-                              width="48" 
-                              height="48" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="#667EEA" 
-                              strokeWidth="2"
-                              style={{ margin: '0 auto 1rem' }}
-                            >
-                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                              <polyline points="21 15 16 10 5 21"></polyline>
-                            </svg>
-                            <p style={{
-                              color: '#667EEA',
-                              fontWeight: '600',
-                              fontSize: '1rem',
-                              marginBottom: '0.5rem',
-                              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                            }}>
-                              Click to upload or drag and drop
-                            </p>
-                            <p style={{
-                              color: '#9CA3AF',
-                              fontSize: '0.875rem',
-                              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-                            }}>
-                              PNG, JPG, GIF up to 10MB
-                            </p>
-                          </label>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={{ 
-                      display: 'block',
-                      marginBottom: '0.625rem', 
-                      fontWeight: '600', 
-                      color: '#111827',
-                      fontSize: '0.9375rem',
-                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      Correct Answer
-                    </label>
-                    <textarea
-                      rows="4"
-                      value={currentQuestion.correctAnswer}
-                      onChange={(e) => setCurrentQuestion(prev => ({ ...prev, correctAnswer: e.target.value }))}
-                      placeholder="Enter the correct answer..."
-                      style={{ 
-                        width: '100%', 
-                        padding: '0.875rem 1.125rem', 
-                        border: '2px solid #E5E7EB', 
-                        borderRadius: '10px', 
-                        fontSize: '1rem',
-                        outline: 'none',
-                        resize: 'vertical',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        background: '#F9FAFB',
-                        color: '#111827',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        lineHeight: '1.6',
-                        fontWeight: '500'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#F59E0B';
-                        e.target.style.background = '#FFFFFF';
-                        e.target.style.boxShadow = '0 0 0 4px rgba(245, 158, 11, 0.1)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#E5E7EB';
-                        e.target.style.background = '#F9FAFB';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '1.25rem', alignItems: 'end' }}>
-                    <div>
-                      <label style={{ 
-                        display: 'block',
-                        marginBottom: '0.625rem', 
-                        fontWeight: '600', 
-                        color: '#111827',
-                        fontSize: '0.9375rem',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        letterSpacing: '-0.01em'
-                      }}>
-                        Points
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={currentQuestion.points}
-                        onChange={(e) => setCurrentQuestion(prev => ({ ...prev, points: parseInt(e.target.value) }))}
-                        style={{ 
-                          width: '100%', 
-                          padding: '0.875rem 1.125rem', 
-                          border: '2px solid #E5E7EB', 
-                          borderRadius: '10px', 
-                          fontSize: '1rem',
-                          outline: 'none',
-                          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                          background: '#F9FAFB',
-                          color: '#111827',
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          fontWeight: '600',
-                          textAlign: 'center'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = '#F59E0B';
-                          e.target.style.background = '#FFFFFF';
-                          e.target.style.boxShadow = '0 0 0 4px rgba(245, 158, 11, 0.1)';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = '#E5E7EB';
-                          e.target.style.background = '#F9FAFB';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                      />
-                    </div>
-                    <button 
-                      type="button" 
-                      onClick={handleAddQuestion}
-                      style={{ 
-                        background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', 
-                        color: 'white', 
-                        padding: '0.875rem 1.75rem', 
-                        borderRadius: '10px', 
-                        border: 'none',
-                        fontWeight: '600',
-                        fontSize: '1rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                        letterSpacing: '0.01em'
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-                      }}
-                    >
-                      + Add Question
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Questions List */}
-            {quizData.questions.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1E293B', marginBottom: '1rem' }}>
-                  Quiz Questions ({quizData.questions.length})
-                </h3>
-                <div style={{ display: 'grid', gap: '1rem' }}>
-                  {quizData.questions.map((question, index) => (
-                    <div key={index} style={{ 
-                      background: 'white', 
-                      padding: '1.5rem', 
-                      borderRadius: '8px', 
-                      border: '2px solid #E5E7EB',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start'
-                    }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '700', color: '#0E78FF', marginBottom: '0.5rem' }}>
-                          Question {index + 1}
-                        </div>
-                        <div style={{ color: '#1E293B', marginBottom: '0.5rem', fontWeight: '500' }}>
-                          {question.questionText}
-                        </div>
-                        <div style={{ 
-                          display: 'inline-block',
-                          background: '#10B981', 
-                          color: 'white', 
-                          padding: '0.25rem 0.75rem', 
-                          borderRadius: '20px', 
-                          fontSize: '0.75rem',
-                          fontWeight: '600'
-                        }}>
-                          {question.points} points
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveQuestion(index)}
-                        style={{ 
-                          background: '#EF4444', 
-                          color: 'white', 
-                          padding: '0.5rem 1rem', 
-                          borderRadius: '6px', 
-                          border: 'none',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          marginLeft: '1rem',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        🗑️ Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button 
-              type="submit"
-              style={{ 
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', 
-                color: 'white', 
-                padding: '1.125rem 2.5rem', 
-                borderRadius: '12px', 
-                border: 'none',
-                fontWeight: '700',
-                fontSize: '1.125rem',
-                cursor: 'pointer',
-                width: '100%',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4), 0 4px 6px -2px rgba(16, 185, 129, 0.3)',
-                letterSpacing: '0.02em',
-                textTransform: 'uppercase'
-              }}
-              onMouseOver={(e) => {
-                e.target.style.transform = 'translateY(-3px)';
-                e.target.style.boxShadow = '0 20px 25px -5px rgba(16, 185, 129, 0.4), 0 10px 10px -5px rgba(16, 185, 129, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 10px 15px -3px rgba(16, 185, 129, 0.4), 0 4px 6px -2px rgba(16, 185, 129, 0.3)';
-              }}
-            >
-              Create Quiz
-            </button>
-          </form>
-        </div>
-          ) : activeSection === 'my-quizzes' ? (
-            <div style={{ background: currentTheme.cardBg, borderRadius: '16px', padding: '2.5rem', border: `1px solid ${currentTheme.border}` }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: currentTheme.text, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={currentTheme.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                </svg>
-                My Quizzes
-              </h2>
               
-              {viewingResponses ? (
-                <StudentResponses 
-                  quizId={viewingResponses.id} 
-                  quizTitle={viewingResponses.title}
-                  onBack={() => setViewingResponses(null)}
-                />
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {myQuizzes.length === 0 ? (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: '3rem', 
-                      color: currentTheme.textSecondary,
-                      background: '#F9FAFB',
-                      borderRadius: '12px',
-                      border: '2px dashed #E5E7EB'
-                    }}>
-                      <svg 
-                        width="64" 
-                        height="64" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="#D1D5DB" 
-                        strokeWidth="2"
-                        style={{ margin: '0 auto 1rem' }}
-                      >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                      </svg>
-                      <h3 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>No quizzes yet</h3>
-                      <p style={{ margin: 0, fontSize: '0.875rem' }}>Create your first quiz to get started!</p>
+              <div className="flex justify-between w-full mt-auto px-2">
+                {subjects.length > 0 ? subjects.slice(0, 3).map((subject, index) => {
+                  const colors = ["bg-[#111827]", "bg-[#4b5563]", "bg-[#9ca3af]"];
+                  return (
+                    <div key={subject.name} className="text-center">
+                      <div className="flex items-center gap-2 justify-center mb-1.5 text-[13px] font-medium text-slate-600">
+                        <div className={`w-2.5 h-2.5 rounded-full ${colors[index % colors.length]}`}></div>
+                        <span className="truncate max-w-[60px]">{subject.name}</span>
+                      </div>
+                      <div className="font-bold text-slate-900 text-[15px]">{subject.percentage}%</div>
                     </div>
-                  ) : (
-                    myQuizzes.map((quiz) => {
-                      const now = new Date();
-                      const start = new Date(quiz.startTime);
-                      const end = new Date(quiz.endTime);
-                      const status = now < start ? 'upcoming' : now > end ? 'ended' : 'active';
-                      const statusColors = {
-                        upcoming: { bg: '#FEF3C7', text: '#92400E', label: 'Upcoming' },
-                        active: { bg: '#D1FAE5', text: '#065F46', label: 'Active' },
-                        ended: { bg: '#F3F4F6', text: '#374151', label: 'Ended' }
-                      };
-                      
-                      return (
-                        <div
-                          key={quiz.id}
-                          style={{
-                            background: 'white',
-                            padding: '1.5rem',
-                            borderRadius: '12px',
-                            border: '1px solid #E5E7EB',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            transition: 'all 0.2s',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{ 
-                              margin: '0 0 0.5rem 0', 
-                              fontSize: '1.125rem',
-                              fontWeight: '600',
-                              color: '#111827'
-                            }}>
-                              {quiz.title}
-                            </h3>
-                            <div style={{ 
-                              display: 'flex', 
-                              gap: '1.5rem',
-                              fontSize: '0.875rem',
-                              color: '#6B7280'
-                            }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                                </svg>
-                                {quiz.subject}
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <circle cx="12" cy="12" r="10"/>
-                                  <path d="M12 6v6l4 2"/>
-                                </svg>
-                                {new Date(quiz.startTime).toLocaleDateString()}
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                {quiz.questions?.length || 0} questions
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <span style={{
-                              padding: '0.375rem 0.875rem',
-                              borderRadius: '6px',
-                              fontSize: '0.8125rem',
-                              fontWeight: '600',
-                              background: statusColors[status].bg,
-                              color: statusColors[status].text
-                            }}>
-                              {statusColors[status].label}
-                            </span>
-                            
-                            <button
-                              onClick={() => setViewingResponses({ id: quiz.id, title: quiz.title })}
-                              style={{
-                                padding: '0.625rem 1.25rem',
-                                background: '#0E78FF',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '0.875rem',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                transition: 'background 0.2s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = '#0056CC'}
-                              onMouseLeave={(e) => e.currentTarget.style.background = '#0E78FF'}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                              </svg>
-                              View Responses
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
+                  );
+                }) : (
+                  <div className="w-full text-center text-slate-400 text-sm italic py-2">
+                    Create quizzes to see breakdown
+                  </div>
+                )}
+              </div>
             </div>
-          ) : null}
+
+            {/* Calendar */}
+            <div className="bg-white rounded-[20px] border border-slate-200/60 p-4 shadow-sm flex flex-col items-center justify-center h-full">
+              <Calendar
+                mode="single"
+                selected={calendarDate}
+                onSelect={setCalendarDate}
+                className="rounded-md w-full"
+              />
+            </div>
+
+          </div>
+
+          <div className="flex items-center justify-between mb-4 mt-2">
+              <h3 className="text-lg font-semibold text-slate-900">Manage Quizzes</h3>
+            </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="px-6">Title</TableHead>
+                  <TableHead className="px-6">Subject</TableHead>
+                  <TableHead className="px-6 text-center">Status</TableHead>
+                  <TableHead className="px-6">End Date</TableHead>
+                  <TableHead className="px-6">Notes</TableHead>
+                  <TableHead className="px-6 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {myQuizzes.length > 0 ? myQuizzes.map((quiz, idx) => (
+                  <TableRow key={quiz._id || quiz.id}>
+                    <TableCell className="px-6 font-medium">{quiz.title}</TableCell>
+                    <TableCell className="px-6 text-muted-foreground">{quiz.subject}</TableCell>
+                    <TableCell className="px-6 text-center">{getStatusBadge(quiz)}</TableCell>
+                    <TableCell className="px-6 text-muted-foreground">
+                      {new Date(quiz.endTime).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="px-6 text-muted-foreground text-xs">
+                      {quiz.questions?.length || 0} Questions included
+                    </TableCell>
+                    <TableCell className="px-6 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-7 w-7 rounded border-slate-200 text-slate-500 hover:text-slate-900"
+                                onClick={() => {
+                                  setViewingResponses(quiz._id || quiz.id);
+                                  setActiveSection('responses');
+                                }}
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View Responses</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-7 w-7 rounded border-slate-200 text-red-500 hover:text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Delete Quiz</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-48 text-center">
+                      <Empty className="border-none w-full max-w-sm mx-auto">
+                        <EmptyHeader>
+                          <EmptyMedia variant="icon">
+                            <Library className="h-6 w-6" />
+                          </EmptyMedia>
+                          <EmptyTitle>No quizzes found</EmptyTitle>
+                          <EmptyDescription>
+                            You haven't created any quizzes yet. Click "Create New Quiz" to get started.
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      {activeSection === 'responses' && viewingResponses && (
+        <div className="w-full max-w-6xl mx-auto space-y-4">
+          <Button variant="ghost" onClick={() => setActiveSection('my-quizzes')} className="mb-4 text-sm font-medium">
+            ← Back to Quizzes
+          </Button>
+          <StudentResponses quizId={viewingResponses} />
+        </div>
+      )}
+    </DashboardLayout>
   );
 }
-
-export default TeacherDashboard;
