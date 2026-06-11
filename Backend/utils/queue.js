@@ -1,9 +1,9 @@
 const Queue = require('bull');
-const { redisConfig } = require('../config/redis');
+// Use REDIS_URL directly since redisConfig doesn't exist in redis.js
+const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 
 // Create queues for AI services
-const whisperQueue = new Queue('whisper-transcription', {
-  redis: redisConfig,
+const whisperQueue = new Queue('whisper-transcription', redisUrl, {
   defaultJobOptions: {
     attempts: 3,
     backoff: {
@@ -16,8 +16,7 @@ const whisperQueue = new Queue('whisper-transcription', {
   }
 });
 
-const sbertQueue = new Queue('sbert-grading', {
-  redis: redisConfig,
+const sbertQueue = new Queue('sbert-grading', redisUrl, {
   defaultJobOptions: {
     attempts: 3,
     backoff: {
@@ -120,8 +119,7 @@ async function waitForJob(job, timeoutMs = 60000) {
   });
 }
 
-const quizQueue = new Queue('quiz-grading', {
-  redis: redisConfig,
+const quizQueue = new Queue('quiz-grading', redisUrl, {
   defaultJobOptions: {
     attempts: 3,
     backoff: {
