@@ -39,6 +39,48 @@ async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, thr
       };
     }
 
+    // Fast path 1: Exact match (case-insensitive)
+    const normalizedStudent = studentAnswer.trim().toLowerCase();
+    const normalizedCorrect = correctAnswer.trim().toLowerCase();
+    if (normalizedStudent === normalizedCorrect) {
+      console.log('✅ Exact match detected (bypassing SBERT)');
+      return {
+        isCorrect: true,
+        similarityScore: 1.0,
+        explanation: 'Exact match with the correct answer.'
+      };
+    }
+
+    // Fast path 2: Substring match (Strictly student containing correct)
+    const cleanStudent = normalizedStudent.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+    const cleanCorrect = normalizedCorrect.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+    
+    // Only apply substring matching if the CORRECT answer is meaningful (> 3 chars)
+    // and the student's answer CONTAINS the ENTIRE correct answer.
+    // Do NOT check if the correct answer contains the student's answer, as that gives false positives.
+    if (cleanCorrect.length > 3 && cleanStudent.includes(cleanCorrect)) {
+      console.log('✅ Substring match: Student answer contains the correct answer');
+      return {
+        isCorrect: true,
+        similarityScore: 1.0,
+        explanation: 'Answer contains the correct keyword/phrase.'
+      };
+    }
+
+    // Negation Check Heuristic
+    const negationWords = ["not", "never", "no", "none", "nothing", "nowhere", "hardly", "barely", "isn't", "aren't", "don't", "doesn't", "won't", "can't", "couldn't", "wouldn't", "shouldn't"];
+    const studentWords = cleanStudent.split(/\s+/);
+    const correctWords = cleanCorrect.split(/\s+/);
+    
+    const studentHasNegation = negationWords.some(w => studentWords.includes(w));
+    const correctHasNegation = negationWords.some(w => correctWords.includes(w));
+    
+    let negationMismatchPenalty = 0;
+    if (studentHasNegation !== correctHasNegation) {
+      console.log('⚠️ Negation mismatch detected! Will penalize the SBERT score.');
+      negationMismatchPenalty = 0.3; // Reduce score by 0.3 if there's a mismatch
+    }
+
     // Check cache first
     const cacheKey = cache.gradingKey(
       `${questionText}:${correctAnswer}`,
@@ -68,7 +110,26 @@ async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, thr
     const data = response.data;
     console.log('✅ SBERT response received:', data);
     
-    const { isCorrect, similarityScore, explanation } = data;
+    let { isCorrect, similarityScore, explanation } = data;
+
+    // Apply negation penalty if applicable
+    if (negationMismatchPenalty > 0) {
+      similarityScore = Math.max(0, similarityScore - negationMismatchPenalty);
+      if (similarityScore < threshold) {
+        isCorrect = false;
+        explanation += " (Score reduced due to negation mismatch)";
+      }
+    }
+
+    // Length mismatch penalty (prevents 1-word answers like "The" from scoring high on long answers)
+    if (studentWords.length <= 2 && correctWords.length >= 4 && similarityScore > 0.8) {
+      console.log('⚠️ Answer length heavily mismatched. Penalizing SBERT anomaly.');
+      similarityScore = Math.max(0, similarityScore - 0.4);
+      if (similarityScore < threshold) {
+        isCorrect = false;
+        explanation += " (Score reduced: answer lacks sufficient detail)";
+      }
+    }
 
     console.log(`Grading result: Score=${similarityScore}, Threshold=${threshold}, Correct=${isCorrect}`);
 

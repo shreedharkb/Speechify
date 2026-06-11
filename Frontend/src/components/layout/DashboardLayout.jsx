@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
-import { 
-  LayoutDashboard, 
-  FileEdit, 
-  Library, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  FileEdit,
+  Library,
+  LogOut,
   Settings,
   BookOpen,
   PieChart,
   Users,
   Menu,
   X,
-  Command,
+  AudioLines,
   MoreVertical,
   Search,
   Bell,
@@ -28,11 +28,11 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
-export default function DashboardLayout({ 
-  children, 
-  role, 
-  userName, 
-  activeSection, 
+export default function DashboardLayout({
+  children,
+  role,
+  userName,
+  activeSection,
   onNavigate,
   setPage
 }) {
@@ -44,10 +44,7 @@ export default function DashboardLayout({
     { id: 'my-quizzes', label: 'My Quizzes', icon: <Library className="w-4 h-4" /> }
   ];
 
-  const teacherProjectItems = [
-    { id: 'analytics', label: 'Analytics', icon: <PieChart className="w-4 h-4" /> },
-    { id: 'students', label: 'Students', icon: <Users className="w-4 h-4" /> }
-  ];
+  const teacherProjectItems = [];
 
   const studentPlatformItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -65,10 +62,10 @@ export default function DashboardLayout({
   };
 
   const getPageTitle = () => {
-    switch(activeSection) {
+    switch (activeSection) {
       case 'dashboard': return 'Dashboard';
       case 'create-quiz': return 'Create Quiz';
-      case 'my-quizzes': 
+      case 'my-quizzes':
       case 'quizzes': return 'My Quizzes';
       case 'analytics': return 'Analytics';
       case 'students': return 'Students';
@@ -81,21 +78,21 @@ export default function DashboardLayout({
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-[#f9fafb] text-[#111827]">
       {/* Logo Area */}
-      <div 
+      <div
         className="flex items-center gap-3 px-6 py-5 cursor-pointer"
         onClick={() => window.location.reload()}
       >
-        <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center shadow-sm shrink-0">
-          <Command className="w-4 h-4 text-white" />
+        <div className="w-8 h-8 bg-[oklch(61%_0.09_60.8)] rounded-full flex items-center justify-center shadow-sm shrink-0">
+          <AudioLines className="w-4 h-4 text-white" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold leading-tight">Speechify</span>
+          <span className="text-lg font-bold text-[#0f172a] leading-tight tracking-tight">Speechify</span>
         </div>
       </div>
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6">
-        
+
         {/* Platform Section */}
         <div>
           <h3 className="px-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Platform</h3>
@@ -109,11 +106,10 @@ export default function DashboardLayout({
                     onNavigate(item.id);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-2 py-1.5 text-[13px] font-medium rounded-md transition-colors ${
-                    isActive 
-                      ? 'bg-slate-200/50 text-slate-900' 
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-2 py-1.5 text-[13px] font-medium rounded-md transition-colors ${isActive
+                    ? 'bg-slate-200/50 text-slate-900'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
                 >
                   <span className={`${isActive ? 'text-slate-900' : 'text-slate-500'}`}>{item.icon}</span>
                   {item.label}
@@ -137,11 +133,10 @@ export default function DashboardLayout({
                       onNavigate(item.id);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-2 py-1.5 text-[13px] font-medium rounded-md transition-colors ${
-                      isActive 
-                        ? 'bg-slate-200/50 text-slate-900' 
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-2 py-1.5 text-[13px] font-medium rounded-md transition-colors ${isActive
+                      ? 'bg-slate-200/50 text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
                   >
                     <span className={`${isActive ? 'text-slate-900' : 'text-slate-500'}`}>{item.icon}</span>
                     {item.label}
@@ -196,10 +191,10 @@ export default function DashboardLayout({
       {/* Mobile Header & Sidebar overlay */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 z-50 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
-            <Command className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 bg-[oklch(61%_0.09_60.8)] rounded-full flex items-center justify-center shadow-sm shrink-0">
+            <AudioLines className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-sm">Speechify</span>
+          <span className="font-bold text-[#0f172a] tracking-tight text-lg">Speechify</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
           <Menu className="w-5 h-5" />
@@ -224,7 +219,7 @@ export default function DashboardLayout({
       <main className="flex-1 flex flex-col min-w-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen">
         {/* Top Header */}
         <header className="h-14 px-6 flex items-center justify-between border-b border-slate-200 bg-white sticky top-0 z-40">
-          
+
           {/* Left side: Page Title */}
           <div className="flex items-center gap-2 text-slate-900 font-medium text-sm">
             <LayoutDashboard className="w-4 h-4 text-slate-500" />

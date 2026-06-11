@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="text-lg font-bold text-[#0f172a] tracking-tight">
             Speechify
           </div>
-          
+
           <div className="flex items-center gap-6 text-sm font-medium text-[#64748b]">
             <a href="#" className="hover:text-[#0f172a] transition-colors">About</a>
             <a href="#" className="hover:text-[#0f172a] transition-colors">Services</a>

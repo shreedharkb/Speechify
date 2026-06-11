@@ -1,421 +1,373 @@
-<div align="center">
-
 # Speechify
 
-### AI-Powered Semantic Quiz Grading Platform
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white) ![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black) ![Express](https://img.shields.io/badge/Express.js-404D59?style=flat&logo=express&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
 
-An intelligent educational platform that revolutionizes quiz assessment using Natural Language Processing and Machine Learning to evaluate student answers based on semantic meaning rather than exact string matching.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com/)
-
-[Features](#key-features) | [Architecture](#system-architecture) | [Installation](#quick-start) | [API Documentation](#api-overview) | [Contributing](#contributing)
-
-</div>
+AI-powered semantic quiz grading platform. Teachers can create quizzes and students can answer them via text or voice. Instead of traditional exact-string matching, Speechify leverages state-of-the-art NLP (`all-MiniLM-L6-v2` via Sentence-BERT) to grade answers based on contextual meaning and similarity, coupled with OpenAI Whisper for seamless voice transcription.
 
 ---
 
-## Project Overview
+## Table of Contents
 
-**Speechify** is a full-stack web application that solves a critical problem in educational technology: **the rigidity of traditional quiz grading systems**. By leveraging state-of-the-art NLP models (Sentence-BERT), this platform understands the semantic meaning of student responses, enabling fair and accurate assessment even when answers are phrased differently from the expected response.
+- [Features](#features)
+- [Architecture & Workflows](#architecture--workflows)
+- [Database Schema](#database-schema)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [Environment Variables](#environment-variables)
+- [API Reference](#api-reference)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [Author](#author)
+- [License](#license)
 
-### The Problem & Solution
+---
 
-| Traditional Grading | Speechify AI Grading |
-|---------------------|----------------------|
-| Exact string matching only | Semantic understanding |
-| "Plants make food" ≠ "Photosynthesis" | "Plants make food" ≈ "Photosynthesis" |
-| High false negatives | Context-aware evaluation |
-| Frustrating for students | Fair and accurate |
+## Features
 
+### AI Semantic Grading
+Evaluates student answer meaning using cosine similarity. Student answers and expected answers are encoded into 768-dimensional semantic vectors using Sentence-BERT and evaluated instantly.
+
+### Real-time Processing & Background Jobs
+Instant grading with detailed feedback powered by Redis Queues and WebSockets, ensuring the Node.js main thread remains unblocked during heavy ML workloads.
+
+### Voice Transcription
+Built-in speech-to-text capabilities utilizing OpenAI Whisper, allowing students to verbally answer quiz questions for accessibility and speed.
+
+### Role-Based Access
+Secure, separated Teacher & Student portals via JWT and Role-Based Access Control (RBAC). Teachers can schedule quizzes with automated start and end times.
+
+---
+
+## Architecture & Workflows
+
+Below is the high-level system architecture of Speechify, showcasing the separation between the React Frontend, Node.js API Gateway, Redis Job Queues, and the Python AI Microservices.
+
+![System Architecture](assets/system_architecture.png)
+
+<details>
+<summary><b>View Eraser.io Code: System Architecture</b></summary>
+
+Copy this into Eraser's **Cloud Architecture** template:
+
+```eraser
+// Users & Devices
+Client Devices [icon: monitor, color: blue] {
+  Web Browser [icon: chrome]
+  Mobile Device [icon: smartphone]
+}
+
+// Security & Edge
+Edge Layer [icon: shield, color: grey] {
+  Nginx Reverse Proxy [icon: nginx]
+  Rate Limiter [icon: activity]
+}
+
+// Application Layer
+Node.js Core Services [icon: nodejs, color: green] {
+  Auth Middleware (JWT) [icon: key]
+  Express REST API [icon: code]
+  WebSocket Server [icon: radio]
+}
+
+// Message Broker
+Event Bus [icon: layers, color: red] {
+  Redis Message Queue [icon: redis]
+}
+
+// Background Processing
+Async Workers [icon: server, color: green] {
+  BullMQ Job Processor [icon: zap]
+}
+
+// AI Infrastructure
+Machine Learning Cluster [icon: cpu, color: yellow] {
+  SBERT Semantic Engine [icon: pytorch]
+  Whisper Audio Engine [icon: openai]
+}
+
+// Data Persistence
+Database Tier [icon: database, color: blue] {
+  Prisma ORM [icon: prisma]
+  PostgreSQL Primary [icon: postgresql]
+  PostgreSQL Replica [icon: postgresql]
+}
+
+// ==================================
+// Data Flow & Network Connections
+// ==================================
+
+Client Devices > Nginx Reverse Proxy: HTTPS Request
+Nginx Reverse Proxy > Rate Limiter: IP Check
+Rate Limiter > Auth Middleware (JWT): Validate Token
+Auth Middleware (JWT) > Express REST API: Route Request
+Auth Middleware (JWT) > WebSocket Server: Establish WSS Connection
+Express REST API > Prisma ORM: Query Data
+Prisma ORM > PostgreSQL Primary: Write Operations (INSERT/UPDATE)
+Prisma ORM > PostgreSQL Replica: Read Operations (SELECT)
+Express REST API > Redis Message Queue: Dispatch Grading Job
+BullMQ Job Processor < Redis Message Queue: Consume Jobs
+BullMQ Job Processor > Prisma ORM: Save Grading Results
+Express REST API > Whisper Audio Engine: Sync Speech-to-Text
+BullMQ Job Processor > SBERT Semantic Engine: Async Batch Grading
+Express REST API > SBERT Semantic Engine: Instant Live Grading
 ```
-Traditional System:
-  Expected: "Photosynthesis is the process plants use to convert sunlight into energy"
-  Student:  "Plants make food using light from the sun"
-  Result:   ❌ INCORRECT (no exact match)
+</details>
 
-Speechify:
-  Expected: "Photosynthesis is the process plants use to convert sunlight into energy"
-  Student:  "Plants make food using light from the sun"
-  Result:   ✅ CORRECT (85% semantic similarity)
+<details>
+<summary><b>View Eraser.io Code: Voice Grading Sequence Diagram</b></summary>
+
+Copy this into Eraser's **Sequence Diagram** template to see exactly how audio answers are processed:
+
+```eraser
+title Student Voice Answer & Grading Flow
+
+Student -> React Frontend: 1. Record Audio & Submit
+React Frontend -> Express API: 2. POST /api/whisper/transcribe
+Express API -> Whisper Service: 3. Forward Audio Blob
+Whisper Service -> Express API: 4. Return Transcribed Text
+React Frontend -> Express API: 5. POST /api/quiz-attempt/submit
+Express API -> Redis Queue: 6. Enqueue Grading Job
+Express API --> React Frontend: 7. Return 202 "Processing"
+Redis Queue -> Background Worker: 8. Dequeue Job
+Background Worker -> SBERT Service: 9. Compare Answers (Vector Math)
+SBERT Service -> Background Worker: 10. Return Similarity Score
+Background Worker -> PostgreSQL DB: 11. Save Final Score
+Background Worker -> WebSocket Server: 12. Emit "Grading Complete" Event
+WebSocket Server --> React Frontend: 13. Push Real-time Update
+React Frontend --> Student: 14. Display Score & Explanation
 ```
+</details>
 
-## Key Features
+<details>
+<summary><b>View Eraser.io Code: Teacher Journey Flow Chart</b></summary>
 
-| Feature | Description | Technology Used |
-|---------|-------------|-----------------|
-| **AI Semantic Grading** | Evaluates answer meaning using cosine similarity | Sentence-BERT, PyTorch |
-| **Real-time Processing** | Instant grading with detailed feedback | Redis Queue, WebSockets |
-| **Voice Transcription** | Speech-to-text for accessibility | OpenAI Whisper |
-| **Role-Based Access** | Separate Teacher & Student portals | JWT, RBAC |
-| **Quiz Scheduling** | Time-bound assessments with auto-publish | Cron Jobs, PostgreSQL |
-| **Containerized Deployment** | One-command setup for all services | Docker Compose |
-| **RESTful API** | Well-documented, scalable API design | Express.js, Prisma ORM |
+Copy this into Eraser's **Flow Chart** template:
 
-## System Architecture
+```eraser
+Start [shape: oval, icon: user, color: blue]
+Valid Login? [shape: diamond, color: yellow]
+Teacher Dashboard [shape: rectangle, icon: monitor]
+Create Quiz Event [shape: rectangle, icon: calendar]
+Add Questions & Expected Answers [shape: rectangle, icon: list]
+Publish to Database [shape: cylinder, icon: postgresql, color: blue]
+Quiz Becomes Active [shape: rectangle, icon: check-circle, color: green]
+Reject Access [shape: oval, icon: x-circle, color: red]
 
+Start > Valid Login?: Authenticate via JWT
+Valid Login? > Teacher Dashboard: Yes
+Valid Login? > Reject Access: No (Invalid Token)
+Teacher Dashboard > Create Quiz Event: Click "New Quiz"
+Create Quiz Event > Add Questions & Expected Answers: Input details
+Add Questions & Expected Answers > Publish to Database: Save via Prisma
+Publish to Database > Quiz Becomes Active: Timer triggers Start Time
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              FRONTEND (React 19)                            │
-│                         Vite | Axios | React Router                         │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                       │
-                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           BACKEND (Node.js + Express)                       │
-│              JWT Auth | Prisma ORM | Rate Limiting | Validation             │
-└─────────────────────────────────────────────────────────────────────────────┘
-                     │                 │                    │
-                     ▼                 ▼                    ▼
-        ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-        │   PostgreSQL   │  │  SBERT Service   │  │ Whisper Service  │
-        │   (Database)   │  │  (AI Grading)    │  │ (Transcription)  │
-        │    Prisma      │  │  Flask + PyTorch │  │  FastAPI + ASR   │
-        └────────────────┘  └──────────────────┘  └──────────────────┘
+</details>
+
+---
+
+## Database Schema
+
+The database uses PostgreSQL managed via Prisma ORM. It tracks users, quiz events, individual questions, and student attempts with granular grading metrics.
+
+![Database Schema](assets/database_schema.png)
+
+<details>
+<summary><b>View Eraser.io Code: Entity Relationship Diagram (ERD)</b></summary>
+
+Copy this into Eraser's **Entity Relationship** template:
+
+```eraser
+Users {
+  id UUID PK
+  email VARCHAR
+  password_hash VARCHAR
+  role ENUM // teacher, student
+  created_at TIMESTAMP
+}
+
+Quiz_Events {
+  id UUID PK
+  teacher_id UUID FK
+  title VARCHAR
+  subject VARCHAR
+  start_time TIMESTAMP
+  end_time TIMESTAMP
+}
+
+Questions {
+  id UUID PK
+  quiz_id UUID FK
+  question_text TEXT
+  correct_answer_text TEXT
+  points INT
+}
+
+Quiz_Attempts {
+  id UUID PK
+  student_id UUID FK
+  quiz_id UUID FK
+  started_at TIMESTAMP
+  completed_at TIMESTAMP
+  total_score FLOAT
+}
+
+Attempt_Answers {
+  id UUID PK
+  attempt_id UUID FK
+  question_id UUID FK
+  student_answer_text TEXT
+  similarity_score FLOAT
+  is_correct BOOLEAN
+  points_earned FLOAT
+  explanation TEXT
+}
+
+Users.id < Quiz_Events.teacher_id
+Quiz_Events.id < Questions.quiz_id
+Users.id < Quiz_Attempts.student_id
+Quiz_Events.id < Quiz_Attempts.quiz_id
+Quiz_Attempts.id < Attempt_Answers.attempt_id
+Questions.id < Attempt_Answers.question_id
 ```
+</details>
+
+---
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|--------------|
-| **Frontend** | React 19, Vite, Axios, React Router, CSS3 |
-| **Backend** | Node.js 18+, Express.js, Prisma ORM, JWT |
-| **Database** | PostgreSQL 16, Redis (caching) |
-| **AI/ML Services** | Sentence-BERT (all-MiniLM-L6-v2), OpenAI Whisper |
-| **DevOps** | Docker, Docker Compose, GitHub Actions |
-| **Testing** | Jest, Supertest, pytest |
+| Layer | Technology | Notes |
+|---|---|---|
+| Frontend | React 19, Vite, Axios, React Router | Modern SPA workflow |
+| Backend | Node.js 18+, Express.js, JWT | Handles routing, RBAC, and rate limiting |
+| AI / Grading | Sentence-BERT (`all-MiniLM-L6-v2`) | Python Flask app using PyTorch |
+| AI / Audio | OpenAI Whisper | Python FastAPI app for speech-to-text |
+| Database | PostgreSQL 16, Prisma ORM | Relational storage for quizzes and users |
+| Cache & Queue | Redis | Async task processing for background grading |
+| DevOps & CI | Docker, Jenkins, GitHub Actions | Full containerization orchestration |
+
+---
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 18+
 - Docker and Docker Compose
-- Python 3.9+ (for AI services)
+- Python 3.9+ (if running AI services bare-metal)
 
-### Installation
-
-1. **Clone and navigate to the project**
-   ```bash
-   git clone <your-repo-url>
-   cd speechify
-   ```
-
-2. **Start AI services and database**
-   ```bash
-   docker-compose up -d
-   ```
-   This starts PostgreSQL, SBERT grading service, and Whisper transcription service.
-
-3. **Configure backend environment**
-   
-   Create `Backend/.env`:
-   ```env
-   PORT=3001
-   JWT_SECRET=your_secret_key_change_this_in_production
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_USER=quiz_admin
-   DB_PASSWORD=quiz_secure_password
-   DB_NAME=quiz_app
-   SBERT_SERVICE_URL=http://localhost:5002
-   WHISPER_SERVICE_URL=http://localhost:5000
-   ```
-
-4. **Start the backend**
-   ```bash
-   cd Backend
-   npm install
-   npm start
-   ```
-
-5. **Start the frontend**
-   ```bash
-   cd Frontend
-   npm install
-   npm run dev
-   ```
-
-6. **Access the application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3001
-   - Database: localhost:5432
-
-## Usage Examples
-
-### For Teachers
-
-1. **Sign up** with role "teacher"
-2. **Create a quiz** with title, subject, and scheduling
-3. **Add questions** with correct answers and point values
-4. **Publish** — students can now take it during the active period
-
-```javascript
-// Example: Create quiz via API
-POST /api/quiz
-{
-  "title": "Biology 101 Midterm",
-  "subject": "Biology",
-  "start_time": "2026-03-01T09:00:00Z",
-  "end_time": "2026-03-01T10:30:00Z",
-  "questions": [
-    {
-      "question_text": "What is photosynthesis?",
-      "correct_answer_text": "The process plants use to convert sunlight into energy",
-      "points": 10
-    }
-  ]
-}
-```
-
-### For Students
-
-1. **Sign up** with role "student"
-2. **View available quizzes** during their active time
-3. **Take a quiz** by submitting text answers
-4. **Get instant results** with AI similarity scores and explanations
-
-```javascript
-// Example: Submit quiz answers via API
-POST /api/quiz-attempt/submit
-{
-  "attemptId": 42,
-  "answers": [
-    {
-      "questionId": 1,
-      "studentAnswer": "Plants make food from sunlight"
-    }
-  ]
-}
-
-// Response includes AI grading
-{
-  "score": 85.42,
-  "results": [
-    {
-      "question": "What is photosynthesis?",
-      "studentAnswer": "Plants make food from sunlight",
-      "correctAnswer": "The process plants use to convert sunlight into energy",
-      "similarityScore": 0.8542,
-      "isCorrect": true,
-      "pointsEarned": 8.5,
-      "explanation": "Good match - core concepts are the same"
-    }
-  ]
-}
-```
-
-### Testing AI Grading
-
-Test the SBERT service directly:
+### Running Locally with Docker
 
 ```bash
-curl -X POST http://localhost:5002/grade \
-  -H "Content-Type: application/json" \
-  -d '{
-    "student_answer": "Plants make food from sunlight",
-    "correct_answer": "Photosynthesis converts sunlight to energy"
-  }'
-```
+git clone https://github.com/shreedharkb/Speechify.git
+cd Speechify
 
-Response:
-```json
-{
-  "similarity_score": 0.8542,
-  "is_correct": true,
-  "explanation": "Good match - core concepts are the same"
-}
-```
-
-## How AI Grading Works
-
-1. **Encoding**: Student and correct answers are converted to 768-dimensional semantic vectors using Sentence-BERT
-2. **Comparison**: Cosine similarity calculated between vectors (0.0 - 1.0 scale)
-3. **Scoring**: 
-   - ≥0.95: Excellent match
-   - 0.90-0.95: Very strong match
-   - 0.85-0.90: Good match (passing threshold)
-   - <0.85: Needs improvement
-
-The AI model (`all-MiniLM-L6-v2`) runs locally on your machine — no external API calls, completely private.
-
-## API Overview
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/signup` | POST | Register new user (student/teacher) |
-| `/api/auth/login` | POST | Login and receive JWT token |
-| `/api/quiz` | POST | Create new quiz (teachers only) |
-| `/api/quiz` | GET | List all quizzes |
-| `/api/quiz/:id` | GET | Get single quiz details |
-| `/api/quiz/active/student` | GET | Get currently active quizzes (students) |
-| `/api/quiz-attempt/start` | POST | Start quiz attempt |
-| `/api/quiz-attempt/submit` | POST | Submit quiz answers for AI grading |
-| `/api/quiz-attempt/:attemptId/results` | GET | Retrieve attempt results |
-| `/api/whisper/transcribe` | POST | Transcribe audio to text |
-
-**Authentication**: Include JWT token in `Authorization: Bearer <token>` header for protected routes.
-
-For detailed API documentation, see [Backend/README.md](Backend/README.md) (if available).
-
-## Project Structure
-
-```
-Speechify/
-├── Frontend/              # React application (Vite)
-│   ├── src/
-│   │   ├── pages/         # Page components (Login, Dashboard, etc.)
-│   │   └── components/    # Reusable UI components
-│   └── package.json
-│
-├── Backend/               # Express.js API server
-│   ├── server.js          # Main server entry point
-│   ├── routes/            # API route definitions
-│   ├── controllers/       # Request handlers and business logic
-│   ├── middleware/        # Auth, validation middleware
-│   ├── config/            # Database configuration
-│   ├── init-database.sql  # PostgreSQL schema
-│   └── package.json
-│
-├── sbert-service/         # Flask app for AI semantic grading
-│   ├── app.py             # SBERT similarity API
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── whisper-service/       # FastAPI app for speech-to-text
-│   ├── app.py             # Whisper transcription API
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── docker-compose.yml     # Orchestrates all services
-├── PROJECT_HISTORY.md     # Detailed project evolution and decisions
-└── README.md              # This file
-```
-
-## Database Schema
-
-Speechify uses PostgreSQL with five main tables:
-
-- **users**: Student and teacher accounts with bcrypt-hashed passwords
-- **quiz_events**: Quizzes with scheduling (start_time, end_time)
-- **questions**: Quiz questions with correct answers and point values
-- **quiz_attempts**: Student attempts (one per student per quiz)
-- **attempt_answers**: Individual answer records with AI similarity scores
-
-See [Backend/init-database.sql](Backend/init-database.sql) for the complete schema.
-
-## Deployment
-
-### Using Docker Compose (Recommended)
-
-```bash
-# Start all services
+# Start PostgreSQL, Redis, SBERT, and Whisper services
 docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
 ```
 
-### Manual Deployment
+### Backend Setup
 
-1. **PostgreSQL**: Set up database using `Backend/init-database.sql`
-2. **Backend**: `cd Backend && npm install && node server.js`
-3. **Frontend**: `cd Frontend && npm install && npm run build && npm run preview`
-4. **AI Services**:
-   ```bash
-   # SBERT
-   cd sbert-service && pip install -r requirements.txt && python app.py
-   
-   # Whisper
-   cd whisper-service && pip install -r requirements.txt && uvicorn app:app
-   ```
+```bash
+cd Backend
+npm install
+# Configure your .env file
+npx prisma migrate dev
+npm run dev
+```
 
-### Environment Variables
+### Frontend Setup
 
-Configure these in `Backend/.env`:
+```bash
+cd Frontend
+npm install
+npm run dev
+```
 
-- `PORT`: Backend server port (default: 3001)
-- `JWT_SECRET`: Secret key for JWT signing (change in production!)
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: PostgreSQL connection
-- `SBERT_SERVICE_URL`: URL for semantic grading service (default: http://localhost:5002)
-- `WHISPER_SERVICE_URL`: URL for transcription service (default: http://localhost:5000)
-
-## Documentation
-
-- **Project History**: See [PROJECT_HISTORY.md](PROJECT_HISTORY.md) for complete development timeline and technical decisions
-- **Audio Storage**: See [SETUP_AUDIO_STORAGE.md](SETUP_AUDIO_STORAGE.md) for audio file handling details
-- **Database Migrations**: See [Backend/PRISMA_MIGRATION_GUIDE.md](Backend/PRISMA_MIGRATION_GUIDE.md) for schema evolution
-
-
-
-
-
-## Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/YourFeature`
-3. Make your changes and commit: `git commit -m 'Add YourFeature'`
-4. Push to your fork: `git push origin feature/YourFeature`
-5. Open a Pull Request with a clear description
-
-Please ensure your code follows the existing style and includes appropriate tests.
+Application is accessible at `http://localhost:5173`.
 
 ---
 
-## Author & Maintainer
+## Project Structure
 
-<div align="center">
+```text
+Speechify/
+├── Frontend/              # React 19 application (Vite)
+├── Backend/               # Express.js API & Prisma ORM
+│   ├── config/            # Database and queue configurations
+│   ├── controllers/       # Business logic (Quizzes, Attempts)
+│   ├── routes/            # Express routers
+│   └── prisma/            # Prisma schema and migrations
+├── sbert-service/         # Flask ML app for Sentence-BERT grading
+├── whisper-service/       # FastAPI ML app for transcription
+├── Jenkinsfile            # Jenkins CI/CD pipeline definition
+├── docker-compose.yml     # Local orchestration for dependencies
+└── README.md              # Project documentation
+```
 
-<img src="https://github.com/shreedharkb.png" width="100" height="100" style="border-radius: 50%;" alt="Shreedhar K B"/>
+---
 
-### Shreedhar K B
+## Environment Variables
 
-**Full Stack Developer | Cloud Enthusiast**
+| Variable | Required | Description |
+|---|---|---|
+| `PORT` | No | Backend API port. Defaults to `3001` |
+| `JWT_SECRET` | Yes | Secret key for JWT signing |
+| `DB_HOST` | Yes | PostgreSQL host |
+| `DB_USER` | Yes | PostgreSQL user |
+| `DB_PASSWORD` | Yes | PostgreSQL password |
+| `DB_NAME` | Yes | PostgreSQL database name |
+| `SBERT_SERVICE_URL` | No | Defaults to `http://localhost:5002` |
+| `WHISPER_SERVICE_URL`| No | Defaults to `http://localhost:5000` |
 
-[![GitHub](https://img.shields.io/badge/GitHub-shreedharkb-181717?style=for-the-badge&logo=github)](https://github.com/shreedharkb)
-[![Email](https://img.shields.io/badge/Email-shreedharkb4%40gmail.com-EA4335?style=for-the-badge&logo=gmail)](mailto:shreedharkb4@gmail.com)
+---
 
-*Designed, developed, and maintained by Shreedhar K B*
+## API Reference
 
-</div>
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `POST` | `/api/auth/signup` | Register new user | ❌ |
+| `POST` | `/api/auth/login` | Login & receive JWT | ❌ |
+| `POST` | `/api/quiz` | Create a new quiz | 👨‍🏫 Teacher |
+| `GET`  | `/api/quiz/active/student`| Get currently active quizzes | 👩‍🎓 Student |
+| `POST` | `/api/quiz-attempt/submit`| Submit answers for AI semantic grading | 👩‍🎓 Student |
+| `POST` | `/api/whisper/transcribe` | Convert speech audio to text | ✅ Yes |
+
+---
+
+## Deployment
+
+Speechify utilizes Docker Compose for standard deployment and a `Jenkinsfile` for CI/CD automation.
+
+```bash
+# Start all services
+docker-compose up -d --build
+
+# View logs for AI grading
+docker-compose logs -f sbert-service
+```
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/AwesomeFeature`
+3. Commit your changes: `git commit -m 'Add AwesomeFeature'`
+4. Push to the branch: `git push origin feature/AwesomeFeature`
+5. Open a Pull Request
+
+---
+
+## Author
+
+**Shreedhar K B**
+*Full Stack Developer | Cloud Enthusiast*
+* [GitHub](https://github.com/shreedharkb)
+* [Email](mailto:shreedharkb4@gmail.com)
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-
-Copyright (c) 2026 Shreedhar K B
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-```
-
----
-
-<div align="center">
-
-**If you found this project helpful, please consider giving it a ⭐**
-
-*Built with passion for better education through AI*
-
-</div>
+MIT

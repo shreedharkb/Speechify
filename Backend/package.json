@@ -23,11 +23,14 @@
     "express": "^4.19.2",
     "ffmpeg": "^0.0.4",
     "form-data": "^4.0.4",
+    "google-auth-library": "^10.7.0",
     "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
     "multer": "^2.0.2",
-    "pg": "^8.18.0"
+    "nodemailer": "^8.0.11",
+    "pg": "^8.18.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

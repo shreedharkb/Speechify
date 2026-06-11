@@ -10,18 +10,13 @@ export default function RoleSelectionPage({ setPage }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-16 bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="w-full max-w-[640px] animate-fade-in-up">
-        {/* Top Badge */}
-        <div className="flex justify-center mb-8">
-          <div 
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium cursor-pointer hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm" 
-            onClick={() => setPage('home')}
-          >
-            <Sparkles className="w-4 h-4 text-purple-500" />
-            <span>Welcome to Speechify</span>
-          </div>
-        </div>
+    <section className="relative flex min-h-screen w-full items-center justify-center px-6 py-16 bg-gradient-to-br from-white via-[oklch(97%_0.01_60.8)] to-[oklch(94%_0.03_60.8)] overflow-hidden">
+      {/* Decorative background glow */}
+      <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[oklch(61%_0.09_60.8)]/15 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-100/40 blur-[100px] rounded-full pointer-events-none" />
+
+      <div className="relative z-10 w-full max-w-[640px] animate-fade-in-up">
+
 
         {/* Header */}
         <div className="text-center mb-10">
@@ -87,6 +82,6 @@ export default function RoleSelectionPage({ setPage }) {
           </Button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

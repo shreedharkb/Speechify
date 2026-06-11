@@ -5,10 +5,9 @@ import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
 import { Textarea } from '../components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
-import { CheckCircle2, XCircle, Plus, Trash2, Calendar, BookOpen, ImagePlus, X, Upload } from 'lucide-react';
+import { CheckCircle2, XCircle, Plus, Trash2, Calendar, BookOpen, ImagePlus, X, Upload, Loader2 } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
-import Spinner from '../components/spinner4';
 
 export default function DashboardPage({ setPage }) {
   const [quizData, setQuizData] = useState({
@@ -413,7 +412,7 @@ export default function DashboardPage({ setPage }) {
               <Button type="submit" size="lg" className="px-8 shadow-md bg-black text-white hover:bg-slate-800" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Spinner className="mr-2 h-4 w-4" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Publishing...
                   </>
                 ) : (

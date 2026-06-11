@@ -456,10 +456,9 @@ function StudentResponses({ quizId, quizTitle, onBack }) {
           overflow: 'hidden',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
         }}>
-          {/* Table Header */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr',
+            gridTemplateColumns: '2fr 1fr 1fr',
             padding: '1rem 1.5rem',
             background: '#F9FAFB',
             borderBottom: '1px solid #E5E7EB',
@@ -472,7 +471,6 @@ function StudentResponses({ quizId, quizTitle, onBack }) {
             <div>Student</div>
             <div>Score</div>
             <div>Submitted</div>
-            <div>Actions</div>
           </div>
 
           {/* Table Body */}
@@ -481,12 +479,12 @@ function StudentResponses({ quizId, quizTitle, onBack }) {
               key={attempt.attemptId || index}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr 1fr',
+                gridTemplateColumns: '2fr 1fr 1fr',
                 padding: '1rem 1.5rem',
                 borderBottom: index < attempts.length - 1 ? '1px solid #F3F4F6' : 'none',
                 alignItems: 'center',
                 transition: 'background 0.2s',
-                cursor: 'pointer'
+                cursor: 'default'
               }}
               onMouseEnter={(e) => e.currentTarget.style.background = '#F9FAFB'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
@@ -526,27 +524,6 @@ function StudentResponses({ quizId, quizTitle, onBack }) {
                   day: 'numeric',
                   year: 'numeric'
                 })}
-              </div>
-              
-              <div>
-                <button
-                  onClick={() => setSelectedAttempt(attempt)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#0E78FF',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.8125rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#0056CC'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#0E78FF'}
-                >
-                  View Details
-                </button>
               </div>
             </div>
           ))}

@@ -65,119 +65,21 @@ const submitQuizAttempt = async (req, res) => {
       return res.status(400).json({ msg: 'Quiz has already ended' });
     }
 
-    // Grade all answers using AI and prepare submission data
-    const questionResults = [];
-    const submissions = [];
-    let totalMarks = 0;
-    let totalSimilarity = 0;
-    
-    console.log(`Processing ${answers.length} answers...`);
-    
-    for (let index = 0; index < answers.length; index++) {
-      const answerObj = answers[index];
-      const question = quiz.questions[index];
-      
-      if (!question) {
-        console.log(`Question ${index + 1} not found in quiz`);
-        continue;
-      }
-
-      // Find the correct answer for this question from the correctAnswers array
-      const correctAnswerObj = quiz.correctAnswers?.find(ca => ca.questionId === question.id);
-      const correctAnswerText = correctAnswerObj?.answer || '';
-
-      // Save audio file if provided
-      let audioPath = null;
-      if (answerObj.audioBlob) {
-        // Save as .wav file in sounds/ folder
-        audioPath = await saveAudioToFile(answerObj.audioBlob, Date.now(), question.id);
-        if (audioPath) {
-          console.log(`✓ Audio saved: sounds/${audioPath}`);
-        }
-      }
-
-      // Grade the answer using AI
-      const gradeResult = await gradeAnswerWithAI(
-        question.text || question.questionText,
-        answerObj.studentAnswer,
-        correctAnswerText,
-        0.70 // 70% threshold for correct answer
-      );
-      
-      const maxPoints = question.points || 10;
-      const similarityScore = gradeResult.similarityScore;
-      const marksAwarded = Math.round(maxPoints * similarityScore * 100) / 100;
-      
-      totalMarks += marksAwarded;
-      totalSimilarity += similarityScore;
-      
-      // Store submission data (will be saved later)
-      submissions.push({
-        studentId: studentId,
-        quizId: quiz.id,
-        questionId: question.id,
-        audioPath: audioPath,
-        transcribedAnswer: answerObj.studentAnswer
-      });
-      
-      // Store question result for evaluation
-      questionResults.push({
-        question_id: question.id,
-        question_text: question.text,
-        student_answer: answerObj.studentAnswer,
-        actual_answer: correctAnswerText,
-        similarity_score: similarityScore,
-        marks_awarded: marksAwarded,
-        max_points: maxPoints
-      });
-      
-      console.log(`Question ${index + 1}: ${marksAwarded.toFixed(2)}/${maxPoints} pts - Similarity: ${Math.round(similarityScore * 100)}%`);
-    }
-
-    // Calculate average similarity
-    const avgSimilarity = answers.length > 0 ? totalSimilarity / answers.length : 0;
-
-    // Save all submissions to database
-    if (submissions.length > 0) {
-      await StudentSubmission.createMany(submissions);
-      console.log(`✓ Saved ${submissions.length} question submissions`);
-    }
-
-    // Create or update evaluation record (upsert to handle duplicate submissions gracefully)
-    const evaluation = await SubmissionEvaluation.createOrUpdate({
-      studentId: studentId,
+    // Instead of synchronous grading, we enqueue the job to Bull
+    const { queueQuizGrading } = require('../utils/queue');
+    const job = await queueQuizGrading({
       quizId: quiz.id,
-      questionResults: questionResults,
-      totalSimilarity: avgSimilarity,
-      totalMarks: totalMarks
+      studentId,
+      answers
     });
 
-    console.log(`✓ Evaluation saved: ID ${evaluation.id}`);
+    console.log(`✓ Enqueued quiz grading job: ${job.id}`);
 
-    // Calculate total possible marks
-    const totalPossible = quiz.questions.reduce((sum, q) => sum + (q.points || 10), 0);
-    const percentage = totalPossible > 0 ? ((totalMarks / totalPossible) * 100).toFixed(2) : 0;
-
-    // Format response for frontend
-    const gradedAnswers = questionResults.map(qr => ({
-      questionId: qr.question_id,
-      question: qr.question_text,
-      studentAnswer: qr.student_answer,
-      correctAnswer: qr.actual_answer,
-      isCorrect: qr.similarity_score >= 0.70,
-      pointsEarned: qr.marks_awarded,
-      maxPoints: qr.max_points,
-      similarityScore: qr.similarity_score,
-      explanation: qr.similarity_score >= 0.70 ? 'Correct answer!' : 'Incorrect or partially correct'
-    }));
-
-    res.json({
-      msg: 'Quiz submitted successfully',
-      score: totalMarks,
-      totalPossible: totalPossible,
-      percentage: percentage,
-      answers: gradedAnswers,
-      evaluationId: evaluation.id
+    // Return 202 Accepted immediately
+    res.status(202).json({
+      msg: 'Quiz submitted for grading. Please wait...',
+      jobId: job.id,
+      status: 'processing'
     });
 
   } catch (err) {
@@ -361,7 +263,15 @@ const getQuizAttemptsByQuizId = async (req, res) => {
         studentEmail: evaluation.student.email,
         score: evaluation.totalMarks,
         submittedAt: evaluation.createdAt,
-        questionResults: evaluation.questionResults
+        answers: (evaluation.questionResults || []).map(qr => ({
+          question: qr.question_text,
+          studentAnswer: qr.student_answer,
+          correctAnswer: qr.actual_answer,
+          isCorrect: qr.similarity_score >= 0.70,
+          pointsEarned: qr.marks_awarded,
+          maxPoints: qr.max_points || 10,
+          similarityScore: qr.similarity_score
+        }))
       }))
     });
 

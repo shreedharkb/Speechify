@@ -164,8 +164,8 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
     return status === 'active' || status === 'missing';
   });
 
-  const activeOrMissingQuizzes = selectedSubject === "all" 
-    ? activeOrMissingQuizzesRaw 
+  const activeOrMissingQuizzes = selectedSubject === "all"
+    ? activeOrMissingQuizzesRaw
     : activeOrMissingQuizzesRaw.filter(q => q.subject === selectedSubject);
 
   const getSubjectBreakdown = () => {
@@ -179,11 +179,14 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
     });
     const total = quizHistory.length;
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    return [
-      { name: sorted[0]?.[0] || 'Mentoring', percentage: sorted[0] ? ((sorted[0][1]/total)*100).toFixed(1) : 0, color: '#111827' },
-      { name: sorted[1]?.[0] || 'Organization', percentage: sorted[1] ? ((sorted[1][1]/total)*100).toFixed(1) : 0, color: '#4b5563' },
-      { name: sorted[2]?.[0] || 'Planning', percentage: sorted[2] ? ((sorted[2][1]/total)*100).toFixed(1) : 0, color: '#9ca3af' }
-    ];
+    return sorted.slice(0, 3).map(([name, count], index) => {
+      const colors = ["#111827", "#4b5563", "#9ca3af"];
+      return {
+        name,
+        percentage: ((count / total) * 100).toFixed(1),
+        color: colors[index % colors.length]
+      };
+    });
   };
 
   const subjects = getSubjectBreakdown();
@@ -221,7 +224,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                   Hi, {user?.name?.split(' ')[0] || 'Andrew'} <span className="text-3xl animate-wave origin-bottom-right inline-block">👋</span>
                 </h2>
                 <h3 className="text-[22px] font-medium text-slate-800 mb-3 tracking-tight leading-tight">
-                  What do you want to learn today<br/>with your partner?
+                  What do you want to learn today<br />with your partner?
                 </h3>
                 <p className="text-slate-500 text-[15px] mb-8 max-w-md leading-relaxed">
                   Discover courses, track progress, and achieve your learning goals seamlessly.
@@ -231,11 +234,6 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                     Explorer Course
                   </Button>
                 </div>
-              </div>
-              
-              {/* Custom Uploaded Illustration Space */}
-              <div className="absolute right-4 bottom-0 hidden md:flex items-end justify-center h-[120%] max-h-[320px] pointer-events-none">
-                <img src="/illustration.png" alt="Learning Illustration" className="h-full w-auto object-contain object-bottom drop-shadow-sm transform translate-y-4" />
               </div>
             </div>
 
@@ -247,23 +245,41 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
             {/* Most Activity - Synced with actual user data */}
             <div className="bg-white rounded-[20px] border border-slate-200/60 p-6 shadow-sm flex flex-col items-center justify-center">
               <h3 className="font-semibold text-slate-900 text-[15px] mb-8 self-start tracking-tight">Most Activity</h3>
-              
-              {/* Pseudo Donut Chart */}
+
+              {/* Dynamic SVG Donut Chart */}
               <div className="relative w-44 h-44 mb-10 mt-4">
-                {subjects.length > 0 ? (
-                  <>
-                    <div className="absolute inset-0 rounded-full border-[22px] border-[#111827]"></div>
-                    <div className="absolute inset-0 rounded-full border-[22px] border-[#4b5563]" style={{ clipPath: 'polygon(50% 50%, 100% 0, 100% 100%, 50% 100%)' }}></div>
-                    <div className="absolute inset-0 rounded-full border-[22px] border-[#9ca3af]" style={{ clipPath: 'polygon(50% 50%, 100% 100%, 0 100%, 0 50%)' }}></div>
-                  </>
-                ) : (
-                  <div className="absolute inset-0 rounded-full border-[22px] border-slate-100"></div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-[132px] h-[132px] bg-white rounded-full"></div>
+                <svg viewBox="0 0 36 36" className="w-full h-full">
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="4.5"></circle>
+                  {subjects.length > 0 && (() => {
+                    let offset = 25;
+                    return subjects.map((sub, i) => {
+                      const percentage = Number(sub.percentage);
+                      if (percentage <= 0) return null;
+                      const dasharray = `${percentage} ${100 - percentage}`;
+                      const currentOffset = offset;
+                      offset -= percentage;
+                      return (
+                        <circle
+                          key={i}
+                          cx="18" cy="18" r="15.915"
+                          fill="transparent"
+                          stroke={sub.color}
+                          strokeWidth="4.5"
+                          strokeDasharray={dasharray}
+                          strokeDashoffset={currentOffset}
+                          className="transition-all duration-1000 ease-out"
+                        />
+                      );
+                    });
+                  })()}
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  {subjects.length === 0 || subjects.every(s => Number(s.percentage) === 0) ? (
+                    <span className="text-slate-400 font-medium text-[13px]">No activity yet</span>
+                  ) : null}
                 </div>
               </div>
-              
+
               <div className="flex justify-between w-full mt-auto px-2">
                 {subjects.length > 0 ? subjects.map((sub, i) => (
                   <div key={i} className="text-center">
@@ -284,7 +300,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
 
               <div className="text-center mb-8">
                 <p className="text-[13px] text-slate-700 font-medium mb-2">Total Score</p>
-                <h4 className="text-[42px] font-bold text-slate-900 leading-none tracking-tight">{analytics.totalScore}</h4>
+                <h4 className="text-[42px] font-bold font-sans text-slate-900 leading-none tracking-tight">{analytics.totalScore}</h4>
 
                 <div className="flex items-center gap-4 mt-6">
                   <div className="flex-1">
@@ -304,7 +320,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                     <div className="w-10 h-10 rounded-[10px] bg-[#111827] text-white flex items-center justify-center">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><circle cx="12" cy="15" r="2" /></svg>
                     </div>
-                    <span className="font-bold text-slate-900 text-2xl leading-none">{activeOrMissingQuizzesRaw.length}</span>
+                    <span className="font-bold font-sans text-slate-900 text-2xl leading-none">{activeOrMissingQuizzesRaw.length}</span>
                   </div>
                   <div className="bg-[#ff7300] text-white text-[13px] font-medium py-1.5 rounded-full w-[96px] text-center">
                     Pending
@@ -316,7 +332,7 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                     <div className="w-10 h-10 rounded-[10px] bg-[#111827] text-white flex items-center justify-center">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9 16 2 2 4-4" /></svg>
                     </div>
-                    <span className="font-bold text-slate-900 text-2xl leading-none">{analytics.totalAttempts}</span>
+                    <span className="font-bold font-sans text-slate-900 text-2xl leading-none">{analytics.totalAttempts}</span>
                   </div>
                   <div className="bg-[#00c458] text-white text-[13px] font-medium py-1.5 rounded-full w-[96px] text-center">
                     Completed
@@ -331,7 +347,10 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                 mode="single"
                 selected={calendarDate}
                 onSelect={setCalendarDate}
-                className="rounded-md w-full"
+                className="rounded-[14px] border-0 w-full"
+                modifiers={{ hasQuiz: activeOrMissingQuizzesRaw.map(q => new Date(q.endTime)) }}
+                modifiersClassNames={{ hasQuiz: "font-bold text-[#ff7300] bg-orange-50 underline decoration-2 underline-offset-4" }}
+                captionLayout="dropdown"
               />
             </div>
 
@@ -400,11 +419,10 @@ const QuizList = ({ onQuizSelect, user, setPage }) => {
                                 variant="outline"
                                 size="sm"
                                 disabled={statusInfo.status === 'missing' || statusInfo.status === 'completed'}
-                                className={`h-8 px-3 rounded-md border-slate-200 ${
-                                  statusInfo.status === 'missing' ? 'opacity-50 cursor-not-allowed bg-slate-50' : 
-                                  statusInfo.status === 'completed' ? 'opacity-70 cursor-not-allowed bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                                  'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                                }`}
+                                className={`h-8 px-3 rounded-md border-slate-200 ${statusInfo.status === 'missing' ? 'opacity-50 cursor-not-allowed bg-slate-50' :
+                                  statusInfo.status === 'completed' ? 'opacity-70 cursor-not-allowed bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                    'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+                                  }`}
                                 onClick={() => handleParticipate(quiz)}
                               >
                                 {statusInfo.status === 'completed' ? (

@@ -4,7 +4,8 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/textarea';
 import { Progress } from '../ui/progress';
-import { Mic, Square, Loader2, ArrowLeft, ArrowRight, Clock, CheckCircle2, AlertTriangle, LayoutGrid } from 'lucide-react';
+import { Label } from '../ui/label';
+import { Mic, Square, Loader2, ArrowLeft, ArrowRight, Clock, CheckCircle2, AlertTriangle, AudioLines } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
@@ -15,7 +16,6 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [transcribing, setTranscribing] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
   const audioChunksRef = React.useRef([]);
 
   useEffect(() => {
@@ -57,6 +57,10 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
       setRecording(false);
     } else {
       try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          alert('Microphone access is not supported. Please use a secure HTTPS connection or localhost.');
+          return;
+        }
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         let options = {};
         if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) options.mimeType = 'audio/webm;codecs=opus';
@@ -71,25 +75,28 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
         };
 
         recorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: recorder.mimeType });
+          const mimeType = recorder.mimeType || 'audio/webm';
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
           setAudioBlobs(prev => ({ ...prev, [currentQuestionIndex]: audioBlob }));
           stream.getTracks().forEach(track => track.stop());
-          await uploadAndTranscribe(audioBlob);
+          await uploadAndTranscribe(audioBlob, mimeType);
         };
 
-        recorder.start();
+        recorder.start(500);
         setMediaRecorder(recorder);
         setRecording(true);
       } catch (error) {
-        alert('Could not access microphone. Please check permissions.');
+        console.error("Mic access error:", error);
+        alert('Could not access microphone. Please check permissions in your browser settings or ensure you are on a secure context (HTTPS/localhost).');
       }
     }
   };
 
-  const uploadAndTranscribe = async (audioBlob) => {
+  const uploadAndTranscribe = async (audioBlob, mimeType = 'audio/webm') => {
     setTranscribing(true);
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'recording.webm');
+    const ext = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('mpeg') ? 'mpeg' : mimeType.includes('wav') ? 'wav' : 'webm';
+    formData.append('audio', audioBlob, `recording.${ext}`);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/whisper/transcribe`, {
@@ -104,7 +111,8 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
           [currentQuestionIndex]: (prev[currentQuestionIndex] || '') + (prev[currentQuestionIndex] ? ' ' : '') + data.text
         }));
       } else {
-        alert('Transcription failed. Please try again or type your answer.');
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.error || 'Transcription failed. Please try again or type your answer.');
       }
     } catch (error) {
       alert('Error uploading audio. Please check your connection.');
@@ -143,12 +151,12 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
     return `${hours > 0 ? hours.toString().padStart(2, '0') + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  if (!quiz) return <div className="flex items-center justify-center h-screen bg-muted"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
+  if (!quiz) return <div className="flex items-center justify-center h-screen bg-background"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
 
   if (!quiz.questions || quiz.questions.length === 0) {
     return (
-      <div className="bg-muted flex items-center justify-center px-4 py-10 lg:py-20 min-h-screen">
-        <Card className="w-full max-w-md mx-auto shadow-none">
+      <div className="bg-background flex items-center justify-center px-4 py-10 lg:py-20 min-h-screen">
+        <Card className="w-full max-w-md mx-auto">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 bg-muted p-3 rounded-full inline-flex">
               <AlertTriangle className="w-6 h-6 text-muted-foreground" />
@@ -170,169 +178,218 @@ const QuizAttempt = ({ quiz, onSubmit, onCancel }) => {
   const answeredCount = Object.values(answers).filter(a => a && a.trim() !== '').length;
 
   return (
-    <div className="bg-muted min-h-screen">
-      {/* Header / Nav Bar Area */}
-      <header className="bg-background border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onCancel} title="Exit Quiz">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">{quiz.title}</h1>
-            <p className="text-sm text-muted-foreground">{quiz.subject}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-xs text-muted-foreground font-medium uppercase">Progress</span>
-            <span className="text-sm font-medium">{answeredCount} / {quiz.questions.length}</span>
-          </div>
-          <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-md border", isTimeRunningOut ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-muted text-foreground")}>
-            <Clock className="w-4 h-4" />
-            <span className="font-medium font-mono">
-              {timeRemaining !== null ? formatTime(timeRemaining) : '--:--'}
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col font-sans text-foreground">
+      {/* NAV */}
+      <div className="relative z-50 bg-white border-b border-zinc-200 w-full sticky top-0">
+        <nav className="flex items-center justify-between px-6 py-3 mx-auto w-full max-w-7xl">
+          {/* LEFT: Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[oklch(61%_0.09_60.8)] rounded-full flex items-center justify-center shadow-sm shrink-0">
+              <AudioLines className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-lg font-bold text-black tracking-tight hidden sm:block">
+              Speechify Quiz
             </span>
           </div>
-        </div>
-      </header>
-      <Progress value={progressPercentage} className="h-1 rounded-none" />
 
-      {/* Main Layout Area */}
-      <main className="max-w-5xl mx-auto px-4 py-8 flex flex-col gap-6">
-
-        {/* Question Grid Overview */}
-        <Card className="shadow-none">
-          <CardHeader className="pb-3 border-b">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                Question Navigation
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setShowGrid(!showGrid)}>
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                {showGrid ? 'Hide' : 'Show'} Overview
-              </Button>
-            </div>
-          </CardHeader>
-          {showGrid && (
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap gap-2">
-                {quiz.questions.map((_, idx) => {
-                  const answered = answers[idx] && answers[idx].trim() !== '';
-                  const active = currentQuestionIndex === idx;
-                  return (
-                    <Button
-                      key={idx}
-                      variant={active ? "default" : answered ? "secondary" : "outline"}
-                      className={cn("w-10 h-10 p-0 font-semibold", answered && !active && "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-transparent")}
-                      onClick={() => setCurrentQuestionIndex(idx)}
-                    >
-                      {idx + 1}
-                    </Button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          )}
-        </Card>
-
-        {/* Current Question Card */}
-        <Card className="shadow-none">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/50 pb-4">
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="text-sm">
-                Question {currentQuestionIndex + 1}
-              </Badge>
-              <span className="text-sm text-muted-foreground font-medium">
-                {currentQuestion.points || 0} Points
+          {/* MIDDLE: Timer */}
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center">
+            <div className={cn(
+              "flex items-center gap-3 px-5 py-1.5 rounded-full transition-all duration-500 shadow-sm border", 
+              isTimeRunningOut 
+                ? "bg-red-500 border-red-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse" 
+                : "bg-zinc-900 border-zinc-800 text-white shadow-[0_4px_15px_rgba(0,0,0,0.1)] hover:scale-105"
+            )}>
+              {/* Pulsing indicator dot */}
+              <div className={cn(
+                "w-2 h-2 rounded-full", 
+                isTimeRunningOut ? "bg-white animate-ping" : "bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+              )} />
+              
+              <span className="tracking-[0.2em] font-mono text-sm font-medium pt-[1px]">
+                {timeRemaining !== null ? formatTime(timeRemaining) : '--:--'}
               </span>
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent className="pt-6 space-y-6">
-            {/* Question Text */}
-            <div className="text-lg md:text-xl font-medium leading-relaxed">
-              {currentQuestion.questionText || currentQuestion.text || currentQuestion.question || ''}
+          {/* RIGHT: Attempt / Results & Exit */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center bg-gray-100/80 rounded-full p-1 border border-gray-200/50">
+              <div className="bg-white shadow-sm rounded-full px-5 py-1 text-sm font-medium text-black cursor-default">Attempt</div>
+              <div className="px-5 py-1 text-sm font-medium text-gray-500 cursor-default">Results</div>
             </div>
 
-            {/* Question Image */}
-            {currentQuestion.imageUrl && (
-              <div className="rounded-lg overflow-hidden border bg-muted p-2 flex justify-center">
-                <img
-                  src={`${import.meta.env.VITE_API_URL}${currentQuestion.imageUrl}`}
-                  alt="Question"
-                  className="max-w-full max-h-[400px] object-contain rounded"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              </div>
-            )}
-
-            {/* Answer Input */}
-            <div className="space-y-3 pt-4 border-t">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold tracking-tight">Your Answer</label>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={recording ? "destructive" : "secondary"}
-                  onClick={handleMicClick}
-                  disabled={transcribing}
-                  className="gap-2"
-                >
-                  {recording ? <Square className="w-4 h-4 fill-current" /> : transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
-                  {recording ? 'Stop Recording' : transcribing ? 'Transcribing...' : 'Voice Input'}
-                </Button>
-              </div>
-
-              <div className="relative">
-                <Textarea
-                  value={answers[currentQuestionIndex] || ''}
-                  onChange={(e) => handleAnswerChange(currentQuestionIndex, e.target.value)}
-                  placeholder="Type your answer here..."
-                  disabled={recording || transcribing}
-                  className="min-h-[200px] resize-y text-base p-4"
-                />
-                {(recording || transcribing) && (
-                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-md flex items-center justify-center border z-10">
-                    <div className="flex items-center gap-3 bg-background border px-4 py-2 rounded-md shadow-sm">
-                      {recording ? (
-                        <><div className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse"></div><span className="font-medium text-sm">Listening...</span></>
-                      ) : (
-                        <><Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /><span className="font-medium text-sm">Processing audio...</span></>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex items-center justify-between border-t bg-muted/20 py-4">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-              disabled={currentQuestionIndex === 0}
-              className="gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" /> Previous
+            <Button variant="ghost" size="sm" onClick={onCancel} className="rounded-full bg-gray-100 hover:bg-gray-200 text-sm font-medium text-black px-4 py-1.5 h-auto">
+              Exit Quiz
             </Button>
+          </div>
+        </nav>
+      </div>
 
-            {currentQuestionIndex < quiz.questions.length - 1 ? (
-              <Button
-                onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                className="gap-2"
-              >
-                Next <ArrowRight className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                className="gap-2"
-              >
-                Submit Quiz <CheckCircle2 className="w-4 h-4" />
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+      <main className="flex-1 px-4 py-8 max-w-7xl mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+          {/* LEFT COLUMN: Main Content */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+
+            {/* Quiz header */}
+            <Card className="border border-zinc-200 shadow-sm bg-white rounded-xl">
+              <CardHeader className="pb-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge variant="outline" className="rounded-full px-3 py-0.5 text-xs font-medium text-zinc-700 bg-white shadow-sm border-zinc-200">{quiz.subject || 'Subject'}</Badge>
+                  <Badge variant="secondary" className="rounded-full px-3 py-0.5 text-xs font-medium bg-zinc-100 text-zinc-700 border-0">Assessment</Badge>
+                </div>
+                <CardTitle className="text-2xl tracking-tight text-zinc-900">{quiz.title}</CardTitle>
+                <CardDescription className="text-zinc-500">Answer all questions. Some questions may require audio responses.</CardDescription>
+              </CardHeader>
+            </Card>
+
+            <div className="space-y-6">
+              {/* Question card */}
+              <Card className="border border-zinc-200 shadow-[0_4px_20px_rgb(0,0,0,0.03)] bg-white rounded-xl overflow-hidden transition-all duration-300">
+                <CardContent className="p-8 space-y-8">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+                      <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+                        Question {currentQuestionIndex + 1} of {quiz.questions.length}
+                      </span>
+                      <Badge variant="secondary" className="rounded-md bg-zinc-100 text-zinc-700 font-medium px-3 py-1 hover:bg-zinc-200 border-0">{currentQuestion.points || 0} marks</Badge>
+                    </div>
+                    <h3 className="text-2xl font-semibold leading-relaxed text-zinc-900 tracking-tight">
+                      {currentQuestion.questionText || currentQuestion.text || currentQuestion.question || ''}
+                    </h3>
+                  </div>
+                  {currentQuestion.imageUrl && (
+                    <div className="rounded-lg overflow-hidden border bg-muted/50 p-2 flex justify-center">
+                      <img src={`${import.meta.env.VITE_API_URL}${currentQuestion.imageUrl}`} alt="Question" className="max-w-full max-h-[300px] object-contain rounded" onError={(e) => { e.target.style.display = 'none'; }} />
+                    </div>
+                  )}
+
+                  <div className="grid w-full gap-2 mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="answer-input" className="text-sm font-medium flex items-center gap-2">
+                        Written Answer
+                        <span className="text-xs text-muted-foreground font-normal">(Optional if audio provided)</span>
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        {transcribing && <span className="text-xs text-primary flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Transcribing...</span>}
+                        {recording && <span className="text-xs text-destructive flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive animate-ping" /> Recording</span>}
+                        <Button
+                          variant={recording ? "destructive" : "outline"}
+                          size="sm"
+                          onClick={handleMicClick}
+                          className={cn(
+                            "gap-2 transition-all duration-300",
+                            recording ? "animate-pulse ring-4 ring-destructive/20 text-destructive border-destructive bg-destructive/10" : "text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground hover:shadow-md"
+                          )}
+                          disabled={transcribing}
+                        >
+                          {recording ? <Square className="w-4 h-4 fill-current" /> : <Mic className="w-4 h-4" />}
+                          {recording ? "Stop Recording" : "Record Audio"}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <Textarea
+                      id="answer-input"
+                      value={answers[currentQuestionIndex] || ''}
+                      onChange={(e) => handleAnswerChange(currentQuestionIndex, e.target.value)}
+                      placeholder="Type your detailed answer here..."
+                      disabled={recording || transcribing}
+                      className="min-h-[220px] resize-y mt-1 bg-[#FAFAFA] hover:bg-zinc-50 focus:bg-white transition-all duration-300 border-zinc-200 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 shadow-sm text-base leading-relaxed rounded-xl"
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-[#FAFAFA] border-t border-zinc-100 px-8 py-5 flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    disabled={currentQuestionIndex === 0}
+                    onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                    className="gap-2 rounded-lg px-6 font-medium bg-white text-zinc-900 border border-zinc-200 shadow-sm transition-all duration-200 hover:bg-zinc-50 active:scale-[0.98] disabled:opacity-50"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Previous
+                  </Button>
+
+                  <Button
+                    disabled={currentQuestionIndex === quiz.questions.length - 1}
+                    onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                    className="gap-2 rounded-lg px-8 font-medium bg-white text-zinc-900 border border-zinc-200 shadow-sm transition-all duration-200 hover:bg-zinc-50 active:scale-[0.98] disabled:opacity-50"
+                  >
+                    Next <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Sidebar Navigation & Metrics */}
+          <div className="lg:col-span-4 xl:col-span-3 space-y-6 sticky top-24">
+            <Card className="border border-zinc-200 shadow-sm bg-white rounded-xl overflow-hidden">
+              <CardHeader className="bg-[#FAFAFA] border-b border-zinc-100 pb-4">
+                <CardTitle className="text-base text-zinc-900 font-semibold tracking-tight">Quiz Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 space-y-6">
+
+                {/* Metrics */}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex flex-col bg-[#FAFAFA] p-3 rounded-lg border border-zinc-100">
+                    <span className="text-zinc-500 font-medium text-xs uppercase tracking-wider mb-1">Answered</span>
+                    <span className="text-xl font-bold text-zinc-900">{answeredCount}</span>
+                  </div>
+                  <div className="flex flex-col bg-[#FAFAFA] p-3 rounded-lg border border-zinc-100">
+                    <span className="text-zinc-500 font-medium text-xs uppercase tracking-wider mb-1">Unanswered</span>
+                    <span className="text-xl font-bold text-zinc-900">{quiz.questions.length - answeredCount}</span>
+                  </div>
+                </div>
+
+                {/* Progress */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-semibold text-zinc-700 uppercase tracking-wider">
+                    <span>Progress</span>
+                    <span>{Math.round(progressPercentage)}%</span>
+                  </div>
+                  <Progress value={progressPercentage} className="h-2 bg-zinc-100 [&>div]:bg-zinc-900" />
+                </div>
+
+                {/* Question Grid */}
+                <div className="space-y-3 pt-4 border-t border-zinc-100">
+                  <span className="text-xs font-semibold text-zinc-700 uppercase tracking-wider">Questions</span>
+                  <div className="grid grid-cols-5 gap-2">
+                    {quiz.questions.map((q, idx) => {
+                      const isAnswered = answers[idx] && answers[idx].trim() !== '';
+                      const isCurrent = currentQuestionIndex === idx;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentQuestionIndex(idx)}
+                          className={cn(
+                            "h-10 rounded-md text-sm font-medium transition-all flex items-center justify-center border",
+                            isCurrent
+                              ? "ring-2 ring-zinc-900 ring-offset-1 border-zinc-900 bg-zinc-900 text-white"
+                              : isAnswered
+                                ? "bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-zinc-200 hover:border-zinc-300"
+                                : "bg-white border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-600"
+                          )}
+                        >
+                          {idx + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+              </CardContent>
+              <CardFooter className="p-5 bg-[#FAFAFA] border-t border-zinc-100">
+                <Button
+                  onClick={handleSubmit}
+                  className="w-full gap-2 rounded-lg font-medium shadow-sm bg-zinc-900 hover:bg-zinc-800 text-white transition-all duration-200 active:scale-[0.98]"
+                >
+                  Submit Assessment <CheckCircle2 className="w-4 h-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -19,8 +19,9 @@ exports.transcribe = async (req, res) => {
     const formData = new FormData();
     formData.append('audio', fs.createReadStream(audioFile.path), {
       filename: audioFile.originalname,
-      contentType: audioFile.mimetype
+      contentType: audioFile.mimetype.split(';')[0] // Strip codecs if present
     });
+    formData.append('language', 'en'); // Force English to prevent hallucinations
 
     try {
       // Send request to the dockerized Whisper service
@@ -42,8 +43,18 @@ exports.transcribe = async (req, res) => {
 
       console.log('Transcription successful:', response.data.text.substring(0, 100) + '...');
       
+      const transcription = response.data.text ? response.data.text.trim() : "";
+      
+      if (audioFile.size < 5000) {
+        return res.status(400).json({ error: 'Audio file too small. Your microphone might be muted or not picking up sound.' });
+      }
+      
+      if (transcription === "You" || transcription === "You.") {
+        return res.status(400).json({ error: 'Whisper detected silence. Please ensure your microphone is picking up your voice.' });
+      }
+
       // Return the transcription text
-      res.json({ text: response.data.text });
+      res.json({ text: transcription });
 
     } catch (error) {
       // Clean up uploaded file

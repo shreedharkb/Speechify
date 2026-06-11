@@ -9,10 +9,15 @@ import DashboardPage from './pages/DashboardPage.jsx';
 import QuizPage from './pages/QuizPage.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
 import StudentDashboard from './pages/StudentDashboard.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import { Toaster } from 'sonner';
 
 export default function App() {
-  const [page, setPage] = useState('home');
+  const [page, setPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('page') || 'home';
+  });
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -70,6 +75,10 @@ export default function App() {
         return <RoleSelectionPage setPage={setPage} />;
       case 'signup':
         return <SignupPage setPage={setPage} />;
+      case 'forgot-password':
+        return <ForgotPasswordPage setPage={setPage} />;
+      case 'reset-password':
+        return <ResetPasswordPage setPage={setPage} />;
       case 'dashboard':
         if (user && user.role === 'teacher') {
           return <TeacherDashboard setPage={setPage} />;

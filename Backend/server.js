@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const path = require('path');
 const { pool } = require('./config/db');
@@ -15,16 +17,46 @@ const imageRoutes = require('./routes/images');
 
 // Initialize Express App
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 
 // CORS configuration - supports both development and production
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    process.env.FRONTEND_URL,
+    'http://localhost:5173',
+    'https://localhost:5173'
+  ].filter(Boolean),
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
 };
+
+const io = new Server(server, {
+  cors: corsOptions
+});
+
+// Make io accessible in our routers
+app.set('io', io);
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log(`WebSocket connected: ${socket.id}`);
+  
+  socket.on('join', (studentId) => {
+    socket.join(`student_${studentId}`);
+    console.log(`Socket ${socket.id} joined room: student_${studentId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`WebSocket disconnected: ${socket.id}`);
+  });
+});
+
+// Initialize Background Workers
+const { initializeGradingWorker } = require('./utils/gradingWorker');
+initializeGradingWorker(io);
 
 app.use(cors(corsOptions));
 
@@ -104,7 +136,7 @@ pool.query('SELECT NOW()')
     app.use('/api/whisper', whisperRoutes);
 
     // --- START SERVER (Only after successful DB connection) ---
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   })

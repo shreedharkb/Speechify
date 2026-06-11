@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from './ui/button';
+import { AudioLines } from 'lucide-react';
 
 export default function Navbar({ setPage, user, onLogout }) {
   const isLoggedIn = !!user;
@@ -12,10 +13,9 @@ export default function Navbar({ setPage, user, onLogout }) {
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => window.location.reload()}
         >
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 6L16 30L30 6H2Z" fill="#0f172a" className="dark:fill-white"/>
-            <path d="M18 8L11 17H16.5L14 26L23 15H17.5L18 8Z" fill="#ffffff" className="dark:fill-[#0a0a0a]"/>
-          </svg>
+          <div className="w-10 h-10 bg-[oklch(61%_0.09_60.8)] rounded-full flex items-center justify-center shadow-sm shrink-0">
+            <AudioLines className="w-6 h-6 text-white" />
+          </div>
           <span className="text-xl font-bold text-black dark:text-white tracking-tight transition-colors duration-500">
             Speechify
           </span>
@@ -43,7 +43,7 @@ export default function Navbar({ setPage, user, onLogout }) {
               <Button variant="outline" size="sm" onClick={() => setPage('login')} className="rounded-md border-gray-200 text-sm font-medium text-black hover:bg-gray-50">
                 Sign In
               </Button>
-              <Button size="sm" onClick={() => setPage('role-selection')} className="rounded-md bg-black text-white hover:bg-gray-800 text-sm font-medium px-4 py-2">
+              <Button size="sm" onClick={() => setPage('role-selection')} className="rounded-md bg-[oklch(61%_0.09_60.8)] text-white hover:opacity-90 transition-colors text-sm font-medium px-4 py-2 border-none">
                 Get Started
               </Button>
             </>

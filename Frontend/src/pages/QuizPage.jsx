@@ -1,29 +1,77 @@
 import React, { useState, useRef, useEffect } from 'react';
 import QuizAttempt from '../components/quiz/QuizAttempt';
 import QuizResults from '../components/quiz/QuizResults';
+import { io } from 'socket.io-client';
 
 export default function QuizPage({ setPage }) {
   const [quizEvent, setQuizEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [results, setResults] = useState(null);
-  const [quizStartTime] = useState(new Date().toISOString()); // Track when quiz started
+  const [quizStartTime] = useState(new Date().toISOString());
+  const [isGrading, setIsGrading] = useState(false);
+  const [socket, setSocket] = useState(null);
+
+  // Initialize Socket Connection
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
+
+    const newSocket = io(import.meta.env.VITE_API_URL);
+    setSocket(newSocket);
+    
+    newSocket.on('connect', () => {
+      console.log('Connected to WebSocket server');
+      newSocket.emit('join', user.id);
+    });
+
+    return () => newSocket.close();
+  }, []);
+
+  // Listen for Quiz Grading Result
+  useEffect(() => {
+    if (!socket || !isGrading || !quizEvent) return;
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
+
+    const quizId = quizEvent.id || quizEvent._id;
+    const eventName = `quizGraded:${user.id}:${quizId}`;
+    
+    console.log(`Listening for socket event: ${eventName}`);
+
+    const handleGraded = (data) => {
+      console.log('Received graded data via websocket!', data);
+      if (data.status === 'completed') {
+        setResults(data.results);
+        setSubmitted(true);
+        setIsGrading(false);
+        localStorage.removeItem('currentQuizEvent');
+      } else {
+        alert('Grading failed: ' + data.error);
+        setIsGrading(false);
+      }
+    };
+
+    socket.on(eventName, handleGraded);
+
+    return () => {
+      socket.off(eventName, handleGraded);
+    };
+  }, [socket, isGrading, quizEvent]);
 
   useEffect(() => {
-    // Get the selected quiz event from localStorage
     try {
       const storedQuizEvent = localStorage.getItem('currentQuizEvent');
       if (storedQuizEvent) {
         const parsedQuiz = JSON.parse(storedQuizEvent);
-        console.log('Loaded quiz event:', parsedQuiz);
         setQuizEvent(parsedQuiz);
       } else {
-        console.error('No quiz event found in localStorage');
         alert('No quiz selected. Redirecting to dashboard.');
         setPage('dashboard');
       }
     } catch (error) {
-      console.error('Error loading quiz event:', error);
       alert('Error loading quiz. Redirecting to dashboard.');
       setPage('dashboard');
     } finally {
@@ -40,9 +88,6 @@ export default function QuizPage({ setPage }) {
         return;
       }
 
-      console.log('Submitting quiz with answers:', answers);
-
-      // Submit the quiz attempt to the backend
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/quiz-attempt/submit`, {
         method: 'POST',
         headers: {
@@ -52,51 +97,25 @@ export default function QuizPage({ setPage }) {
         body: JSON.stringify({
           quizEventId: quizEvent.id || quizEvent._id,
           answers: answers,
-          startedAt: quizStartTime // Include when quiz was started
+          startedAt: quizStartTime
         })
       });
 
-      if (response.ok) {
+      if (response.status === 202) {
         const data = await response.json();
-        console.log('Quiz submission response:', data);
-        
-        // Transform the response to match QuizResults component expectations
-        const formattedResults = {
-          quizTitle: quizEvent.title,
-          submittedAt: new Date().toISOString(),
-          timeTaken: 'N/A', // Can be calculated if we track start time
-          questions: data.answers.map((answer, index) => ({
-            questionText: answer.question,
-            studentAnswer: answer.studentAnswer,
-            correctAnswer: answer.correctAnswer,
-            isCorrect: answer.isCorrect,
-            pointsEarned: answer.pointsEarned || 0,
-            maxPoints: answer.maxPoints || 10,
-            points: answer.maxPoints || 10,
-            similarityScore: answer.similarityScore || 0,
-            feedback: answer.explanation || (answer.isCorrect ? 'Correct!' : 'Incorrect')
-          })),
-          score: data.score,
-          totalPossible: data.totalPossible,
-          percentage: data.percentage
-        };
-        
-        setResults(formattedResults);
+        console.log('Quiz queued for grading:', data);
+        setIsGrading(true);
+      } else if (response.ok) {
+        // Fallback for synchronous API if changed back
+        const data = await response.json();
+        setResults(data.results || data);
         setSubmitted(true);
-        // Clear the stored quiz event
         localStorage.removeItem('currentQuizEvent');
       } else {
         const errorData = await response.json();
-        console.error('Submission error:', errorData);
         alert(`Failed to submit quiz: ${errorData.msg || errorData.error}`);
       }
     } catch (error) {
-      console.error('Error submitting quiz:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
       alert(`An error occurred while submitting the quiz: ${error.message || 'Unknown error'}`);
     }
   };
@@ -117,6 +136,23 @@ export default function QuizPage({ setPage }) {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
           </svg>
           <p className="text-sm text-[#94a3b8] font-medium">Loading quiz...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isGrading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <svg className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-6" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Analyzing your answers...</h2>
+          <p className="text-slate-500">
+            Our AI is securely transcribing your audio and grading your responses. This will only take a few moments. Please don't close this page.
+          </p>
         </div>
       </div>
     );

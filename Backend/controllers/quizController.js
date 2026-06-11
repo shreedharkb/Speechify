@@ -224,12 +224,16 @@ exports.getAllQuizzes = async (req, res) => {
 exports.getTeacherQuizzes = async (req, res) => {
   try {
     const quizzes = await Quiz.findByTeacherId(req.user.id);
+    const prisma = require('../config/prisma');
+    const totalStudentsCount = await prisma.student.count();
     
     // Add calculated fields
     const enrichedQuizzes = quizzes.map(quiz => ({
       ...quiz,
       questionCount: quiz.questions.length,
       totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 10), 0),
+      totalStudents: totalStudentsCount,
+      attemptCount: quiz._count?.evaluations || 0,
       status: new Date() >= new Date(quiz.startTime) && new Date() <= new Date(quiz.endTime) 
         ? 'active' 
         : new Date() < new Date(quiz.startTime) 

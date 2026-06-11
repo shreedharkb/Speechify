@@ -120,26 +120,62 @@ async function waitForJob(job, timeoutMs = 60000) {
   });
 }
 
+const quizQueue = new Queue('quiz-grading', {
+  redis: redisConfig,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 5000
+    },
+    removeOnComplete: 100,
+    removeOnFail: 50,
+    timeout: 300000 // 5 minutes timeout for full quiz grading
+  }
+});
+
+quizQueue.on('completed', (job, result) => {
+  console.log(`✅ Quiz Grading job ${job.id} completed`);
+});
+
+quizQueue.on('failed', (job, err) => {
+  console.error(`❌ Quiz Grading job ${job.id} failed:`, err.message);
+});
+
+// Add job to quiz queue
+async function queueQuizGrading(quizData, options = {}) {
+  const job = await quizQueue.add('grade-quiz', quizData, {
+    priority: options.priority || 1,
+    ...options
+  });
+  return job;
+}
+
 // Clean old jobs
 async function cleanQueues() {
   await whisperQueue.clean(3600000, 'completed'); // Clean completed jobs older than 1 hour
   await whisperQueue.clean(86400000, 'failed'); // Clean failed jobs older than 24 hours
   await sbertQueue.clean(3600000, 'completed');
   await sbertQueue.clean(86400000, 'failed');
+  await quizQueue.clean(3600000, 'completed');
+  await quizQueue.clean(86400000, 'failed');
 }
 
 // Graceful shutdown
 async function closeQueues() {
   await whisperQueue.close();
   await sbertQueue.close();
+  await quizQueue.close();
 }
 
 module.exports = {
   whisperQueue,
   sbertQueue,
+  quizQueue,
   getQueueStats,
   queueTranscription,
   queueGrading,
+  queueQuizGrading,
   waitForJob,
   cleanQueues,
   closeQueues

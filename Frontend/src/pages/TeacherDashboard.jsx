@@ -22,18 +22,20 @@ import {
   TooltipTrigger,
 } from '../components/ui/tooltip';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '../components/ui/empty';
-import { 
-  Play, 
-  Trash2, 
-  FileText, 
-  CheckCircle2, 
+import {
+  Play,
+  Trash2,
+  FileText,
+  CheckCircle2,
   Clock,
   Lock,
   RotateCcw,
   Maximize,
   Smartphone,
   Monitor,
-  Library
+  Library,
+  PieChart,
+  Users
 } from 'lucide-react';
 
 export default function TeacherDashboard({ setPage }) {
@@ -52,7 +54,7 @@ export default function TeacherDashboard({ setPage }) {
         const user = JSON.parse(userString);
         setUserName(user.name || 'Teacher');
       }
-    } catch (error) {}
+    } catch (error) { }
   }, []);
 
   const fetchMyQuizzes = async () => {
@@ -84,7 +86,7 @@ export default function TeacherDashboard({ setPage }) {
     const now = new Date();
     const start = new Date(quiz.startTime);
     const end = new Date(quiz.endTime);
-    
+
     if (now < start) {
       return (
         <Badge variant="outline" className="gap-1 border-amber-200 bg-amber-50 text-amber-700">
@@ -116,18 +118,26 @@ export default function TeacherDashboard({ setPage }) {
     }
 
     const subjectCounts = {};
-    let total = 0;
+    let totalAttempts = 0;
 
     myQuizzes.forEach(quiz => {
       const subject = quiz.subject || 'Other';
-      subjectCounts[subject] = (subjectCounts[subject] || 0) + 1;
-      total++;
+      const attempts = quiz.attemptCount || 0;
+
+      if (attempts > 0) {
+        subjectCounts[subject] = (subjectCounts[subject] || 0) + attempts;
+        totalAttempts += attempts;
+      }
     });
+
+    if (totalAttempts === 0) {
+      return [];
+    }
 
     return Object.entries(subjectCounts)
       .map(([name, count]) => ({
         name,
-        percentage: Math.round((count / total) * 100)
+        percentage: Math.round((count / totalAttempts) * 100)
       }))
       .sort((a, b) => b.percentage - a.percentage);
   };
@@ -136,7 +146,7 @@ export default function TeacherDashboard({ setPage }) {
 
   if (loading) {
     return (
-      <DashboardLayout 
+      <DashboardLayout
         role="teacher"
         userName={userName}
         activeSection={activeSection}
@@ -158,7 +168,7 @@ export default function TeacherDashboard({ setPage }) {
   }
 
   return (
-    <DashboardLayout 
+    <DashboardLayout
       role="teacher"
       userName={userName}
       activeSection={activeSection}
@@ -171,7 +181,7 @@ export default function TeacherDashboard({ setPage }) {
 
       {(activeSection === 'dashboard' || activeSection === 'my-quizzes') && (
         <div className="space-y-6 max-w-7xl mx-auto">
-          
+
           {/* Top Row Grid - Just Hero */}
           <div className="grid grid-cols-1 gap-6">
 
@@ -188,7 +198,7 @@ export default function TeacherDashboard({ setPage }) {
                   Welcome back, {userName?.split(' ')[0] || 'Teacher'} <span className="text-3xl animate-wave origin-bottom-right inline-block">👋</span>
                 </h2>
                 <h3 className="text-[22px] font-medium text-slate-800 mb-3 tracking-tight leading-tight">
-                  Ready to manage your classes<br/>and track student progress?
+                  Ready to manage your classes<br />and track student progress?
                 </h3>
                 <p className="text-slate-500 text-[15px] mb-8 max-w-md leading-relaxed">
                   Create quizzes, monitor student performance, and achieve your teaching goals seamlessly.
@@ -205,7 +215,7 @@ export default function TeacherDashboard({ setPage }) {
 
           {/* Bottom Row Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
+
             {/* Student Overall Success Rate */}
             <div className="bg-white rounded-[20px] border border-slate-200/60 p-6 shadow-sm flex flex-col">
               <h3 className="font-semibold text-slate-900 text-[15px] mb-6 tracking-tight">Student Overall Success Rate</h3>
@@ -230,7 +240,7 @@ export default function TeacherDashboard({ setPage }) {
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-2.5 text-slate-700 font-medium">
                     <div className="w-5 flex justify-center text-blue-500">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                     </div>
                     Total Students
                   </div>
@@ -239,7 +249,7 @@ export default function TeacherDashboard({ setPage }) {
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-2.5 text-slate-700 font-medium">
                     <div className="w-5 flex justify-center text-emerald-500">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
                     </div>
                     Attempted Students
                   </div>
@@ -248,39 +258,50 @@ export default function TeacherDashboard({ setPage }) {
               </div>
 
               <Progress value={successRate} className="h-2.5 mt-1 mb-2 [&>div]:bg-slate-900" />
-              <div className="text-[13px] text-slate-500 font-medium mb-6">
+              <div className="text-[13px] text-slate-500 font-medium mb-2">
                 {successRate.toFixed(1)}% of total
               </div>
-
-              <Button onClick={() => setActiveSection('analytics')} variant="outline" className="w-full mt-auto text-slate-700 font-medium text-[13px] border-slate-200/80 hover:bg-slate-50 shadow-sm h-10">
-                View Details
-              </Button>
             </div>
 
             {/* Most Activity */}
             <div className="bg-white rounded-[20px] border border-slate-200/60 p-6 shadow-sm flex flex-col items-center justify-center">
               <h3 className="font-semibold text-slate-900 text-[15px] mb-8 self-start tracking-tight">Most Activity</h3>
-              
-              {/* Pseudo Donut Chart */}
+
+              {/* Dynamic SVG Donut Chart */}
               <div className="relative w-44 h-44 mb-10 mt-4">
-                {subjects.length > 0 ? (
-                  <>
-                    <div className="absolute inset-0 rounded-full border-[22px] border-[#111827]"></div>
-                    <div className="absolute inset-0 rounded-full border-[22px] border-[#4b5563]" style={{ clipPath: 'polygon(50% 50%, 100% 0, 100% 100%, 50% 100%)' }}></div>
-                    <div className="absolute inset-0 rounded-full border-[22px] border-[#9ca3af]" style={{ clipPath: 'polygon(50% 50%, 100% 100%, 0 100%, 0 50%)' }}></div>
-                  </>
-                ) : (
-                  <div className="absolute inset-0 rounded-full border-[22px] border-[#f1f5f9]"></div>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-[132px] h-[132px] bg-white rounded-full flex items-center justify-center">
-                    {subjects.length === 0 && (
-                      <span className="text-slate-400 font-medium text-[13px]">No activity yet</span>
-                    )}
-                  </div>
+                <svg viewBox="0 0 36 36" className="w-full h-full">
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="4.5"></circle>
+                  {subjects.length > 0 && (() => {
+                    let offset = 25;
+                    const colors = ["#111827", "#4b5563", "#9ca3af"];
+                    return subjects.map((sub, i) => {
+                      const percentage = Number(sub.percentage);
+                      if (percentage <= 0) return null;
+                      const dasharray = `${percentage} ${100 - percentage}`;
+                      const currentOffset = offset;
+                      offset -= percentage;
+                      return (
+                        <circle
+                          key={i}
+                          cx="18" cy="18" r="15.915"
+                          fill="transparent"
+                          stroke={colors[i % colors.length]}
+                          strokeWidth="4.5"
+                          strokeDasharray={dasharray}
+                          strokeDashoffset={currentOffset}
+                          className="transition-all duration-1000 ease-out"
+                        />
+                      );
+                    });
+                  })()}
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  {subjects.length === 0 || subjects.every(s => Number(s.percentage) === 0) ? (
+                    <span className="text-slate-400 font-medium text-[13px]">No activity yet</span>
+                  ) : null}
                 </div>
               </div>
-              
+
               <div className="flex justify-between w-full mt-auto px-2">
                 {subjects.length > 0 ? subjects.slice(0, 3).map((subject, index) => {
                   const colors = ["bg-[#111827]", "bg-[#4b5563]", "bg-[#9ca3af]"];
@@ -307,15 +328,18 @@ export default function TeacherDashboard({ setPage }) {
                 mode="single"
                 selected={calendarDate}
                 onSelect={setCalendarDate}
-                className="rounded-md w-full"
+                className="rounded-[14px] border-0 w-full"
+                modifiers={{ hasQuiz: myQuizzes.map(q => new Date(q.endTime)) }}
+                modifiersClassNames={{ hasQuiz: "font-bold text-[#ff7300] bg-orange-50 underline decoration-2 underline-offset-4" }}
+                captionLayout="dropdown"
               />
             </div>
 
           </div>
 
           <div className="flex items-center justify-between mb-4 mt-2">
-              <h3 className="text-lg font-semibold text-slate-900">Manage Quizzes</h3>
-            </div>
+            <h3 className="text-lg font-semibold text-slate-900">Manage Quizzes</h3>
+          </div>
 
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
             <Table>
@@ -346,9 +370,9 @@ export default function TeacherDashboard({ setPage }) {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="icon" 
+                              <Button
+                                variant="outline"
+                                size="icon"
                                 className="h-7 w-7 rounded border-slate-200 text-slate-500 hover:text-slate-900"
                                 onClick={() => {
                                   setViewingResponses(quiz._id || quiz.id);
@@ -367,9 +391,9 @@ export default function TeacherDashboard({ setPage }) {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="icon" 
+                              <Button
+                                variant="outline"
+                                size="icon"
                                 className="h-7 w-7 rounded border-slate-200 text-red-500 hover:text-red-600 hover:bg-red-50"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />

@@ -139,9 +139,9 @@ def grade_answer():
             })
         
         # Calculate semantic similarity using SBERT
-        # Combine question with answer for better context
-        student_text = f"{question_text} {student_answer}"
-        correct_text = f"{question_text} {correct_answer}"
+        # Combine question with answer for better context with explicit labels
+        student_text = f"Question: {question_text} Answer: {student_answer}"
+        correct_text = f"Question: {question_text} Answer: {correct_answer}"
         
         similarity_score = calculate_semantic_similarity(student_text, correct_text)
         
@@ -229,9 +229,9 @@ def batch_grade():
                     })
                     continue
                 
-                # Calculate similarity
-                student_text = f"{question_text} {student_answer}"
-                correct_text = f"{question_text} {correct_answer}"
+                # Calculate similarity with explicit context labels
+                student_text = f"Question: {question_text} Answer: {student_answer}"
+                correct_text = f"Question: {question_text} Answer: {correct_answer}"
                 
                 similarity_score = calculate_semantic_similarity(student_text, correct_text)
                 direct_similarity = calculate_semantic_similarity(student_answer, correct_answer)

@@ -93,7 +93,7 @@ const QuizModel = {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
-          select: { submissions: true }
+          select: { submissions: true, evaluations: true }
         }
       }
     });
