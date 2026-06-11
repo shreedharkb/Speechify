@@ -22,8 +22,9 @@ model = None
 async def startup_event():
     """Load the Whisper model on startup"""
     global model
-    print("Loading Whisper model...")
-    model = WhisperModel("base", device="cpu", compute_type="int8")
+    print("Loading Whisper tiny model...")
+    # Using 'tiny' model instead of 'base' to prevent Out Of Memory crashes on Free Tier
+    model = WhisperModel("tiny", device="cpu", compute_type="int8")
     print("Whisper model loaded successfully!")
 
 
