@@ -3,6 +3,14 @@ from flask_cors import CORS
 from sentence_transformers import SentenceTransformer, util
 import torch
 import logging
+import os
+
+# CRITICAL MEMORY OPTIMIZATIONS FOR RENDER FREE TIER (512MB RAM)
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+torch.set_num_threads(1)
+# Force CPU only and disable autograd to save massive amounts of memory
+torch.set_grad_enabled(False)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
