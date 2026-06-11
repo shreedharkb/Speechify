@@ -1,33 +1,32 @@
 const Queue = require('bull');
-// Use REDIS_URL directly since redisConfig doesn't exist in redis.js
-const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+const Redis = require('ioredis');
 
-// Create queues for AI services
-const whisperQueue = new Queue('whisper-transcription', redisUrl, {
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000
-    },
-    removeOnComplete: 100, // Keep last 100 completed jobs
-    removeOnFail: 50,
-    timeout: 120000 // 2 minute timeout for transcription
+// Helper to create robust Redis connections for Bull
+function createRedisClient(type) {
+  if (process.env.REDIS_URL) {
+    return new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false,
+      tls: process.env.REDIS_URL.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined
+    });
   }
-});
+  return new Redis({ host: '127.0.0.1', port: 6379, maxRetriesPerRequest: null });
+}
 
-const sbertQueue = new Queue('sbert-grading', redisUrl, {
+const queueOptions = {
+  createClient: createRedisClient,
   defaultJobOptions: {
     attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 1000
-    },
+    backoff: { type: 'exponential', delay: 2000 },
     removeOnComplete: 100,
     removeOnFail: 50,
-    timeout: 60000 // 1 minute timeout for grading
+    timeout: 120000
   }
-});
+};
+
+// Create queues for AI services
+const whisperQueue = new Queue('whisper-transcription', queueOptions);
+const sbertQueue = new Queue('sbert-grading', queueOptions);
 
 // Queue event handlers
 whisperQueue.on('completed', (job, result) => {
@@ -119,18 +118,7 @@ async function waitForJob(job, timeoutMs = 60000) {
   });
 }
 
-const quizQueue = new Queue('quiz-grading', redisUrl, {
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 5000
-    },
-    removeOnComplete: 100,
-    removeOnFail: 50,
-    timeout: 300000 // 5 minutes timeout for full quiz grading
-  }
-});
+const quizQueue = new Queue('quiz-grading', queueOptions);
 
 quizQueue.on('completed', (job, result) => {
   console.log(`✅ Quiz Grading job ${job.id} completed`);
