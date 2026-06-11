@@ -6,7 +6,7 @@ services:
     name: speechify-sbert
     env: docker
     rootDir: sbert-service
-    plan: starter # ML models need memory
+    plan: free # Changed to free to avoid payment wall
     healthCheckPath: /health
     envVars:
       - key: PORT
@@ -19,7 +19,7 @@ services:
     name: speechify-whisper
     env: docker
     rootDir: whisper-service
-    plan: starter # Audio processing needs memory
+    plan: free # Changed to free to avoid payment wall
     envVars:
       - key: PORT
         value: 5000
