@@ -15,6 +15,9 @@ const questionRoutes = require('./routes/questions');
 const quizRoutes = require('./routes/quiz');
 const imageRoutes = require('./routes/images');
 
+// Controllers
+const { warmupSbert } = require('./controllers/gradeController');
+
 // Initialize Express App
 const app = express();
 const server = http.createServer(app);
@@ -77,6 +80,9 @@ app.get('/api/health', async (req, res) => {
     const redisHealth = await redis.ping();
     const queueStats = await getQueueStats();
     
+    // Ping SBERT service in the background to prevent cold starts
+    warmupSbert().catch(console.error);
+    
     res.json({
       status: 'healthy',
       database: dbHealth ? 'connected' : 'disconnected',
@@ -118,6 +124,9 @@ pool.query('SELECT NOW()')
   .then((result) => {
     console.log("Successfully connected to PostgreSQL!");
     console.log("Database time:", result.rows[0].now);
+
+    // Warm up SBERT service on backend startup
+    warmupSbert().catch(console.error);
 
     // --- API ROUTES ---
     // Use the authentication routes

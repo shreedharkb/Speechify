@@ -1,193 +1,153 @@
 const axios = require('axios');
 const { cache } = require('../config/redis');
 
-// SBERT service URL - can be configured via environment variable
+// SBERT service URL
 const SBERT_SERVICE_URL = process.env.SBERT_SERVICE_URL || 'http://localhost:5002';
 
 /**
- * Grade student answer using SBERT semantic similarity
- * @param {string} questionText - The question being asked
- * @param {string} studentAnswer - The answer provided by the student
- * @param {string} correctAnswer - The correct answer from the teacher
- * @param {number} threshold - Similarity threshold (default: 0.85 for 85%)
- * @returns {Promise<{isCorrect: boolean, similarityScore: number, explanation: string}>}
+ * Returns the base URL for the SBERT service (no trailing slash).
  */
-async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, threshold = 0.85) {
-  try {
-    console.log('\n🤖 SBERT Grading Starting...');
-    console.log('Question:', questionText);
-    console.log('Student Answer:', studentAnswer);
-    console.log('Correct Answer:', correctAnswer);
-    console.log('Threshold:', threshold);
-    
-    // Handle empty answers
-    if (!studentAnswer || !studentAnswer.trim()) {
-      console.log('❌ Empty student answer');
-      return {
-        isCorrect: false,
-        similarityScore: 0,
-        explanation: 'No answer provided'
-      };
-    }
-
-    if (!correctAnswer || !correctAnswer.trim()) {
-      console.warn('❌ No correct answer provided for comparison');
-      return {
-        isCorrect: false,
-        similarityScore: 0,
-        explanation: 'No correct answer available'
-      };
-    }
-
-    // Fast path 1: Exact match (case-insensitive)
-    const normalizedStudent = studentAnswer.trim().toLowerCase();
-    const normalizedCorrect = correctAnswer.trim().toLowerCase();
-    if (normalizedStudent === normalizedCorrect) {
-      console.log('✅ Exact match detected (bypassing SBERT)');
-      return {
-        isCorrect: true,
-        similarityScore: 1.0,
-        explanation: 'Exact match with the correct answer.'
-      };
-    }
-
-    // Fast path 2: Substring match (Strictly student containing correct)
-    const cleanStudent = normalizedStudent.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-    const cleanCorrect = normalizedCorrect.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-    
-    // Only apply substring matching if the CORRECT answer is meaningful (> 3 chars)
-    // and the student's answer CONTAINS the ENTIRE correct answer.
-    // Do NOT check if the correct answer contains the student's answer, as that gives false positives.
-    if (cleanCorrect.length > 3 && cleanStudent.includes(cleanCorrect)) {
-      console.log('✅ Substring match: Student answer contains the correct answer');
-      return {
-        isCorrect: true,
-        similarityScore: 1.0,
-        explanation: 'Answer contains the correct keyword/phrase.'
-      };
-    }
-
-    // Negation Check Heuristic
-    const negationWords = ["not", "never", "no", "none", "nothing", "nowhere", "hardly", "barely", "isn't", "aren't", "don't", "doesn't", "won't", "can't", "couldn't", "wouldn't", "shouldn't"];
-    const studentWords = cleanStudent.split(/\s+/);
-    const correctWords = cleanCorrect.split(/\s+/);
-    
-    const studentHasNegation = negationWords.some(w => studentWords.includes(w));
-    const correctHasNegation = negationWords.some(w => correctWords.includes(w));
-    
-    let negationMismatchPenalty = 0;
-    if (studentHasNegation !== correctHasNegation) {
-      console.log('⚠️ Negation mismatch detected! Will penalize the SBERT score.');
-      negationMismatchPenalty = 0.3; // Reduce score by 0.3 if there's a mismatch
-    }
-
-    // Check cache first
-    const cacheKey = cache.gradingKey(
-      `${questionText}:${correctAnswer}`,
-      studentAnswer
-    );
-    const cachedResult = await cache.get(cacheKey);
-    if (cachedResult) {
-      console.log('✅ Cache hit for grading');
-      return cachedResult;
-    }
-
-    // Call SBERT service for semantic similarity grading
-    // Ensure no double slashes if the environment variable has a trailing slash
-    const baseUrl = SBERT_SERVICE_URL.endsWith('/') ? SBERT_SERVICE_URL.slice(0, -1) : SBERT_SERVICE_URL;
-    console.log(`📡 Calling SBERT service at ${baseUrl}/grade...`);
-    
-    const response = await axios.post(`${baseUrl}/grade`, {
-      questionText: questionText,
-      studentAnswer: studentAnswer,
-      correctAnswer: correctAnswer,
-      threshold: threshold
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 120000 // 120 second timeout (crucial for downloading HuggingFace models on free tier)
-    });
-
-    const data = response.data;
-    console.log('✅ SBERT response received:', data);
-    
-    let { isCorrect, similarityScore, explanation } = data;
-
-    // Apply negation penalty if applicable
-    if (negationMismatchPenalty > 0) {
-      similarityScore = Math.max(0, similarityScore - negationMismatchPenalty);
-      if (similarityScore < threshold) {
-        isCorrect = false;
-        explanation += " (Score reduced due to negation mismatch)";
-      }
-    }
-
-    // Length mismatch penalty (prevents 1-word answers like "The" from scoring high on long answers)
-    if (studentWords.length <= 2 && correctWords.length >= 4 && similarityScore > 0.8) {
-      console.log('⚠️ Answer length heavily mismatched. Penalizing SBERT anomaly.');
-      similarityScore = Math.max(0, similarityScore - 0.4);
-      if (similarityScore < threshold) {
-        isCorrect = false;
-        explanation += " (Score reduced: answer lacks sufficient detail)";
-      }
-    }
-
-    console.log(`Grading result: Score=${similarityScore}, Threshold=${threshold}, Correct=${isCorrect}`);
-
-    // Cache the result for 10 minutes
-    const result = {
-      isCorrect,
-      similarityScore,
-      explanation
-    };
-    await cache.set(cacheKey, result, 600);
-
-    return result;
-
-  } catch (error) {
-    console.error('❌ ERROR in SBERT grading:', error.message);
-    
-    // Log more details about the error
-    if (error.response) {
-      console.error('SBERT Service Error:');
-      console.error('Status:', error.response.status);
-      console.error('Data:', JSON.stringify(error.response.data, null, 2));
-    } else if (error.request) {
-      console.error('No response received from SBERT service');
-      console.error('Make sure SBERT service is running at:', SBERT_SERVICE_URL);
-    } else {
-      console.error('Error setting up request:', error.message);
-    }
-    
-    // SBERT service is required - no fallback
-    console.error('⚠️ SBERT service is required but unavailable. Grading failed.');
-    throw new Error(`SBERT service unavailable at ${SBERT_SERVICE_URL}. Please ensure the service is running.`);
-  }
+function sbertBase() {
+  return SBERT_SERVICE_URL.endsWith('/')
+    ? SBERT_SERVICE_URL.slice(0, -1)
+    : SBERT_SERVICE_URL;
 }
 
 /**
- * Grade multiple answers in batch
- * @param {Array<{questionText: string, studentAnswer: string, correctAnswer: string}>} answers
- * @param {number} threshold
- * @returns {Promise<Array<{isCorrect: boolean, similarityScore: number, explanation: string}>>}
+ * Call the SBERT service with retry + exponential backoff.
+ * Handles Render cold-start 502/504 errors gracefully.
+ *
+ * @param {string} endpoint  - e.g. '/grade' or '/batch-grade'
+ * @param {object} body      - JSON body to POST
+ * @param {number} maxRetries
+ * @returns {Promise<object>} - Parsed response data
  */
-async function gradeMultipleAnswers(answers, threshold = 0.85) {
+async function callSbert(endpoint, body, maxRetries = 3) {
+  const url = `${sbertBase()}${endpoint}`;
+  let delay = 2000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`📡 SBERT ${endpoint} — attempt ${attempt}/${maxRetries}`);
+      const response = await axios.post(url, body, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 120000, // 2 min — allows HuggingFace model download on cold start
+      });
+      return response.data;
+    } catch (err) {
+      const isLastAttempt = attempt === maxRetries;
+      const isRetryable = !err.response || [502, 503, 504].includes(err.response?.status);
+
+      if (isLastAttempt || !isRetryable) {
+        console.error(`❌ SBERT call failed after ${attempt} attempt(s): ${err.message}`);
+        throw err;
+      }
+
+      console.warn(`⚠️ SBERT unavailable (attempt ${attempt}). Retrying in ${delay / 1000}s...`);
+      await new Promise(r => setTimeout(r, delay));
+      delay *= 2; // exponential backoff: 2s → 4s → 8s
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUBLIC API
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Grade a single student answer using the SBERT service.
+ *
+ * @param {string} questionText   - The quiz question
+ * @param {string} studentAnswer  - The student's answer
+ * @param {string} correctAnswer  - The teacher's correct answer
+ * @param {number} [threshold=0.75] - Similarity threshold for pass/fail
+ * @returns {Promise<{ isCorrect: boolean, similarityScore: number, explanation: string }>}
+ */
+async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, threshold = 0.75) {
+  console.log('\n🤖 Grading started');
+  console.log('  Question :', questionText);
+  console.log('  Student  :', studentAnswer);
+  console.log('  Correct  :', correctAnswer);
+  console.log('  Threshold:', threshold);
+
+  // ── Fast-path: empty inputs ──────────────────────────────────────────────
+  if (!studentAnswer?.trim()) {
+    return { isCorrect: false, similarityScore: 0, explanation: 'No answer provided.' };
+  }
+  if (!correctAnswer?.trim()) {
+    return { isCorrect: false, similarityScore: 0, explanation: 'No correct answer available.' };
+  }
+
+  // ── Cache lookup ─────────────────────────────────────────────────────────
+  const cacheKey = cache.gradingKey(
+    `${questionText}:${correctAnswer}`,
+    studentAnswer
+  );
+  const cached = await cache.get(cacheKey);
+  if (cached) {
+    console.log('✅ Cache hit');
+    return cached;
+  }
+
+  // ── Delegate ALL grading logic to the Python service ────────────────────
+  const data = await callSbert('/grade', {
+    questionText,
+    studentAnswer,
+    correctAnswer,
+    threshold,
+  });
+
+  if (data.error) {
+    throw new Error(`SBERT service error: ${data.error}`);
+  }
+
+  const result = {
+    isCorrect:       data.isCorrect,
+    similarityScore: data.similarityScore,
+    explanation:     data.explanation,
+  };
+
+  console.log(`✅ Grade result: score=${result.similarityScore}  correct=${result.isCorrect}`);
+
+  // Cache for 10 minutes
+  await cache.set(cacheKey, result, 600);
+  return result;
+}
+
+/**
+ * Grade multiple answers sequentially.
+ *
+ * @param {Array<{ questionText, studentAnswer, correctAnswer }>} answers
+ * @param {number} [threshold=0.75]
+ * @returns {Promise<Array<{ isCorrect, similarityScore, explanation }>>}
+ */
+async function gradeMultipleAnswers(answers, threshold = 0.75) {
   const results = [];
-  
-  // Grade answers sequentially to avoid rate limiting
   for (const { questionText, studentAnswer, correctAnswer } of answers) {
     const result = await gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, threshold);
     results.push(result);
-    
-    // Small delay to avoid hitting API rate limits
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Small delay to avoid hammering the SBERT service
+    await new Promise(r => setTimeout(r, 100));
   }
-  
   return results;
+}
+
+/**
+ * Warm up the SBERT service (fire-and-forget).
+ * Call this on backend startup to reduce first-request cold-start latency.
+ */
+async function warmupSbert() {
+  try {
+    console.log(`🔥 Warming up SBERT service at ${sbertBase()}/health ...`);
+    await axios.get(`${sbertBase()}/health`, { timeout: 15000 });
+    console.log('✅ SBERT service is warm.');
+  } catch (err) {
+    console.log(`⚠️ SBERT warmup ping failed (normal if asleep): ${err.message}`);
+  }
 }
 
 module.exports = {
   gradeAnswerWithAI,
-  gradeMultipleAnswers
+  gradeMultipleAnswers,
+  warmupSbert,
 };
