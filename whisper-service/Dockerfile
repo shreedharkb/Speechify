@@ -35,6 +35,6 @@ EXPOSE 5000
 # Set environment variables
 ENV KMP_DUPLICATE_LIB_OK=TRUE
 
-# Run with 4 workers for concurrent transcription requests
-# Note: Whisper is CPU-intensive, so workers are limited by CPU cores
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "4"]
+# Run with 1 worker instead of 4 to fit within free tier memory limits (512MB)
+# Note: Whisper is CPU/memory intensive, each worker loads the model into RAM
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "1"]
