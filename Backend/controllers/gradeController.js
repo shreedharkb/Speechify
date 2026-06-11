@@ -93,9 +93,11 @@ async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, thr
     }
 
     // Call SBERT service for semantic similarity grading
-    console.log(`📡 Calling SBERT service at ${SBERT_SERVICE_URL}/grade...`);
+    // Ensure no double slashes if the environment variable has a trailing slash
+    const baseUrl = SBERT_SERVICE_URL.endsWith('/') ? SBERT_SERVICE_URL.slice(0, -1) : SBERT_SERVICE_URL;
+    console.log(`📡 Calling SBERT service at ${baseUrl}/grade...`);
     
-    const response = await axios.post(`${SBERT_SERVICE_URL}/grade`, {
+    const response = await axios.post(`${baseUrl}/grade`, {
       questionText: questionText,
       studentAnswer: studentAnswer,
       correctAnswer: correctAnswer,
@@ -104,7 +106,7 @@ async function gradeAnswerWithAI(questionText, studentAnswer, correctAnswer, thr
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 60000 // 60 second timeout (allows cold-start model loading on free tier)
+      timeout: 120000 // 120 second timeout (crucial for downloading HuggingFace models on free tier)
     });
 
     const data = response.data;

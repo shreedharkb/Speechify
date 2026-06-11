@@ -9,6 +9,8 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
+### 🚀 [Live Demo: Try Speechify Here](https://speechify-psi.vercel.app)
+
 AI-powered semantic quiz grading platform. Teachers can create quizzes and students can answer them via text or voice. Instead of traditional exact-string matching, Speechify leverages state-of-the-art NLP (`all-MiniLM-L6-v2` via Sentence-BERT) to grade answers based on contextual meaning and similarity, coupled with OpenAI Whisper for seamless voice transcription.
 
 </div>
