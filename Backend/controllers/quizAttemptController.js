@@ -56,14 +56,14 @@ const submitQuizAttempt = async (req, res) => {
       });
     }
 
-    // Check if quiz is still active
-    const now = new Date();
-    if (now < new Date(quiz.startTime)) {
-      return res.status(400).json({ msg: 'Quiz has not started yet' });
-    }
-    if (now > new Date(quiz.endTime)) {
-      return res.status(400).json({ msg: 'Quiz has already ended' });
-    }
+    // Check if quiz is still active (Commented out to allow testing quizzes at any time)
+    // const now = new Date();
+    // if (now < new Date(quiz.startTime)) {
+    //   return res.status(400).json({ msg: 'Quiz has not started yet' });
+    // }
+    // if (now > new Date(quiz.endTime)) {
+    //   return res.status(400).json({ msg: 'Quiz has already ended' });
+    // }
 
     // Instead of synchronous grading, we enqueue the job to Bull
     const { queueQuizGrading } = require('../utils/queue');
