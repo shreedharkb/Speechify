@@ -45,8 +45,8 @@ Instant grading with detailed feedback powered by Redis Queues and WebSockets, e
 ### Voice Transcription
 Built-in speech-to-text capabilities utilizing OpenAI Whisper, allowing students to verbally answer quiz questions for accessibility and speed.
 
-### Role-Based Access
-Secure, separated Teacher & Student portals via JWT and Role-Based Access Control (RBAC). Teachers can schedule quizzes with automated start and end times.
+### Role-Based Access & Authentication
+Secure, separated Teacher & Student portals via JWT and Role-Based Access Control (RBAC). Supports traditional email/password login as well as **Google OAuth Authentication** for quick access. Teachers can schedule quizzes with automated start and end times.
 
 ---
 
@@ -171,6 +171,8 @@ Speechify/
 | `DB_USER` | Yes | PostgreSQL user |
 | `DB_PASSWORD` | Yes | PostgreSQL password |
 | `DB_NAME` | Yes | PostgreSQL database name |
+| `GOOGLE_CLIENT_ID` | No | Required for Google Auth (Backend) |
+| `VITE_GOOGLE_CLIENT_ID`| No | Required for Google Auth (Frontend) |
 | `SBERT_SERVICE_URL` | No | Defaults to `http://localhost:5002` |
 | `WHISPER_SERVICE_URL`| No | Defaults to `http://localhost:5000` |
 
@@ -182,6 +184,7 @@ Speechify/
 |---|---|---|---|
 | `POST` | `/api/auth/signup` | Register new user | ❌ |
 | `POST` | `/api/auth/login` | Login & receive JWT | ❌ |
+| `POST` | `/api/auth/google` | Google OAuth Login/Signup | ❌ |
 | `POST` | `/api/quiz` | Create a new quiz | 👨‍🏫 Teacher |
 | `GET`  | `/api/quiz/active/student`| Get currently active quizzes | 👩‍🎓 Student |
 | `POST` | `/api/quiz-attempt/submit`| Submit answers for AI semantic grading | 👩‍🎓 Student |
