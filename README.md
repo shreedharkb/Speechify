@@ -271,7 +271,7 @@ npm install
 npm run dev              # Starts Vite dev server on http://localhost:5173
 ```
 
-The application is now accessible at **`http://localhost:5173`**.
+The application is now accessible at **[https://speechify-psi.vercel.app](https://speechify-psi.vercel.app)**.
 
 ---
 
