@@ -1,7 +1,6 @@
 <div align="center">
 
-# Speechify
-
+# <img src="Frontend/public/favicon.svg" alt="Speechify Logo" width="40" align="center" /> **Speechify**
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Express](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
