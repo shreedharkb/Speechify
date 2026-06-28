@@ -1,427 +1,319 @@
 <div align="center">
+  <br />
+  <a href="https://speechify-psi.vercel.app">
+    <img src="Frontend/public/favicon.svg" alt="Speechify Logo" width="100" />
+  </a>
+  <h1>Speechify</h1>
+  <p><strong>AI-Powered Semantic Quiz Grading & Voice Assessment Platform</strong></p>
+  <br />
 
-# <img src="Frontend/public/favicon.svg" alt="Speechify Logo" width="40" align="center" /> **Speechify**
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)&nbsp;[![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)&nbsp;[![Express](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)&nbsp;[![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)&nbsp;[![Python](https://img.shields.io/badge/Python_3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)&nbsp;[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)&nbsp;[![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)&nbsp;[![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
+  <!-- Badges -->
+  <p>
+    <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+    <img src="https://img.shields.io/badge/Express.js-404D59?style=for-the-badge&logo=express&logoColor=white" alt="Express.js" />
+    <img src="https://img.shields.io/badge/PostgreSQL_16-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Python_3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+    <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis" />
+    <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white" alt="Socket.io" />
+  </p>
 
-**AI-powered semantic quiz grading platform for teachers and students.**
-
-[Live Demo](https://speechify-psi.vercel.app) · [Report a Bug](https://github.com/shreedharkb/Speechify/issues) · [Request a Feature](https://github.com/shreedharkb/Speechify/issues)
-
+  <br />
+  <a href="https://speechify-psi.vercel.app">
+    <img src="https://img.shields.io/badge/🚀_View_Live_Deployment-speechify--psi.vercel.app-2563eb?style=for-the-badge" alt="Live Demo" />
+  </a>
 </div>
 
----
+<br />
 
-## Overview
-
-Speechify is a full-stack academic platform that replaces conventional exact-match grading with **AI-driven semantic evaluation**. Teachers create scheduled quizzes; students respond via text or voice. Answers are processed through a multi-layer NLP pipeline — combining lexical overlap, numeric detection, gibberish filtering, and context-aware cosine similarity using **Sentence-BERT (`all-MiniLM-L6-v2`)** — to return a meaningful grade and explanation in real time.
-
-Voice answers are transcribed using **OpenAI Whisper**, and all computationally expensive grading tasks are offloaded to a **Bull/Redis job queue**, keeping the Node.js API non-blocking. Results are pushed back to the client via **Socket.IO WebSockets**.
+> **Speechify** is an enterprise-grade academic evaluation system that replaces brittle exact-match grading with **AI-driven semantic analysis**. Teachers schedule quizzes; students respond via voice or typed text. Answers are processed through a multi-layer NLP pipeline combining gibberish detection, numeric grading, and context-aware cosine similarity using **Sentence-BERT (`all-MiniLM-L6-v2`)** to return instant, explainable grades. Audio submissions are transcribed in real time via **OpenAI Whisper**, while heavy machine learning jobs run asynchronously on **Bull/Redis** workers, pushing scores back over **Socket.IO WebSockets**.
 
 ---
 
-## Table of Contents
+## 📑 Table of Contents
 
-- [Features](#features)
-- [System Architecture](#system-architecture)
-- [Tech Stack](#tech-stack)
-- [Database Schema](#database-schema)
-- [Workflows](#workflows)
-- [Project Structure](#project-structure)
-- [Quick Start](#quick-start)
-- [Environment Variables](#environment-variables)
-- [API Reference](#api-reference)
-- [Deployment](#deployment)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [License](#license)
-
----
-
-## Features
-
-| Feature | Description |
-|---|---|
-| **Semantic Grading** | Multi-layer NLP pipeline: gibberish detection → numeric grading → exact match → SBERT cosine similarity (60% direct + 40% context-aware) |
-| **Voice Transcription** | Students record audio answers transcribed in real time using OpenAI Whisper (FastAPI microservice) |
-| **Real-time Results** | Grading results pushed to the browser instantly via Socket.IO — no polling required |
-| **Async Job Queue** | Bull queues backed by Redis ensure the Node.js API thread is never blocked by ML workloads |
-| **Role-Based Access** | Separate Teacher and Student portals, secured with JWT + RBAC middleware |
-| **Google OAuth** | One-click login and signup via Google OAuth 2.0 for both roles |
-| **Scheduled Quizzes** | Teachers define `startTime` and `endTime`; the platform auto-activates and deactivates quizzes |
-| **Rate Limiting** | 100 requests per minute per IP enforced globally on `/api/*` |
+- [✨ Core Capabilities](#-core-capabilities)
+- [🏗️ System Architecture](#-system-architecture)
+- [🗄️ Database Entity-Relationship Schema](#-database-entity-relationship-schema)
+- [⚡ Technical Challenges & Solutions](#-technical-challenges--solutions)
+- [💻 Tech Stack](#-tech-stack)
+- [📁 Project Structure](#-project-structure)
+- [🔌 API Reference](#-api-reference)
+- [⚙️ Environment Variables](#-environment-variables)
+- [🚀 Quick Start](#-quick-start)
+- [🔄 CI/CD Pipeline](#-cicd-pipeline)
+- [📜 License](#-license)
 
 ---
 
-## System Architecture
+## ✨ Core Capabilities
 
-The platform follows a **microservices architecture** with three independently deployable backend services and a React SPA frontend.
+- **🧠 Semantic NLP Grading**: Multi-stage evaluation engine blending 60% direct answer overlap with 40% Sentence-BERT context-aware cosine similarity. Filters out gibberish and accurately evaluates synonyms and rephrased concepts.
+- **🎙️ Real-Time Voice Assessment**: Students can speak their answers directly into the browser. Audio streams are captured and transcribed instantly by a dedicated **OpenAI Whisper** microservice built with FastAPI.
+- **⚡ Asynchronous Bull/Redis Workers**: Computationally expensive AI similarity matrix calculations are offloaded to background job queues, ensuring the Node.js API Gateway never blocks under concurrent student exam loads.
+- **📡 Instant WebSocket Notifications**: Grading results and teacher evaluations are pushed instantaneously to student browser dashboards via **Socket.IO** without polling.
+- **🔐 Role-Based Access Control (RBAC)**: Isolated Teacher and Student portals secured via JWT validation and Google OAuth 2.0 single sign-on.
+- **⏱️ Automated Quiz Scheduling**: Teachers define `startTime` and `endTime` windows; automated system triggers activate and terminate exams seamlessly.
 
-<div align="center">
-  <img src="assets/system-architecture.png" alt="System Architecture Diagram" width="100%" loading="lazy">
-</div>
+---
 
-### Component Overview
+## 🏗️ System Architecture
 
-| Component | Technology | Port | Responsibility |
-|---|---|---|---|
-| **Frontend** | React 19 + Vite | `5173` | SPA — Teacher & Student UIs |
-| **API Gateway** | Node.js + Express | `3001` | Auth, routing, RBAC, Socket.IO, job enqueue |
-| **SBERT Service** | Python + Flask | `5002` | Semantic similarity grading (`all-MiniLM-L6-v2`) |
-| **Whisper Service** | Python + FastAPI | `5000` | Speech-to-text transcription |
-| **Database** | PostgreSQL 16 + Prisma ORM | `5432` | Relational data (users, quizzes, submissions, evaluations) |
-| **Job Queue / Cache** | Redis 7 + Bull | `6379` | Async grading queue, result caching |
+Speechify employs a scalable **microservices architecture** decoupling client presentation, REST routing, async queue scheduling, speech transcription, and transformer inference.
 
-### Request Flow
+```mermaid
+flowchart TD
+    classDef client fill:#2563eb,stroke:#1e3a8a,color:#fff
+    classDef gateway fill:#059669,stroke:#064e3b,color:#fff
+    classDef queue fill:#7c3aed,stroke:#4c1d95,color:#fff
+    classDef ai fill:#db2777,stroke:#831843,color:#fff
+    classDef db fill:#d97706,stroke:#78350f,color:#fff
 
+    subgraph Presentation["Client Layer"]
+        React["React 19 SPA<br>Vite + Tailwind CSS"]:::client
+    end
+
+    subgraph Gateway["API Gateway Layer"]
+        Express["Node.js Express API<br>RBAC / Auth / Socket.IO"]:::gateway
+    end
+
+    subgraph Async["Background Workers & Caching"]
+        Bull["Bull Job Queue<br>Async Task Scheduler"]:::queue
+        Redis[(Redis 7 Cache<br>Queue Store & Session State)]:::queue
+    end
+
+    subgraph Intelligence["AI Microservices Layer"]
+        SBERT["Python Flask Microservice<br>Sentence-BERT (all-MiniLM-L6-v2)"]:::ai
+        Whisper["Python FastAPI Microservice<br>OpenAI Whisper Transcription"]:::ai
+    end
+
+    subgraph Storage["Relational Storage Layer"]
+        Prisma["Prisma ORM Client"]:::db
+        Postgres[(PostgreSQL 16 Database<br>Relational Quiz & Grade Store)]:::db
+    end
+
+    %% Data Flows
+    React <-->|REST API / WebSockets| Express
+    React -->|Audio Upload| Whisper
+    Whisper -->|Transcribed Text| Express
+
+    Express -->|Enqueue Grading Job| Bull
+    Bull <--> Redis
+    Bull -->|Process Job| SBERT
+
+    SBERT -->|Similarity Score| Express
+    Express <-->|Read / Write| Prisma
+    Prisma <--> Postgres
+
+    Express -->|Socket.IO Push| React
 ```
-Browser → React SPA
-             │
-             ▼ REST / WebSocket
-     Node.js API (Express)
-        │           │
-        │           ▼ Bull Queue → Redis
-        │        Grading Worker
-        │                │
-        ▼                ▼ HTTP
-  PostgreSQL      SBERT Service (:5002)
-  (Prisma ORM)         │
-                        ▼
-                  Result → Socket.IO → Browser
+
+---
+
+## 🗄️ Database Entity-Relationship Schema
+
+The platform relies on a 5-table normalized schema in PostgreSQL 16 managed through Prisma ORM. Questions and answers utilize JSONB columns for flexible quiz structuring.
+
+```mermaid
+erDiagram
+    Teacher ||--o{ Quiz : "creates"
+    Student ||--o{ QuizAttempt : "submits"
+    Quiz ||--o{ QuizAttempt : "receives"
+    QuizAttempt ||--|| SubmissionEvaluation : "generates"
+
+    Student {
+        String id PK
+        String email UK
+        String name
+        String rollNumber
+        String branch
+        Int semester
+    }
+
+    Teacher {
+        String id PK
+        String email UK
+        String name
+        String department
+    }
+
+    Quiz {
+        String id PK
+        String title
+        Json questions
+        Json correctAnswers
+        DateTime startTime
+        DateTime endTime
+        String teacherId FK
+    }
+
+    QuizAttempt {
+        String id PK
+        String studentId FK
+        String quizId FK
+        Json responses
+        String audioRecordingUrl
+        DateTime submittedAt
+    }
+
+    SubmissionEvaluation {
+        String id PK
+        String attemptId FK
+        Json questionResults
+        Float totalScore
+        Float semanticSimilarity
+        DateTime evaluatedAt
+    }
 ```
 
 ---
 
-## Tech Stack
+## ⚡ Technical Challenges & Solutions
 
-| Layer | Technology | Version | Notes |
-|---|---|---|---|
-| **Frontend** | React, Vite, Axios, Tailwind CSS | React 19, Vite 6 | SPA with role-based routing |
-| **API Server** | Node.js, Express.js | Node 18+, Express 4 | REST + WebSocket gateway |
-| **Auth** | JWT, bcryptjs, Google OAuth 2.0 | — | Role-based (Teacher / Student) |
-| **Job Queue** | Bull, ioredis | Bull 4, Redis 7 | Async background grading |
-| **Real-time** | Socket.IO | v4 | Grading result push to client |
-| **Semantic AI** | Sentence-BERT (`all-MiniLM-L6-v2`) | PyTorch | Flask microservice on port 5002 |
-| **Speech-to-Text** | OpenAI Whisper | FastAPI | Microservice on port 5000 |
-| **Database** | PostgreSQL 16, Prisma ORM | Prisma 7 | 5-table relational schema |
-| **DevOps** | Docker, Docker Compose | — | Full containerized local environment |
-| **CI/CD** | Jenkins, SonarQube, OWASP DC, Trivy | — | Static analysis + image build + push |
-| **Cloud Deploy** | Render (backend), Vercel (frontend) | — | Free-tier compatible |
+1. **Non-Blocking ML Workloads (Bull + Redis Orchestration)**
+   - **Challenge**: Calculating tensor similarity embeddings across hundreds of concurrent student submissions immediately bottlenecked the single-threaded event loop of Node.js.
+   - **Solution**: Decoupled grading evaluation into asynchronous **Bull** job queues backed by **Redis**. When a student submits an exam, the API immediately responds with an acknowledgement (`202 Accepted`) and spins off a background worker. Once the SBERT microservice finishes scoring, results push live to the student via Socket.IO.
+
+2. **Accurate Semantic Grading vs. Keywords**
+   - **Challenge**: Traditional grading algorithms fail when students demonstrate understanding using synonyms or alternative sentence phrasing rather than verbatim textbook definitions.
+   - **Solution**: Developed a hybrid 6-layer grading pipeline using PyTorch and `sentence-transformers`. The pipeline screens out gibberish, validates numeric constants, evaluates exact overlap (60%), and runs cosine vector comparison on `all-MiniLM-L6-v2` embeddings (40%), mirroring human teacher grading accuracy.
 
 ---
 
-## Database Schema
+## 💻 Tech Stack
 
-The database uses **PostgreSQL 16** managed through **Prisma ORM**. The schema consists of five tables with relational integrity enforced via foreign keys and cascade deletes.
-
-<div align="center">
-  <img src="assets/database_schema.png" alt="PostgreSQL Database Schema" width="100%" loading="lazy">
-</div>
-
-### Tables
-
-| Table | Description |
-|---|---|
-| `students` | Student identity — name, email, roll number, year, branch, semester |
-| `teachers` | Teacher identity — name, email, branch |
-| `quizzes` | Quiz metadata + all questions as a `JSON` column + `correctAnswers` as `JSON` |
-| `student_submissions` | One row per student–question pair; stores audio path and transcribed text |
-| `submission_evaluations` | One row per student–quiz pair; stores `questionResults` JSON, total marks, total similarity |
-
-> **Design Decision:** Questions are stored as a `JSON` array inside the `quizzes` table (not a separate relation) to allow flexible question structures (text, points, optional image URL) without schema migrations.
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend Framework** | **React 19** & **Vite 6** | Fast single-page application with concurrent rendering and role-based views |
+| **Styling & UI** | **Tailwind CSS** & **Axios** | Responsive layout styling and streamlined REST API communication |
+| **API Gateway** | **Node.js** & **Express 4** | Central gateway routing requests, enforcing JWT auth, and handling rate limits |
+| **Real-Time Engine** | **Socket.IO v4** | Bidirectional WebSocket communication for instant score broadcast |
+| **Async Queues** | **Bull 4** & **Redis 7** | In-memory job orchestration preventing server blocking during ML evaluations |
+| **Semantic AI Engine** | **Python Flask** & **Sentence-BERT** | Microservice running PyTorch `all-MiniLM-L6-v2` semantic cosine similarity |
+| **Speech-to-Text** | **Python FastAPI** & **OpenAI Whisper** | Microservice capturing student audio streams and returning transcriptions |
+| **Database & ORM** | **PostgreSQL 16** & **Prisma 7** | Strongly typed relational persistence for student identities and evaluations |
+| **DevOps & CI/CD** | **Docker Compose** & **Jenkins** | Containerized orchestration with automated vulnerability and CVE scanning |
 
 ---
 
-## Workflows
+## 📁 Project Structure
 
-### Voice Submission & Grading
-
-Illustrates the asynchronous flow from voice capture to final grade delivery via WebSocket.
-
-<div align="center">
-  <img src="assets/voice-submission.png" alt="Voice Submission Sequence Diagram" width="100%" loading="lazy">
-</div>
-
-### Teacher's Journey
-
-The decision tree from login to publishing an active, scheduled quiz.
-
-<div align="center">
-  <img src="assets/teacher-journey.png" alt="Teacher Flowchart" width="100%" loading="lazy">
-</div>
-
----
-
-## Project Structure
-
-```
+```text
 Speechify/
-├── Frontend/                   # React 19 SPA (Vite)
+├── Frontend/                 # React 19 SPA built with Vite
 │   ├── src/
-│   │   ├── components/         # Shared UI components
-│   │   ├── pages/              # Route-level page components
-│   │   │   ├── TeacherDashboard.jsx
-│   │   │   ├── StudentDashboard.jsx
-│   │   │   ├── QuizPage.jsx
-│   │   │   └── ...
-│   │   ├── utils/              # Axios instances, helpers
-│   │   └── styles.css          # Global styles
-│   ├── index.html
-│   └── vite.config.js
-│
-├── Backend/                    # Node.js + Express API
-│   ├── server.js               # Entry point — Express, Socket.IO, Worker init
-│   ├── config/
-│   │   ├── db.js               # PostgreSQL pool (pg)
-│   │   └── redis.js            # ioredis client
-│   ├── controllers/            # Business logic per domain
-│   │   ├── authController.js   # Signup, login, Google OAuth, JWT issue
-│   │   ├── quizController.js   # CRUD for quizzes + scheduling
-│   │   ├── quizAttemptController.js  # Student answer submission
-│   │   ├── gradeController.js  # SBERT HTTP call + warmup
-│   │   ├── whisperController.js      # Whisper HTTP call + file upload
-│   │   └── questionController.js
-│   ├── routes/                 # Express routers
-│   │   ├── auth.js             # /api/auth/*
-│   │   ├── quiz.js             # /api/quiz/*
-│   │   ├── quizAttempt.js      # /api/quiz-attempt/*
-│   │   ├── whisper.js          # /api/whisper/*
-│   │   └── questions.js        # /api/questions/*
-│   ├── middleware/
-│   │   └── rateLimitMiddleware.js    # 100 req/min per IP
-│   ├── utils/
-│   │   ├── queue.js            # Bull queue definitions
-│   │   └── gradingWorker.js    # Background worker — dequeues & grades
-│   ├── prisma/
-│   │   └── schema.prisma       # Prisma data model (5 tables)
-│   ├── Dockerfile              # Production container for Backend
-│   └── package.json
-│
-├── sbert-service/              # Python Flask — Semantic Grading
-│   ├── app.py                  # 6-layer grading pipeline + /grade + /batch-grade
-│   ├── requirements.txt        # sentence-transformers, torch, flask
-│   └── Dockerfile
-│
-├── whisper-service/            # Python FastAPI — Speech-to-Text
-│   ├── app.py                  # /transcribe endpoint (Whisper model)
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── assets/                     # Architecture and workflow diagrams
-├── docker-compose.yml          # Local orchestration (Postgres, Redis, SBERT, Whisper)
-├── Jenkinsfile                 # Jenkins CI/CD pipeline definition
-├── render.yaml                 # Render cloud deployment manifest
-└── README.md
+│   │   ├── components/       # Reusable UI widgets and navigation cards
+│   │   ├── pages/            # Role views (TeacherDashboard, StudentDashboard, QuizPage)
+│   │   └── utils/            # Axios API interceptors and WebSocket listeners
+├── Backend/                  # Node.js + Express API Gateway
+│   ├── controllers/          # Domain logic (auth, quizzes, submissions, voice handling)
+│   ├── middleware/           # JWT verification, RBAC guards, and 100 req/min rate limiters
+│   ├── prisma/               # Prisma schema definitions and migration snapshots
+│   ├── routes/               # Express API endpoints (/api/auth, /api/quiz, /api/whisper)
+│   └── utils/                # Bull queue configuration and async grading worker logic
+├── sbert-service/            # Python Flask Microservice for semantic evaluation
+│   ├── app.py                # 6-layer grading pipeline and /batch-grade endpoints
+│   └── requirements.txt      # PyTorch, sentence-transformers, Flask dependencies
+├── whisper-service/          # Python FastAPI Microservice for voice transcription
+│   ├── app.py                # /transcribe handler interfacing with OpenAI Whisper
+│   └── requirements.txt      # FastAPI, uvicorn, openai-whisper dependencies
+├── assets/                   # Architecture diagrams and schema flowcharts
+├── docker-compose.yml        # Full local multi-container infrastructure definition
+└── Jenkinsfile               # Automated CI/CD build, test, and security scan pipeline
 ```
 
 ---
 
-## Quick Start
+## 🔌 API Reference
 
-### Prerequisites
+### Core Endpoints
 
-| Requirement | Version |
-|---|---|
-| Node.js | 18+ |
-| Docker & Docker Compose | Latest |
-| Python | 3.9+ *(only if running AI services bare-metal)* |
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/login` | Public | Authenticate user and return signed JWT + Role |
+| `POST` | `/api/quiz` | Teacher | Publish a new quiz with JSON questions and schedule |
+| `GET` | `/api/quiz/active/student` | Student | Fetch active quizzes within the valid time window |
+| `POST` | `/api/quiz-attempt/submit` | Student | Submit quiz answers and trigger Bull grading queue |
+| `POST` | `/api/whisper/transcribe` | Authenticated | Stream audio recording for instant text conversion |
+| `GET` | `/api/health` | Public | Check infrastructure health across DB, Redis, and AI services |
 
-### 1. Clone the Repository
+---
 
+## ⚙️ Environment Variables
+
+### Backend Configuration (`Backend/.env`)
+
+| Variable Name | Description | Required |
+| :--- | :--- | :--- |
+| `PORT` | Express server listen port (Default: `3001`) | No |
+| `JWT_SECRET` | Cryptographic secret for signing auth tokens | Yes |
+| `DATABASE_URL` | PostgreSQL connection string (`postgresql://user:pass@host:5432/db`) | Yes |
+| `REDIS_URL` | Redis cache and queue connection URL (`redis://localhost:6379`) | Yes |
+| `SBERT_SERVICE_URL` | SBERT microservice URL (`http://localhost:5002`) | Yes |
+| `WHISPER_SERVICE_URL` | Whisper transcription service URL (`http://localhost:5000`) | Yes |
+| `FRONTEND_URL` | Allowed CORS origin (`http://localhost:5173`) | Yes |
+
+### Frontend Configuration (`Frontend/.env`)
+
+| Variable Name | Description | Required |
+| :--- | :--- | :--- |
+| `VITE_API_URL` | Target Backend API base path (`http://localhost:3001`) | Yes |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth 2.0 public client ID | No |
+
+---
+
+## 🚀 Quick Start
+
+### 1. Clone Repository & Start Containers
+Launch PostgreSQL, Redis, SBERT, and Whisper microservices via Docker Compose:
 ```bash
 git clone https://github.com/shreedharkb/Speechify.git
 cd Speechify
+docker-compose up -d --build
 ```
 
-### 2. Start Infrastructure Services (Docker)
-
-This starts PostgreSQL, Redis, the SBERT grading service, and the Whisper transcription service.
-
-```bash
-docker-compose up -d
-```
-
-### 3. Configure Environment Variables
-
-```bash
-cp Backend/.env.example Backend/.env
-# Edit Backend/.env with your values (see Environment Variables section)
-```
-
-### 4. Start the Backend
-
+### 2. Configure Backend & Synchronize Database
 ```bash
 cd Backend
+cp .env.example .env
 npm install
-npx prisma migrate dev   # Runs migrations and generates Prisma client
-npm run dev              # Starts server on http://localhost:3001
+npx prisma migrate dev
+npm run dev
 ```
 
-### 5. Start the Frontend
-
+### 3. Launch Frontend Client
 ```bash
-cd Frontend
+cd ../Frontend
 npm install
-npm run dev              # Starts Vite dev server on http://localhost:5173
+npm run dev
 ```
 
-The application is now accessible at **[https://speechify-psi.vercel.app](https://speechify-psi.vercel.app)**.
+Navigate to [http://localhost:5173](http://localhost:5173) to start evaluating quizzes!
 
 ---
 
-## Environment Variables
+## 🔄 CI/CD Pipeline
 
-### Backend (`Backend/.env`)
+The project includes an automated `Jenkinsfile` orchestrating a 6-stage verification pipeline:
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `PORT` | No | `3001` | Express server port |
-| `NODE_ENV` | No | `development` | Environment mode |
-| `JWT_SECRET` | **Yes** | — | Secret key for signing JWTs |
-| `JWT_EXPIRES_IN` | No | `24h` | JWT expiry duration |
-| `DB_HOST` | **Yes** | — | PostgreSQL host |
-| `DB_PORT` | No | `5432` | PostgreSQL port |
-| `DB_USER` | **Yes** | — | PostgreSQL username |
-| `DB_PASSWORD` | **Yes** | — | PostgreSQL password |
-| `DB_NAME` | **Yes** | — | PostgreSQL database name |
-| `DATABASE_URL` | **Yes (prod)** | — | Full Prisma connection string for production |
-| `REDIS_URL` | **Yes (prod)** | — | Redis connection URL (e.g., Upstash) |
-| `SBERT_SERVICE_URL` | No | `http://localhost:5002` | URL of the SBERT grading microservice |
-| `WHISPER_SERVICE_URL` | No | `http://localhost:5000` | URL of the Whisper transcription microservice |
-| `FRONTEND_URL` | No | — | Allowed CORS origin for the frontend |
-| `GOOGLE_CLIENT_ID` | No | — | Google OAuth 2.0 Client ID (backend verification) |
-
-### Frontend (`Frontend/.env`)
-
-| Variable | Required | Description |
-|---|---|---|
-| `VITE_API_URL` | **Yes** | Backend API base URL (e.g., `http://localhost:3001`) |
-| `VITE_GOOGLE_CLIENT_ID` | No | Google OAuth 2.0 Client ID (frontend login button) |
-
----
-
-## API Reference
-
-### Authentication
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/auth/signup` | ❌ | Register a new Teacher or Student account |
-| `POST` | `/api/auth/login` | ❌ | Login and receive a signed JWT |
-| `POST` | `/api/auth/google` | ❌ | Google OAuth login / signup |
-
-### Quizzes
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/quiz` | 👨‍🏫 Teacher | Create a new quiz with questions and scheduled time |
-| `GET` | `/api/quiz` | 👨‍🏫 Teacher | Retrieve all quizzes created by the authenticated teacher |
-| `GET` | `/api/quiz/active/student` | 👩‍🎓 Student | Get all currently active (time-windowed) quizzes |
-| `GET` | `/api/quiz/:id` | ✅ Both | Get a specific quiz by ID |
-
-### Quiz Attempts
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/quiz-attempt/submit` | 👩‍🎓 Student | Submit text/transcribed answers — enqueues async grading job |
-| `GET` | `/api/quiz-attempt/results/:quizId` | 👩‍🎓 Student | Retrieve grading results for a completed attempt |
-
-### Voice Transcription
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/api/whisper/transcribe` | ✅ Yes | Upload audio file; returns transcribed text from Whisper |
-
-### System
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/api/health` | ❌ | Health check — DB, Redis, and queue status |
-| `GET` | `/api/queue-stats` | ❌ | Current Bull queue metrics |
-
-### SBERT Microservice (Internal)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/health` | Service health + loaded model name |
-| `POST` | `/grade` | Grade a single answer `{ questionText, studentAnswer, correctAnswer, threshold? }` |
-| `POST` | `/batch-grade` | Grade multiple answers in one request |
-
----
-
-## Deployment
-
-### Local (Docker Compose)
-
-```bash
-# Start all services
-docker-compose up -d --build
-
-# View logs for the SBERT grading service
-docker-compose logs -f sbert-service
-
-# View logs for the Whisper service
-docker-compose logs -f whisper-service
-
-# Stop all services
-docker-compose down
+```mermaid
+flowchart LR
+    A[Git Checkout] --> B[npm install]
+    B --> C[SonarQube Analysis]
+    C --> D[OWASP Dependency Check]
+    D --> E[Trivy Vulnerability Scan]
+    E --> F[Docker Build & Push]
 ```
 
-### Cloud (Render + Vercel)
+---
 
-The `render.yaml` file in the repository root defines all Render services:
+## 📜 License
 
-| Service | Type | Plan |
-|---|---|---|
-| `speechify-sbert` | Docker web service | Free |
-| `speechify-whisper` | Docker web service | Free |
-| `speechify-api` | Node.js web service | Free |
-| `speechify-db` | Managed PostgreSQL | Free |
-
-**Steps:**
-
-1. Push the repository to GitHub.
-2. In Render, create a new **Blueprint** and point it to the repository — Render will auto-detect `render.yaml`.
-3. Set any `sync: false` environment variables (e.g., `REDIS_URL`, `FRONTEND_URL`) manually in the Render dashboard.
-4. Deploy the Frontend to **Vercel** by importing the `Frontend/` directory and setting `VITE_API_URL` to the Render backend URL.
+This project is licensed under the **MIT License**.
 
 ---
 
-## CI/CD Pipeline
-
-The `Jenkinsfile` defines a 6-stage automated pipeline:
-
-```
-Git Checkout
-     │
-     ▼
-Install Dependencies  (npm install for Backend & Frontend)
-     │
-     ▼
-SonarQube Analysis    (static code quality + vulnerability scan)
-     │
-     ▼
-OWASP Dependency Check  (CVE scan on all npm packages)
-     │
-     ▼
-Trivy Filesystem Scan  (container vulnerability scan)
-     │
-     ▼
-Docker Build          (builds Backend image: shreedharkb/speechify:latest)
-     │
-     ▼
-Docker Push to DockerHub
-```
-
-**Post-build:** Dependency check report is published and Docker is logged out automatically.
-
----
-
-## Author
-
-**Shreedhar K B**
-[GitHub](https://github.com/shreedharkb) · [Live Demo](https://speechify-psi.vercel.app)
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+<div align="center">
+  <p>Built with ❤️ by <strong>Shreedhar K B</strong></p>
+</div>
