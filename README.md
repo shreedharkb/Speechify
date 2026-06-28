@@ -70,43 +70,56 @@ flowchart TD
     classDef ai fill:#db2777,stroke:#831843,color:#fff
     classDef db fill:#d97706,stroke:#78350f,color:#fff
 
-    subgraph Presentation["Client Layer"]
-        React["React 19 SPA<br>Vite + Tailwind CSS"]:::client
+    ReactSPA["React 19 SPA<br>Teacher & Student Dashboards"]:::client
+
+    subgraph ExpressGateway["Node.js Express API Gateway (:3001)"]
+        AuthRoute["POST /api/auth/login<br>JWT & Google OAuth"]:::gateway
+        QuizRoute["POST /api/quiz<br>Quiz Creator & Scheduler"]:::gateway
+        AttemptRoute["POST /api/quiz-attempt/submit<br>Answer Handler"]:::gateway
+        WhisperProxy["POST /api/whisper/transcribe<br>Audio Streamer"]:::gateway
+        SocketServer["Socket.IO WebSocket Server<br>Real-Time Score Broadcaster"]:::gateway
+        RateLimiter["100 req/min IP Rate Limiter<br>Global API Guard"]:::gateway
     end
 
-    subgraph Gateway["API Gateway Layer"]
-        Express["Node.js Express API<br>RBAC / Auth / Socket.IO"]:::gateway
+    ReactSPA -->|"HTTPS / REST"| RateLimiter
+    RateLimiter --> AuthRoute
+    RateLimiter --> QuizRoute
+    RateLimiter --> AttemptRoute
+    RateLimiter --> WhisperProxy
+    ReactSPA <-->|"WebSocket Connection<br>ws://localhost:3001"| SocketServer
+
+    subgraph Microservices["AI Microservices Cluster"]
+        WhisperService["Python FastAPI Microservice (:5000)<br>OpenAI Whisper Speech-to-Text Engine"]:::ai
+        SBERTService["Python Flask Microservice (:5002)<br>6-Layer SBERT (all-MiniLM-L6-v2) Pipeline"]:::ai
     end
 
-    subgraph Async["Background Workers & Caching"]
-        Bull["Bull Job Queue<br>Async Task Scheduler"]:::queue
-        Redis[(Redis 7 Cache<br>Queue Store & Session State)]:::queue
+    WhisperProxy -->|"Multipart Audio Blob<br>.wav / .mp3"| WhisperService
+    WhisperService -->|"Transcribed String"| WhisperProxy
+
+    subgraph AsyncOrchestration["Bull / Redis Async Grading Engine"]
+        BullQueue["Bull Job Queue<br>grading-queue"]:::queue
+        RedisCache[(Redis 7 Cache (:6379)<br>Queue Job Store & Active Sessions)]:::queue
+        GradingWorker["Node.js Grading Worker<br>Background Consumer"]:::queue
     end
 
-    subgraph Intelligence["AI Microservices Layer"]
-        SBERT["Python Flask Microservice<br>Sentence-BERT (all-MiniLM-L6-v2)"]:::ai
-        Whisper["Python FastAPI Microservice<br>OpenAI Whisper Transcription"]:::ai
+    AttemptRoute -->|"Enqueue {attemptId, answers}"| BullQueue
+    BullQueue <-->|"Persistence"| RedisCache
+    BullQueue -->|"Dequeue Job"| GradingWorker
+    GradingWorker -->|"POST /batch-grade<br>{studentAnswer, correctAnswer}"| SBERTService
+
+    subgraph DataStorage["Relational Data Store"]
+        PrismaORM["Prisma 7 ORM Client<br>Connection Pool"]:::db
+        PostgreSQL[(PostgreSQL 16 (:5432)<br>Users, Quizzes, Submissions, Evaluations)]:::db
     end
 
-    subgraph Storage["Relational Storage Layer"]
-        Prisma["Prisma ORM Client"]:::db
-        Postgres[(PostgreSQL 16 Database<br>Relational Quiz & Grade Store)]:::db
-    end
+    AuthRoute <-->|"Verify & Issue JWT"| PrismaORM
+    QuizRoute <-->|"Store JSONB Questions"| PrismaORM
+    AttemptRoute -->|"Save Pending Submission"| PrismaORM
+    GradingWorker -->|"Persist Evaluation Marks &<br>Cosine Similarity %"| PrismaORM
+    PrismaORM <--> PostgreSQL
 
-    %% Data Flows
-    React <-->|REST API / WebSockets| Express
-    React -->|Audio Upload| Whisper
-    Whisper -->|Transcribed Text| Express
-
-    Express -->|Enqueue Grading Job| Bull
-    Bull <--> Redis
-    Bull -->|Process Job| SBERT
-
-    SBERT -->|Similarity Score| Express
-    Express <-->|Read / Write| Prisma
-    Prisma <--> Postgres
-
-    Express -->|Socket.IO Push| React
+    GradingWorker -->|"Emit 'evaluation_complete'<br>Payload: {score, feedback}"| SocketServer
+    SocketServer -->|"Push Score Live"| ReactSPA
 ```
 
 ---
