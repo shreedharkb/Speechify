@@ -1,0 +1,43 @@
+
++===================================================================+
+|       Speechify -- Grading Pipeline Evaluation Report             |
++===================================================================+
+
+Test Cases : 100
+Threshold  : 0.5
+Model      : all-MiniLM-L6-v2 (22.7M params, 384-dim)
+
+====================================================================
+  HEAD-TO-HEAD COMPARISON
+====================================================================
+
+  Metric              Exact Match     Keyword Only    Full Pipeline
+  ------------------  --------------  --------------  --------------
+  Accuracy            61.0%           56.0%           74.0%
+  Precision           100.0%          73.9%           76.4%
+  Recall              29.1%           30.9%           76.4%
+  F1 Score            45.1%           43.6%           76.4%
+  Cohen's Kappa       0.2697          0.1651          0.4747
+  MAE                 0.4160          0.2941          0.2335
+  Avg Latency         0.0         ms  0.1         ms  36.0ms
+  P95 Latency         0.0         ms  0.6         ms  65.5ms
+
+====================================================================
+  PER-CATEGORY ACCURACY (Full Pipeline)
+====================================================================
+  exact_match           n= 10  accuracy=90.0%  MAE=0.1000
+  paraphrase            n= 20  accuracy=70.0%  MAE=0.3568
+  partial               n= 15  accuracy=20.0%  MAE=0.2671
+  conceptual            n= 15  accuracy=66.7%  MAE=0.3595
+  numeric               n= 10  accuracy=90.0%  MAE=0.1000
+  wrong                 n= 20  accuracy=95.0%  MAE=0.1975
+  gibberish             n= 10  accuracy=100.0%  MAE=0.0864
+
+====================================================================
+  CONFUSION MATRIX (Full Pipeline)
+====================================================================
+                    Predicted PASS    Predicted FAIL
+  Actually PASS         42 (TP)           13 (FN)
+  Actually FAIL         13 (FP)           32 (TN)
+
+Full report: grading_eval_report.json

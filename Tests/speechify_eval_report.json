@@ -1,0 +1,524 @@
+{
+  "n_test_cases": 59,
+  "threshold_used": 0.75,
+  "lexical_threshold_used": 0.5,
+  "stage_1_exact_match_baseline": {
+    "accuracy": 0.5932203389830508,
+    "precision": 1.0,
+    "recall": 0.2727272727272727,
+    "f1": 0.42857142857142855,
+    "tp": 9,
+    "tn": 26,
+    "fp": 0,
+    "fn": 24,
+    "n": 59
+  },
+  "stage_2_lexical_only_baseline": {
+    "accuracy": 0.5932203389830508,
+    "precision": 0.8461538461538461,
+    "recall": 0.3333333333333333,
+    "f1": 0.47826086956521735,
+    "tp": 11,
+    "tn": 24,
+    "fp": 2,
+    "fn": 22,
+    "n": 59
+  },
+  "stage_3_full_sbert_pipeline": {
+    "accuracy": 0.6610169491525424,
+    "precision": 0.8823529411764706,
+    "recall": 0.45454545454545453,
+    "f1": 0.6,
+    "tp": 15,
+    "tn": 24,
+    "fp": 2,
+    "fn": 18,
+    "n": 59
+  },
+  "per_category_accuracy": {
+    "stage_1_exact_match": {
+      "partial": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "paraphrase": {
+        "n": 11,
+        "correct": 1,
+        "accuracy": 0.09090909090909091
+      },
+      "partial_insufficient": {
+        "n": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "synonym": {
+        "n": 3,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "numeric_wrong": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "zero_overlap_correct": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "wrong": {
+        "n": 7,
+        "correct": 7,
+        "accuracy": 1.0
+      },
+      "numeric_close": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "distractor": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "negation_match": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "substring": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "negation": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "gibberish": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "empty": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "numeric_as_word": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "length_mismatch": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "exact": {
+        "n": 6,
+        "correct": 6,
+        "accuracy": 1.0
+      },
+      "numeric_exact": {
+        "n": 3,
+        "correct": 2,
+        "accuracy": 0.6666666666666666
+      }
+    },
+    "stage_2_lexical_only": {
+      "partial": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "paraphrase": {
+        "n": 11,
+        "correct": 2,
+        "accuracy": 0.18181818181818182
+      },
+      "partial_insufficient": {
+        "n": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "synonym": {
+        "n": 3,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "numeric_wrong": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "zero_overlap_correct": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "wrong": {
+        "n": 7,
+        "correct": 7,
+        "accuracy": 1.0
+      },
+      "numeric_close": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "distractor": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "negation_match": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "substring": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "negation": {
+        "n": 3,
+        "correct": 1,
+        "accuracy": 0.3333333333333333
+      },
+      "gibberish": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "empty": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "numeric_as_word": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "length_mismatch": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "exact": {
+        "n": 6,
+        "correct": 6,
+        "accuracy": 1.0
+      },
+      "numeric_exact": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      }
+    },
+    "stage_3_full_pipeline": {
+      "partial": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "paraphrase": {
+        "n": 11,
+        "correct": 5,
+        "accuracy": 0.45454545454545453
+      },
+      "partial_insufficient": {
+        "n": 1,
+        "correct": 1,
+        "accuracy": 1.0
+      },
+      "synonym": {
+        "n": 3,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "numeric_wrong": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "zero_overlap_correct": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "wrong": {
+        "n": 7,
+        "correct": 7,
+        "accuracy": 1.0
+      },
+      "numeric_close": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "distractor": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "negation_match": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "substring": {
+        "n": 2,
+        "correct": 1,
+        "accuracy": 0.5
+      },
+      "negation": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "gibberish": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      },
+      "empty": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "numeric_as_word": {
+        "n": 2,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "length_mismatch": {
+        "n": 2,
+        "correct": 2,
+        "accuracy": 1.0
+      },
+      "exact": {
+        "n": 6,
+        "correct": 6,
+        "accuracy": 1.0
+      },
+      "numeric_exact": {
+        "n": 3,
+        "correct": 3,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "latency": {
+    "single_request_avg_ms": 2443.4,
+    "single_request_p95_ms": 2147.4,
+    "batch_total_seconds": 4.02,
+    "batch_avg_per_item_ms": 68.2
+  },
+  "mismatches": [
+    {
+      "question": "What causes rain?",
+      "correct_answer": "Water vapor condenses into droplets",
+      "student_answer": "when water vapor cools down and turns into droplets it forms rain",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.7432,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "paraphrase"
+    },
+    {
+      "question": "What is photosynthesis?",
+      "correct_answer": "Plants convert sunlight into energy",
+      "student_answer": "It's the process where plants use sunlight to make energy",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.7278,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "paraphrase"
+    },
+    {
+      "question": "What is the function of the heart?",
+      "correct_answer": "It pumps blood through the body",
+      "student_answer": "The heart's job is to circulate blood around the body",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.6253,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "paraphrase"
+    },
+    {
+      "question": "What is inflation?",
+      "correct_answer": "A general rise in prices over time",
+      "student_answer": "when prices go up across the economy over time",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.719,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "paraphrase"
+    },
+    {
+      "question": "What is an ecosystem?",
+      "correct_answer": "A community of living organisms and their environment",
+      "student_answer": "a group of living things interacting with their surroundings",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.6415,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "paraphrase"
+    },
+    {
+      "question": "What is a synonym for happy?",
+      "correct_answer": "Joyful",
+      "student_answer": "Glad",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.25,
+      "explanation": "Incorrect \u2014 answer does not match the correct answer.",
+      "category": "synonym"
+    },
+    {
+      "question": "What is the opposite of hot?",
+      "correct_answer": "Cold",
+      "student_answer": "Cool",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.25,
+      "explanation": "Incorrect \u2014 answer does not match the correct answer.",
+      "category": "synonym"
+    },
+    {
+      "question": "Name a mammal.",
+      "correct_answer": "Dog",
+      "student_answer": "Cat",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.25,
+      "explanation": "Incorrect \u2014 answer does not match the correct answer.",
+      "category": "synonym"
+    },
+    {
+      "question": "What is the approximate value of pi to 2 decimal places?",
+      "correct_answer": "3.14",
+      "student_answer": "3.15",
+      "gold": false,
+      "pipeline_said_correct": true,
+      "similarity_score": 0.95,
+      "explanation": "Numeric answer differs from correct value (3.14). Score penalized.",
+      "category": "numeric_close"
+    },
+    {
+      "question": "What is 15% of 200?",
+      "correct_answer": "30",
+      "student_answer": "31",
+      "gold": false,
+      "pipeline_said_correct": true,
+      "similarity_score": 0.75,
+      "explanation": "Numeric answer differs from correct value (30.0). Score penalized.",
+      "category": "numeric_close"
+    },
+    {
+      "question": "What is photosynthesis?",
+      "correct_answer": "Plants convert sunlight into energy through chlorophyll",
+      "student_answer": "plants use sunlight",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.6473,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "partial"
+    },
+    {
+      "question": "What is an ecosystem?",
+      "correct_answer": "A community of living organisms and their environment interacting together",
+      "student_answer": "living things and environment",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.6146,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "partial"
+    },
+    {
+      "question": "What is a car powered by?",
+      "correct_answer": "Gasoline or electricity",
+      "student_answer": "petrol or battery power",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.6554,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "zero_overlap_correct"
+    },
+    {
+      "question": "What do bees produce?",
+      "correct_answer": "Honey",
+      "student_answer": "the sweet substance made in a hive",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.25,
+      "explanation": "Incorrect \u2014 answer does not match the correct answer.",
+      "category": "zero_overlap_correct"
+    },
+    {
+      "question": "How many continents are there?",
+      "correct_answer": "7",
+      "student_answer": "seven",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.0,
+      "explanation": "Expected a numeric answer but got non-numeric text.",
+      "category": "numeric_as_word"
+    },
+    {
+      "question": "What is 5 + 7?",
+      "correct_answer": "12",
+      "student_answer": "twelve",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.0,
+      "explanation": "Expected a numeric answer but got non-numeric text.",
+      "category": "numeric_as_word"
+    },
+    {
+      "question": "What is the chemical symbol for gold?",
+      "correct_answer": "Au",
+      "student_answer": "the symbol is Au",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.6357,
+      "explanation": "Partial match \u2014 some correct concepts but missing key details.",
+      "category": "substring"
+    },
+    {
+      "question": "Who developed the theory of relativity?",
+      "correct_answer": "Albert Einstein",
+      "student_answer": "Einstein came up with relativity theory",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.5726,
+      "explanation": "Weak match \u2014 loosely related but significantly different meaning.",
+      "category": "paraphrase"
+    },
+    {
+      "question": "Does the Earth orbit the Sun?",
+      "correct_answer": "Yes, the Earth orbits the Sun",
+      "student_answer": "Yes it does",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.4293,
+      "explanation": "Weak match \u2014 loosely related but significantly different meaning.",
+      "category": "negation_match"
+    },
+    {
+      "question": "Is water a compound?",
+      "correct_answer": "Yes, water is a compound",
+      "student_answer": "yes",
+      "gold": true,
+      "pipeline_said_correct": false,
+      "similarity_score": 0.4246,
+      "explanation": "Weak match \u2014 loosely related but significantly different meaning.",
+      "category": "negation_match"
+    }
+  ]
+}

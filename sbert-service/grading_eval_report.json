@@ -1,0 +1,3185 @@
+{
+  "timestamp": "2026-07-14T15:13:43Z",
+  "test_cases": 100,
+  "threshold": 0.5,
+  "model": "all-MiniLM-L6-v2",
+  "modes": {
+    "exact_match": {
+      "mode": "exact_match",
+      "metrics": {
+        "total": 100,
+        "accuracy": 0.61,
+        "precision": 1.0,
+        "recall": 0.2909,
+        "f1": 0.4507,
+        "mae": 0.416,
+        "cohens_kappa": 0.2697,
+        "confusion_matrix": {
+          "TP": 16,
+          "FP": 0,
+          "FN": 39,
+          "TN": 45
+        }
+      },
+      "category_breakdown": {
+        "exact_match": {
+          "count": 10,
+          "accuracy": 1.0,
+          "mae": 0.0
+        },
+        "paraphrase": {
+          "count": 20,
+          "accuracy": 0.0,
+          "mae": 0.8625
+        },
+        "partial": {
+          "count": 15,
+          "accuracy": 1.0,
+          "mae": 0.4633
+        },
+        "conceptual": {
+          "count": 15,
+          "accuracy": 0.0,
+          "mae": 0.83
+        },
+        "numeric": {
+          "count": 10,
+          "accuracy": 0.6,
+          "mae": 0.38
+        },
+        "wrong": {
+          "count": 20,
+          "accuracy": 1.0,
+          "mae": 0.0575
+        },
+        "gibberish": {
+          "count": 10,
+          "accuracy": 1.0,
+          "mae": 0.0
+        }
+      },
+      "avg_latency_ms": 0.0,
+      "p95_latency_ms": 0.0,
+      "per_case": [
+        {
+          "id": 1,
+          "category": "exact_match",
+          "question": "What is the chemical symbol for water?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 2,
+          "category": "exact_match",
+          "question": "What is the capital of France?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 3,
+          "category": "exact_match",
+          "question": "What is 2 + 2?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 4,
+          "category": "exact_match",
+          "question": "Who wrote Romeo and Juliet?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 5,
+          "category": "exact_match",
+          "question": "What is the speed of light in m/s?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 6,
+          "category": "exact_match",
+          "question": "What is the atomic number of carbon?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 7,
+          "category": "exact_match",
+          "question": "What is the currency of Japan?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 8,
+          "category": "exact_match",
+          "question": "What planet is known as the Red Planet?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 9,
+          "category": "exact_match",
+          "question": "What is the tallest mountain in the world?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 10,
+          "category": "exact_match",
+          "question": "What is the chemical symbol for gold?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 11,
+          "category": "paraphrase",
+          "question": "What causes tides?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 12,
+          "category": "paraphrase",
+          "question": "What is photosynthesis?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 13,
+          "category": "paraphrase",
+          "question": "Define osmosis",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 14,
+          "category": "paraphrase",
+          "question": "What is Newton's First Law?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 15,
+          "category": "paraphrase",
+          "question": "What is the function of mitochondria?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 16,
+          "category": "paraphrase",
+          "question": "Explain the water cycle",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 17,
+          "category": "paraphrase",
+          "question": "What is DNA?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 18,
+          "category": "paraphrase",
+          "question": "What causes earthquakes?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 19,
+          "category": "paraphrase",
+          "question": "What is the greenhouse effect?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 20,
+          "category": "paraphrase",
+          "question": "Define democracy",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 21,
+          "category": "paraphrase",
+          "question": "What is inflation?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 22,
+          "category": "paraphrase",
+          "question": "Explain natural selection",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 23,
+          "category": "paraphrase",
+          "question": "What is the theory of evolution?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 24,
+          "category": "paraphrase",
+          "question": "What is an atom?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 25,
+          "category": "paraphrase",
+          "question": "What is a chemical reaction?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 26,
+          "category": "paraphrase",
+          "question": "What is the law of supply and demand?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 27,
+          "category": "paraphrase",
+          "question": "What is a genome?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 28,
+          "category": "paraphrase",
+          "question": "What is entropy?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 29,
+          "category": "paraphrase",
+          "question": "Define velocity",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 30,
+          "category": "paraphrase",
+          "question": "What is the immune system?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 31,
+          "category": "partial",
+          "question": "Name the three states of matter",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 32,
+          "category": "partial",
+          "question": "What are the functions of the liver?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.35,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 33,
+          "category": "partial",
+          "question": "List the planets in our solar system",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 34,
+          "category": "partial",
+          "question": "What are the components of blood?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 35,
+          "category": "partial",
+          "question": "Explain cell division",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.5,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 36,
+          "category": "partial",
+          "question": "What are the branches of the US government?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 37,
+          "category": "partial",
+          "question": "Describe the rock cycle",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.4,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 38,
+          "category": "partial",
+          "question": "What are the causes of World War I?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 39,
+          "category": "partial",
+          "question": "What are the layers of the Earth?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 40,
+          "category": "partial",
+          "question": "What is the scientific method?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.5,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 41,
+          "category": "partial",
+          "question": "List the five senses",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 42,
+          "category": "partial",
+          "question": "What are renewable energy sources?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 43,
+          "category": "partial",
+          "question": "Describe the digestive system",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.4,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 44,
+          "category": "partial",
+          "question": "What are Newton's three laws?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.35,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 45,
+          "category": "partial",
+          "question": "What is the Bill of Rights?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 46,
+          "category": "conceptual",
+          "question": "Why do we have seasons?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 47,
+          "category": "conceptual",
+          "question": "How does a vaccine work?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 48,
+          "category": "conceptual",
+          "question": "What is a black hole?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 49,
+          "category": "conceptual",
+          "question": "Explain how airplanes fly",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 50,
+          "category": "conceptual",
+          "question": "What causes rust?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.75,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 51,
+          "category": "conceptual",
+          "question": "How does the internet work?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 52,
+          "category": "conceptual",
+          "question": "Explain gravity",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 53,
+          "category": "conceptual",
+          "question": "How do batteries work?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 54,
+          "category": "conceptual",
+          "question": "What is friction?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 55,
+          "category": "conceptual",
+          "question": "How does a compass work?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 56,
+          "category": "conceptual",
+          "question": "What is cloud computing?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 57,
+          "category": "conceptual",
+          "question": "How does a microwave oven work?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 58,
+          "category": "conceptual",
+          "question": "What is machine learning?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 59,
+          "category": "conceptual",
+          "question": "What is a blockchain?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 60,
+          "category": "conceptual",
+          "question": "How does GPS work?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 61,
+          "category": "numeric",
+          "question": "What is the boiling point of water in Celsius?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 62,
+          "category": "numeric",
+          "question": "How many chromosomes do humans have?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 63,
+          "category": "numeric",
+          "question": "What is the value of pi to two decimal places?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 64,
+          "category": "numeric",
+          "question": "What year did World War II end?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 65,
+          "category": "numeric",
+          "question": "What is the square root of 144?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 66,
+          "category": "numeric",
+          "question": "How many bones are in the adult human body?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 67,
+          "category": "numeric",
+          "question": "What is the freezing point of water in Fahrenheit?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 68,
+          "category": "numeric",
+          "question": "How many continents are there?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 69,
+          "category": "numeric",
+          "question": "What is the speed of sound in m/s (approximate)?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 70,
+          "category": "numeric",
+          "question": "How many elements are in the periodic table?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 71,
+          "category": "wrong",
+          "question": "What is the largest planet in our solar system?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 72,
+          "category": "wrong",
+          "question": "What is the chemical formula for table salt?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 73,
+          "category": "wrong",
+          "question": "Who painted the Mona Lisa?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 74,
+          "category": "wrong",
+          "question": "What is the powerhouse of the cell?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 75,
+          "category": "wrong",
+          "question": "What gas do plants absorb during photosynthesis?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 76,
+          "category": "wrong",
+          "question": "What is the capital of Australia?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 77,
+          "category": "wrong",
+          "question": "In which year did India gain independence?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 78,
+          "category": "wrong",
+          "question": "What is the chemical symbol for iron?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 79,
+          "category": "wrong",
+          "question": "What is the hardest natural substance?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 80,
+          "category": "wrong",
+          "question": "What organ pumps blood in the body?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 81,
+          "category": "wrong",
+          "question": "What is the main gas in Earth's atmosphere?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 82,
+          "category": "wrong",
+          "question": "Who discovered penicillin?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 83,
+          "category": "wrong",
+          "question": "What is the smallest prime number?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 84,
+          "category": "wrong",
+          "question": "What is the boiling point of water in Fahrenheit?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 85,
+          "category": "wrong",
+          "question": "Which planet is closest to the Sun?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 86,
+          "category": "wrong",
+          "question": "What is the largest organ in the human body?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 87,
+          "category": "wrong",
+          "question": "What color does litmus paper turn in acid?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 88,
+          "category": "wrong",
+          "question": "How many teeth does an adult human have?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 89,
+          "category": "wrong",
+          "question": "What is the longest river in the world?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 90,
+          "category": "wrong",
+          "question": "What is absolute zero in Celsius?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 91,
+          "category": "gibberish",
+          "question": "What is the theory of relativity?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 92,
+          "category": "gibberish",
+          "question": "Explain the structure of an atom",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 93,
+          "category": "gibberish",
+          "question": "What is the Pythagorean theorem?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 94,
+          "category": "gibberish",
+          "question": "Define ecosystem",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 95,
+          "category": "gibberish",
+          "question": "What is the law of conservation of energy?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 96,
+          "category": "gibberish",
+          "question": "What is a neutron star?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 97,
+          "category": "gibberish",
+          "question": "Explain photovoltaic effect",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 98,
+          "category": "gibberish",
+          "question": "What is plate tectonics?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 99,
+          "category": "gibberish",
+          "question": "Define the term frequency",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 100,
+          "category": "gibberish",
+          "question": "What is Ohm's law?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        }
+      ]
+    },
+    "keyword_only": {
+      "mode": "keyword_only",
+      "metrics": {
+        "total": 100,
+        "accuracy": 0.56,
+        "precision": 0.7391,
+        "recall": 0.3091,
+        "f1": 0.4359,
+        "mae": 0.2941,
+        "cohens_kappa": 0.1651,
+        "confusion_matrix": {
+          "TP": 17,
+          "FP": 6,
+          "FN": 38,
+          "TN": 39
+        }
+      },
+      "category_breakdown": {
+        "exact_match": {
+          "count": 10,
+          "accuracy": 1.0,
+          "mae": 0.0
+        },
+        "paraphrase": {
+          "count": 20,
+          "accuracy": 0.0,
+          "mae": 0.6503
+        },
+        "partial": {
+          "count": 15,
+          "accuracy": 0.6,
+          "mae": 0.1815
+        },
+        "conceptual": {
+          "count": 15,
+          "accuracy": 0.0,
+          "mae": 0.6531
+        },
+        "numeric": {
+          "count": 10,
+          "accuracy": 0.7,
+          "mae": 0.2574
+        },
+        "wrong": {
+          "count": 20,
+          "accuracy": 1.0,
+          "mae": 0.0575
+        },
+        "gibberish": {
+          "count": 10,
+          "accuracy": 1.0,
+          "mae": 0.0159
+        }
+      },
+      "avg_latency_ms": 0.06,
+      "p95_latency_ms": 0.63,
+      "per_case": [
+        {
+          "id": 1,
+          "category": "exact_match",
+          "question": "What is the chemical symbol for water?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 2,
+          "category": "exact_match",
+          "question": "What is the capital of France?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 3,
+          "category": "exact_match",
+          "question": "What is 2 + 2?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 4,
+          "category": "exact_match",
+          "question": "Who wrote Romeo and Juliet?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 5,
+          "category": "exact_match",
+          "question": "What is the speed of light in m/s?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 6,
+          "category": "exact_match",
+          "question": "What is the atomic number of carbon?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 7,
+          "category": "exact_match",
+          "question": "What is the currency of Japan?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 8,
+          "category": "exact_match",
+          "question": "What planet is known as the Red Planet?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 9,
+          "category": "exact_match",
+          "question": "What is the tallest mountain in the world?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 10,
+          "category": "exact_match",
+          "question": "What is the chemical symbol for gold?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 11,
+          "category": "paraphrase",
+          "question": "What causes tides?",
+          "predictedScore": 0.2591,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 12,
+          "category": "paraphrase",
+          "question": "What is photosynthesis?",
+          "predictedScore": 0.2262,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 13,
+          "category": "paraphrase",
+          "question": "Define osmosis",
+          "predictedScore": 0.1911,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 2.01
+        },
+        {
+          "id": 14,
+          "category": "paraphrase",
+          "question": "What is Newton's First Law?",
+          "predictedScore": 0.1061,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 15,
+          "category": "paraphrase",
+          "question": "What is the function of mitochondria?",
+          "predictedScore": 0.285,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 16,
+          "category": "paraphrase",
+          "question": "Explain the water cycle",
+          "predictedScore": 0.2803,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 17,
+          "category": "paraphrase",
+          "question": "What is DNA?",
+          "predictedScore": 0.4163,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 18,
+          "category": "paraphrase",
+          "question": "What causes earthquakes?",
+          "predictedScore": 0.1523,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 19,
+          "category": "paraphrase",
+          "question": "What is the greenhouse effect?",
+          "predictedScore": 0.324,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 20,
+          "category": "paraphrase",
+          "question": "Define democracy",
+          "predictedScore": 0.128,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 21,
+          "category": "paraphrase",
+          "question": "What is inflation?",
+          "predictedScore": 0.1341,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.57
+        },
+        {
+          "id": 22,
+          "category": "paraphrase",
+          "question": "Explain natural selection",
+          "predictedScore": 0.2613,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 23,
+          "category": "paraphrase",
+          "question": "What is the theory of evolution?",
+          "predictedScore": 0.16,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 24,
+          "category": "paraphrase",
+          "question": "What is an atom?",
+          "predictedScore": 0.3175,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 25,
+          "category": "paraphrase",
+          "question": "What is a chemical reaction?",
+          "predictedScore": 0.1836,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 26,
+          "category": "paraphrase",
+          "question": "What is the law of supply and demand?",
+          "predictedScore": 0.0883,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 27,
+          "category": "paraphrase",
+          "question": "What is a genome?",
+          "predictedScore": 0.0693,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 28,
+          "category": "paraphrase",
+          "question": "What is entropy?",
+          "predictedScore": 0.2811,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 29,
+          "category": "paraphrase",
+          "question": "Define velocity",
+          "predictedScore": 0.1157,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 30,
+          "category": "paraphrase",
+          "question": "What is the immune system?",
+          "predictedScore": 0.2656,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 31,
+          "category": "partial",
+          "question": "Name the three states of matter",
+          "predictedScore": 0.8036,
+          "predictedPass": true,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.63
+        },
+        {
+          "id": 32,
+          "category": "partial",
+          "question": "What are the functions of the liver?",
+          "predictedScore": 0.1736,
+          "predictedPass": false,
+          "expectedScore": 0.35,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 33,
+          "category": "partial",
+          "question": "List the planets in our solar system",
+          "predictedScore": 0.6971,
+          "predictedPass": true,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 34,
+          "category": "partial",
+          "question": "What are the components of blood?",
+          "predictedScore": 0.5409,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 35,
+          "category": "partial",
+          "question": "Explain cell division",
+          "predictedScore": 0.2138,
+          "predictedPass": false,
+          "expectedScore": 0.5,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 36,
+          "category": "partial",
+          "question": "What are the branches of the US government?",
+          "predictedScore": 0.4602,
+          "predictedPass": false,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 37,
+          "category": "partial",
+          "question": "Describe the rock cycle",
+          "predictedScore": 0.2298,
+          "predictedPass": false,
+          "expectedScore": 0.4,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 38,
+          "category": "partial",
+          "question": "What are the causes of World War I?",
+          "predictedScore": 0.7847,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 39,
+          "category": "partial",
+          "question": "What are the layers of the Earth?",
+          "predictedScore": 0.3364,
+          "predictedPass": false,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 40,
+          "category": "partial",
+          "question": "What is the scientific method?",
+          "predictedScore": 0.1556,
+          "predictedPass": false,
+          "expectedScore": 0.5,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 41,
+          "category": "partial",
+          "question": "List the five senses",
+          "predictedScore": 0.7333,
+          "predictedPass": true,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 42,
+          "category": "partial",
+          "question": "What are renewable energy sources?",
+          "predictedScore": 0.5143,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 43,
+          "category": "partial",
+          "question": "Describe the digestive system",
+          "predictedScore": 0.3554,
+          "predictedPass": false,
+          "expectedScore": 0.4,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 44,
+          "category": "partial",
+          "question": "What are Newton's three laws?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.35,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 45,
+          "category": "partial",
+          "question": "What is the Bill of Rights?",
+          "predictedScore": 0.3761,
+          "predictedPass": false,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 46,
+          "category": "conceptual",
+          "question": "Why do we have seasons?",
+          "predictedScore": 0.2251,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 47,
+          "category": "conceptual",
+          "question": "How does a vaccine work?",
+          "predictedScore": 0.2477,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 48,
+          "category": "conceptual",
+          "question": "What is a black hole?",
+          "predictedScore": 0.1726,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.81
+        },
+        {
+          "id": 49,
+          "category": "conceptual",
+          "question": "Explain how airplanes fly",
+          "predictedScore": 0.0853,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 50,
+          "category": "conceptual",
+          "question": "What causes rust?",
+          "predictedScore": 0.206,
+          "predictedPass": false,
+          "expectedScore": 0.75,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 51,
+          "category": "conceptual",
+          "question": "How does the internet work?",
+          "predictedScore": 0.1455,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 52,
+          "category": "conceptual",
+          "question": "Explain gravity",
+          "predictedScore": 0.1307,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 53,
+          "category": "conceptual",
+          "question": "How do batteries work?",
+          "predictedScore": 0.1157,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 54,
+          "category": "conceptual",
+          "question": "What is friction?",
+          "predictedScore": 0.1763,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 55,
+          "category": "conceptual",
+          "question": "How does a compass work?",
+          "predictedScore": 0.2332,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 56,
+          "category": "conceptual",
+          "question": "What is cloud computing?",
+          "predictedScore": 0.2441,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 57,
+          "category": "conceptual",
+          "question": "How does a microwave oven work?",
+          "predictedScore": 0.1866,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 58,
+          "category": "conceptual",
+          "question": "What is machine learning?",
+          "predictedScore": 0.2195,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 59,
+          "category": "conceptual",
+          "question": "What is a blockchain?",
+          "predictedScore": 0.1024,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.79
+        },
+        {
+          "id": 60,
+          "category": "conceptual",
+          "question": "How does GPS work?",
+          "predictedScore": 0.1632,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 61,
+          "category": "numeric",
+          "question": "What is the boiling point of water in Celsius?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 62,
+          "category": "numeric",
+          "question": "How many chromosomes do humans have?",
+          "predictedScore": 0.2262,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 63,
+          "category": "numeric",
+          "question": "What is the value of pi to two decimal places?",
+          "predictedScore": 0.4167,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 64,
+          "category": "numeric",
+          "question": "What year did World War II end?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 65,
+          "category": "numeric",
+          "question": "What is the square root of 144?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 66,
+          "category": "numeric",
+          "question": "How many bones are in the adult human body?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 67,
+          "category": "numeric",
+          "question": "What is the freezing point of water in Fahrenheit?",
+          "predictedScore": 0.5833,
+          "predictedPass": true,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 68,
+          "category": "numeric",
+          "question": "How many continents are there?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 69,
+          "category": "numeric",
+          "question": "What is the speed of sound in m/s (approximate)?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 70,
+          "category": "numeric",
+          "question": "How many elements are in the periodic table?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 71,
+          "category": "wrong",
+          "question": "What is the largest planet in our solar system?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 72,
+          "category": "wrong",
+          "question": "What is the chemical formula for table salt?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 73,
+          "category": "wrong",
+          "question": "Who painted the Mona Lisa?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 74,
+          "category": "wrong",
+          "question": "What is the powerhouse of the cell?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 75,
+          "category": "wrong",
+          "question": "What gas do plants absorb during photosynthesis?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 76,
+          "category": "wrong",
+          "question": "What is the capital of Australia?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 77,
+          "category": "wrong",
+          "question": "In which year did India gain independence?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 78,
+          "category": "wrong",
+          "question": "What is the chemical symbol for iron?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 79,
+          "category": "wrong",
+          "question": "What is the hardest natural substance?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 80,
+          "category": "wrong",
+          "question": "What organ pumps blood in the body?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 81,
+          "category": "wrong",
+          "question": "What is the main gas in Earth's atmosphere?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 82,
+          "category": "wrong",
+          "question": "Who discovered penicillin?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 83,
+          "category": "wrong",
+          "question": "What is the smallest prime number?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 84,
+          "category": "wrong",
+          "question": "What is the boiling point of water in Fahrenheit?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 85,
+          "category": "wrong",
+          "question": "Which planet is closest to the Sun?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 86,
+          "category": "wrong",
+          "question": "What is the largest organ in the human body?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 87,
+          "category": "wrong",
+          "question": "What color does litmus paper turn in acid?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 88,
+          "category": "wrong",
+          "question": "How many teeth does an adult human have?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 89,
+          "category": "wrong",
+          "question": "What is the longest river in the world?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 90,
+          "category": "wrong",
+          "question": "What is absolute zero in Celsius?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 91,
+          "category": "gibberish",
+          "question": "What is the theory of relativity?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 92,
+          "category": "gibberish",
+          "question": "Explain the structure of an atom",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 93,
+          "category": "gibberish",
+          "question": "What is the Pythagorean theorem?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 94,
+          "category": "gibberish",
+          "question": "Define ecosystem",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 95,
+          "category": "gibberish",
+          "question": "What is the law of conservation of energy?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 96,
+          "category": "gibberish",
+          "question": "What is a neutron star?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 97,
+          "category": "gibberish",
+          "question": "Explain photovoltaic effect",
+          "predictedScore": 0.1588,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 98,
+          "category": "gibberish",
+          "question": "What is plate tectonics?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.8
+        },
+        {
+          "id": 99,
+          "category": "gibberish",
+          "question": "Define the term frequency",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 100,
+          "category": "gibberish",
+          "question": "What is Ohm's law?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        }
+      ]
+    },
+    "full_pipeline": {
+      "mode": "full_pipeline",
+      "metrics": {
+        "total": 100,
+        "accuracy": 0.74,
+        "precision": 0.7636,
+        "recall": 0.7636,
+        "f1": 0.7636,
+        "mae": 0.2335,
+        "cohens_kappa": 0.4747,
+        "confusion_matrix": {
+          "TP": 42,
+          "FP": 13,
+          "FN": 13,
+          "TN": 32
+        }
+      },
+      "category_breakdown": {
+        "exact_match": {
+          "count": 10,
+          "accuracy": 0.9,
+          "mae": 0.1
+        },
+        "paraphrase": {
+          "count": 20,
+          "accuracy": 0.7,
+          "mae": 0.3568
+        },
+        "partial": {
+          "count": 15,
+          "accuracy": 0.2,
+          "mae": 0.2671
+        },
+        "conceptual": {
+          "count": 15,
+          "accuracy": 0.6667,
+          "mae": 0.3595
+        },
+        "numeric": {
+          "count": 10,
+          "accuracy": 0.9,
+          "mae": 0.1
+        },
+        "wrong": {
+          "count": 20,
+          "accuracy": 0.95,
+          "mae": 0.1975
+        },
+        "gibberish": {
+          "count": 10,
+          "accuracy": 1.0,
+          "mae": 0.0864
+        }
+      },
+      "avg_latency_ms": 36.01,
+      "p95_latency_ms": 65.52,
+      "per_case": [
+        {
+          "id": 1,
+          "category": "exact_match",
+          "question": "What is the chemical symbol for water?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.67
+        },
+        {
+          "id": 2,
+          "category": "exact_match",
+          "question": "What is the capital of France?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 3,
+          "category": "exact_match",
+          "question": "What is 2 + 2?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.42
+        },
+        {
+          "id": 4,
+          "category": "exact_match",
+          "question": "Who wrote Romeo and Juliet?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 5,
+          "category": "exact_match",
+          "question": "What is the speed of light in m/s?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 6,
+          "category": "exact_match",
+          "question": "What is the atomic number of carbon?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 7,
+          "category": "exact_match",
+          "question": "What is the currency of Japan?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 8,
+          "category": "exact_match",
+          "question": "What planet is known as the Red Planet?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 9,
+          "category": "exact_match",
+          "question": "What is the tallest mountain in the world?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 10,
+          "category": "exact_match",
+          "question": "What is the chemical symbol for gold?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 11,
+          "category": "paraphrase",
+          "question": "What causes tides?",
+          "predictedScore": 0.686,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 79.4
+        },
+        {
+          "id": 12,
+          "category": "paraphrase",
+          "question": "What is photosynthesis?",
+          "predictedScore": 0.6564,
+          "predictedPass": true,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 59.04
+        },
+        {
+          "id": 13,
+          "category": "paraphrase",
+          "question": "Define osmosis",
+          "predictedScore": 0.58,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 67.15
+        },
+        {
+          "id": 14,
+          "category": "paraphrase",
+          "question": "What is Newton's First Law?",
+          "predictedScore": 0.4861,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 63.34
+        },
+        {
+          "id": 15,
+          "category": "paraphrase",
+          "question": "What is the function of mitochondria?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 16,
+          "category": "paraphrase",
+          "question": "Explain the water cycle",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 17,
+          "category": "paraphrase",
+          "question": "What is DNA?",
+          "predictedScore": 0.7358,
+          "predictedPass": true,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 56.03
+        },
+        {
+          "id": 18,
+          "category": "paraphrase",
+          "question": "What causes earthquakes?",
+          "predictedScore": 0.5607,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 61.72
+        },
+        {
+          "id": 19,
+          "category": "paraphrase",
+          "question": "What is the greenhouse effect?",
+          "predictedScore": 0.6626,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 63.37
+        },
+        {
+          "id": 20,
+          "category": "paraphrase",
+          "question": "Define democracy",
+          "predictedScore": 0.5552,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 57.24
+        },
+        {
+          "id": 21,
+          "category": "paraphrase",
+          "question": "What is inflation?",
+          "predictedScore": 0.5225,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 60.08
+        },
+        {
+          "id": 22,
+          "category": "paraphrase",
+          "question": "Explain natural selection",
+          "predictedScore": 0.5873,
+          "predictedPass": true,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 55.52
+        },
+        {
+          "id": 23,
+          "category": "paraphrase",
+          "question": "What is the theory of evolution?",
+          "predictedScore": 0.5697,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 58.06
+        },
+        {
+          "id": 24,
+          "category": "paraphrase",
+          "question": "What is an atom?",
+          "predictedScore": 0.5451,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 55.26
+        },
+        {
+          "id": 25,
+          "category": "paraphrase",
+          "question": "What is a chemical reaction?",
+          "predictedScore": 0.4957,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 54.98
+        },
+        {
+          "id": 26,
+          "category": "paraphrase",
+          "question": "What is the law of supply and demand?",
+          "predictedScore": 0.3807,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 66.48
+        },
+        {
+          "id": 27,
+          "category": "paraphrase",
+          "question": "What is a genome?",
+          "predictedScore": 0.364,
+          "predictedPass": false,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 50.47
+        },
+        {
+          "id": 28,
+          "category": "paraphrase",
+          "question": "What is entropy?",
+          "predictedScore": 0.5627,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 59.61
+        },
+        {
+          "id": 29,
+          "category": "paraphrase",
+          "question": "Define velocity",
+          "predictedScore": 0.5605,
+          "predictedPass": true,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 57.04
+        },
+        {
+          "id": 30,
+          "category": "paraphrase",
+          "question": "What is the immune system?",
+          "predictedScore": 0.6024,
+          "predictedPass": true,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 60.53
+        },
+        {
+          "id": 31,
+          "category": "partial",
+          "question": "Name the three states of matter",
+          "predictedScore": 0.8836,
+          "predictedPass": true,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 44.25
+        },
+        {
+          "id": 32,
+          "category": "partial",
+          "question": "What are the functions of the liver?",
+          "predictedScore": 0.5959,
+          "predictedPass": true,
+          "expectedScore": 0.35,
+          "expectedPass": false,
+          "latency_ms": 56.44
+        },
+        {
+          "id": 33,
+          "category": "partial",
+          "question": "List the planets in our solar system",
+          "predictedScore": 0.8791,
+          "predictedPass": true,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 53.53
+        },
+        {
+          "id": 34,
+          "category": "partial",
+          "question": "What are the components of blood?",
+          "predictedScore": 0.7719,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 50.97
+        },
+        {
+          "id": 35,
+          "category": "partial",
+          "question": "Explain cell division",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.5,
+          "expectedPass": false,
+          "latency_ms": 0.51
+        },
+        {
+          "id": 36,
+          "category": "partial",
+          "question": "What are the branches of the US government?",
+          "predictedScore": 0.6999,
+          "predictedPass": true,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 48.93
+        },
+        {
+          "id": 37,
+          "category": "partial",
+          "question": "Describe the rock cycle",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.4,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 38,
+          "category": "partial",
+          "question": "What are the causes of World War I?",
+          "predictedScore": 0.8852,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 57.16
+        },
+        {
+          "id": 39,
+          "category": "partial",
+          "question": "What are the layers of the Earth?",
+          "predictedScore": 0.6116,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 54.37
+        },
+        {
+          "id": 40,
+          "category": "partial",
+          "question": "What is the scientific method?",
+          "predictedScore": 0.5409,
+          "predictedPass": true,
+          "expectedScore": 0.5,
+          "expectedPass": false,
+          "latency_ms": 54.13
+        },
+        {
+          "id": 41,
+          "category": "partial",
+          "question": "List the five senses",
+          "predictedScore": 0.8775,
+          "predictedPass": true,
+          "expectedScore": 0.55,
+          "expectedPass": false,
+          "latency_ms": 48.44
+        },
+        {
+          "id": 42,
+          "category": "partial",
+          "question": "What are renewable energy sources?",
+          "predictedScore": 0.6644,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 49.58
+        },
+        {
+          "id": 43,
+          "category": "partial",
+          "question": "Describe the digestive system",
+          "predictedScore": 0.6717,
+          "predictedPass": true,
+          "expectedScore": 0.4,
+          "expectedPass": false,
+          "latency_ms": 77.08
+        },
+        {
+          "id": 44,
+          "category": "partial",
+          "question": "What are Newton's three laws?",
+          "predictedScore": 0.2461,
+          "predictedPass": false,
+          "expectedScore": 0.35,
+          "expectedPass": false,
+          "latency_ms": 65.52
+        },
+        {
+          "id": 45,
+          "category": "partial",
+          "question": "What is the Bill of Rights?",
+          "predictedScore": 0.6212,
+          "predictedPass": true,
+          "expectedScore": 0.45,
+          "expectedPass": false,
+          "latency_ms": 51.77
+        },
+        {
+          "id": 46,
+          "category": "conceptual",
+          "question": "Why do we have seasons?",
+          "predictedScore": 0.6009,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 65.19
+        },
+        {
+          "id": 47,
+          "category": "conceptual",
+          "question": "How does a vaccine work?",
+          "predictedScore": 0.5466,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 61.34
+        },
+        {
+          "id": 48,
+          "category": "conceptual",
+          "question": "What is a black hole?",
+          "predictedScore": 0.227,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 63.96
+        },
+        {
+          "id": 49,
+          "category": "conceptual",
+          "question": "Explain how airplanes fly",
+          "predictedScore": 0.3776,
+          "predictedPass": false,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 63.79
+        },
+        {
+          "id": 50,
+          "category": "conceptual",
+          "question": "What causes rust?",
+          "predictedScore": 0.5354,
+          "predictedPass": true,
+          "expectedScore": 0.75,
+          "expectedPass": true,
+          "latency_ms": 56.46
+        },
+        {
+          "id": 51,
+          "category": "conceptual",
+          "question": "How does the internet work?",
+          "predictedScore": 0.5479,
+          "predictedPass": true,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 61.87
+        },
+        {
+          "id": 52,
+          "category": "conceptual",
+          "question": "Explain gravity",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 53,
+          "category": "conceptual",
+          "question": "How do batteries work?",
+          "predictedScore": 0.5475,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 54.01
+        },
+        {
+          "id": 54,
+          "category": "conceptual",
+          "question": "What is friction?",
+          "predictedScore": 0.4996,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 53.67
+        },
+        {
+          "id": 55,
+          "category": "conceptual",
+          "question": "How does a compass work?",
+          "predictedScore": 0.6576,
+          "predictedPass": true,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 60.69
+        },
+        {
+          "id": 56,
+          "category": "conceptual",
+          "question": "What is cloud computing?",
+          "predictedScore": 0.535,
+          "predictedPass": true,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 54.55
+        },
+        {
+          "id": 57,
+          "category": "conceptual",
+          "question": "How does a microwave oven work?",
+          "predictedScore": 0.5286,
+          "predictedPass": true,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 60.04
+        },
+        {
+          "id": 58,
+          "category": "conceptual",
+          "question": "What is machine learning?",
+          "predictedScore": 0.522,
+          "predictedPass": true,
+          "expectedScore": 0.9,
+          "expectedPass": true,
+          "latency_ms": 58.38
+        },
+        {
+          "id": 59,
+          "category": "conceptual",
+          "question": "What is a blockchain?",
+          "predictedScore": 0.363,
+          "predictedPass": false,
+          "expectedScore": 0.8,
+          "expectedPass": true,
+          "latency_ms": 64.54
+        },
+        {
+          "id": 60,
+          "category": "conceptual",
+          "question": "How does GPS work?",
+          "predictedScore": 0.5691,
+          "predictedPass": true,
+          "expectedScore": 0.85,
+          "expectedPass": true,
+          "latency_ms": 63.46
+        },
+        {
+          "id": 61,
+          "category": "numeric",
+          "question": "What is the boiling point of water in Celsius?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 62,
+          "category": "numeric",
+          "question": "How many chromosomes do humans have?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 63,
+          "category": "numeric",
+          "question": "What is the value of pi to two decimal places?",
+          "predictedScore": 0.95,
+          "predictedPass": true,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 64,
+          "category": "numeric",
+          "question": "What year did World War II end?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 65,
+          "category": "numeric",
+          "question": "What is the square root of 144?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.51
+        },
+        {
+          "id": 66,
+          "category": "numeric",
+          "question": "How many bones are in the adult human body?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 67,
+          "category": "numeric",
+          "question": "What is the freezing point of water in Fahrenheit?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 68,
+          "category": "numeric",
+          "question": "How many continents are there?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 69,
+          "category": "numeric",
+          "question": "What is the speed of sound in m/s (approximate)?",
+          "predictedScore": 0.95,
+          "predictedPass": true,
+          "expectedScore": 0.95,
+          "expectedPass": true,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 70,
+          "category": "numeric",
+          "question": "How many elements are in the periodic table?",
+          "predictedScore": 1.0,
+          "predictedPass": true,
+          "expectedScore": 1.0,
+          "expectedPass": true,
+          "latency_ms": 0.53
+        },
+        {
+          "id": 71,
+          "category": "wrong",
+          "question": "What is the largest planet in our solar system?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 46.96
+        },
+        {
+          "id": 72,
+          "category": "wrong",
+          "question": "What is the chemical formula for table salt?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 42.67
+        },
+        {
+          "id": 73,
+          "category": "wrong",
+          "question": "Who painted the Mona Lisa?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 42.88
+        },
+        {
+          "id": 74,
+          "category": "wrong",
+          "question": "What is the powerhouse of the cell?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 45.11
+        },
+        {
+          "id": 75,
+          "category": "wrong",
+          "question": "What gas do plants absorb during photosynthesis?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 43.0
+        },
+        {
+          "id": 76,
+          "category": "wrong",
+          "question": "What is the capital of Australia?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 43.72
+        },
+        {
+          "id": 77,
+          "category": "wrong",
+          "question": "In which year did India gain independence?",
+          "predictedScore": 0.95,
+          "predictedPass": true,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 78,
+          "category": "wrong",
+          "question": "What is the chemical symbol for iron?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 41.01
+        },
+        {
+          "id": 79,
+          "category": "wrong",
+          "question": "What is the hardest natural substance?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 41.97
+        },
+        {
+          "id": 80,
+          "category": "wrong",
+          "question": "What organ pumps blood in the body?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 42.88
+        },
+        {
+          "id": 81,
+          "category": "wrong",
+          "question": "What is the main gas in Earth's atmosphere?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 46.17
+        },
+        {
+          "id": 82,
+          "category": "wrong",
+          "question": "Who discovered penicillin?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 41.55
+        },
+        {
+          "id": 83,
+          "category": "wrong",
+          "question": "What is the smallest prime number?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 84,
+          "category": "wrong",
+          "question": "What is the boiling point of water in Fahrenheit?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 85,
+          "category": "wrong",
+          "question": "Which planet is closest to the Sun?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 43.3
+        },
+        {
+          "id": 86,
+          "category": "wrong",
+          "question": "What is the largest organ in the human body?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.05,
+          "expectedPass": false,
+          "latency_ms": 43.85
+        },
+        {
+          "id": 87,
+          "category": "wrong",
+          "question": "What color does litmus paper turn in acid?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 43.64
+        },
+        {
+          "id": 88,
+          "category": "wrong",
+          "question": "How many teeth does an adult human have?",
+          "predictedScore": 0.4,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 89,
+          "category": "wrong",
+          "question": "What is the longest river in the world?",
+          "predictedScore": 0.25,
+          "predictedPass": false,
+          "expectedScore": 0.1,
+          "expectedPass": false,
+          "latency_ms": 44.42
+        },
+        {
+          "id": 90,
+          "category": "wrong",
+          "question": "What is absolute zero in Celsius?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 91,
+          "category": "gibberish",
+          "question": "What is the theory of relativity?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 92,
+          "category": "gibberish",
+          "question": "Explain the structure of an atom",
+          "predictedScore": 0.1448,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 49.64
+        },
+        {
+          "id": 93,
+          "category": "gibberish",
+          "question": "What is the Pythagorean theorem?",
+          "predictedScore": 0.145,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 51.14
+        },
+        {
+          "id": 94,
+          "category": "gibberish",
+          "question": "Define ecosystem",
+          "predictedScore": 0.1293,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 48.64
+        },
+        {
+          "id": 95,
+          "category": "gibberish",
+          "question": "What is the law of conservation of energy?",
+          "predictedScore": 0.1173,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 54.03
+        },
+        {
+          "id": 96,
+          "category": "gibberish",
+          "question": "What is a neutron star?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 97,
+          "category": "gibberish",
+          "question": "Explain photovoltaic effect",
+          "predictedScore": 0.2245,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 51.27
+        },
+        {
+          "id": 98,
+          "category": "gibberish",
+          "question": "What is plate tectonics?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        },
+        {
+          "id": 99,
+          "category": "gibberish",
+          "question": "Define the term frequency",
+          "predictedScore": 0.103,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 51.48
+        },
+        {
+          "id": 100,
+          "category": "gibberish",
+          "question": "What is Ohm's law?",
+          "predictedScore": 0.0,
+          "predictedPass": false,
+          "expectedScore": 0.0,
+          "expectedPass": false,
+          "latency_ms": 0.0
+        }
+      ]
+    }
+  }
+}
